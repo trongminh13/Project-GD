@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838323787997",
+    "project_id": "ashadeep-sms-d92c6",
+    "storage_bucket": "ashadeep-sms-d92c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838323787997:android:fa8c1bf64f362944cd6334",
+        "android_client_info": {
+          "package_name": "com.example.admin_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIrQguH2f4D7s3-SiZ0bGyv51KQ9qr7yw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

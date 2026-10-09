@@ -1,0 +1,33 @@
+# ============================================
+# School Backend - Environment Variables Guide
+# ============================================
+# Copy this file and set the required variables
+# as environment variables before running the app.
+#
+# Required variables (no default):
+#   DB_PASSWORD        - PostgreSQL password
+#   JWT_SECRET         - Base64-encoded JWT signing key (256+ bits)
+#   DB_ENCRYPTION_KEY  - Base64-encoded AES-256 key for field encryption
+#
+# Optional variables (have defaults):
+#   DB_URL             - JDBC URL (default: jdbc:postgresql://localhost:5432/ashadeep_school_db)
+#   DB_USERNAME        - Database user (default: postgres)
+#   FAST2SMS_KEY       - Fast2SMS API key (for SMS notifications)
+#   RAZORPAY_KEY_ID    - Razorpay merchant key ID
+#   RAZORPAY_KEY_SECRET - Razorpay merchant secret
+#
+# ============================================
+# Generating keys:
+#   JWT_SECRET:        openssl rand -base64 64
+#   DB_ENCRYPTION_KEY: openssl rand -base64 32
+# ============================================
+
+# Example .env file (if using dotenv):
+# DB_URL=jdbc:postgresql://localhost:5432/ashadeep_school_db
+# DB_USERNAME=postgres
+# DB_PASSWORD=your_secure_password_here
+# JWT_SECRET=your_base64_encoded_jwt_secret_here
+# DB_ENCRYPTION_KEY=your_base64_encoded_encryption_key_here
+# FAST2SMS_KEY=your_fast2sms_api_key
+# RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxx
+# RAZORPAY_KEY_SECRET=your_razorpay_secret

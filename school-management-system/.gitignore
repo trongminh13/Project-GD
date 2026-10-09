@@ -1,0 +1,156 @@
+# ===========================
+# Environment & Secrets
+# ===========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ===========================
+# IDE & Editor
+# ===========================
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ===========================
+# Java / Maven / Gradle
+# ===========================
+target/
+build/
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# ===========================
+# Flutter / Dart
+# ===========================
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+.packages
+pubspec.lock
+
+# ===========================
+# Python
+# ===========================
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+
+# ===========================
+# Logs
+# ===========================
+*.log
+logs/
+
+# ===========================
+# Excel / Data Files
+# ===========================
+*.xlsx
+*.xls
+*.csv
+
+# ===========================
+# Scratch / Debug Code
+# ===========================
+TestSms.java
+TestController.java
+PrintExcel.java
+**/controller/TestController.java
+**/test/**/PrintExcel.java
+Excels/
+*.py
+!**/src/**/*.py
+
+# ===========================
+# Scripts (local dev only)
+# ===========================
+scripts/
+*.bat
+*.ps1
+frontend/mycopy.bat
+frontend/run_copy_wrapper.bat
+frontend/run_copy.dart
+frontend/scripts/
+backend/school-backend/run_backend.bat
+
+# ===========================
+# AI Agent Tooling
+# ===========================
+.agent/
+.gemini/
+.gsd/
+.gsd-update-temp/
+.claude/
+claude-plugin/
+
+# Ralph
+ralph.sh
+ralph-flowchart.png
+ralph.webp
+prd.json
+progress.txt
+.last-branch
+
+# AI docs
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+CHANGELOG.md
+GSD-STYLE.md
+PROJECT_RULES.md
+prompt.md
+model_capabilities.yaml
+prd.json.example
+
+# AI adapters & skills
+adapters/
+skills/
+docs/
+
+# ===========================
+# Separate Projects
+# ===========================
+flowchart/
+
+# ===========================
+# Temp / Cache
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+frontend/%USERPROFILE%/
+backend/school-backend/HELP.md
+backend/school-backend/boot.log
