@@ -168,6 +168,20 @@ public class BulkImportService {
                             if (parent != null) {
                                 student.setParent(parent);
                             }
+
+                            // Auto-create Student User account with STUDENT role and temporary password
+                            final String studentAdmNo = admNo;
+                            User studentUser = userRepository.findByUsername(studentAdmNo).orElseGet(() -> {
+                                User newUser = new User();
+                                newUser.setUsername(studentAdmNo);
+                                String tempPass = com.school.backend.util.PasswordGeneratorUtil.generateRandomPassword();
+                                newUser.setPassword(encoder.encode(tempPass));
+                                newUser.setRole(Role.STUDENT);
+                                newUser.setMustChangePassword(true);
+                                return userRepository.save(newUser);
+                            });
+                            student.setUser(studentUser);
+
                             allStudents.add(student);
                         }
                     } catch (Exception e) {

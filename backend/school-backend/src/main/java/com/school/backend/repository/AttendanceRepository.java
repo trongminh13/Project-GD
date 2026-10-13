@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByStudentId(Long studentId);
+    List<Attendance> findByStudentIdAndDateBetween(Long studentId, LocalDate startDate, LocalDate endDate);
     List<Attendance> findByDate(LocalDate date);
     Optional<Attendance> findByStudentIdAndDate(Long studentId, LocalDate date);
     long countByStudentIdAndStatus(Long studentId, AttendanceStatus status);

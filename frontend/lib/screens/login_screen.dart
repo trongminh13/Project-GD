@@ -1,3 +1,5 @@
+import "package:ashadeep/features/student/screens/student_dashboard_screen.dart";
+import "package:ashadeep/features/auth/screens/force_change_password_screen.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ashadeep/utils/constants.dart';
@@ -131,10 +133,27 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Welcome, ${user.name}!')));
 
-      if (user.role == UserRole.admin) {
+      if (user.mustChangePassword) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ForceChangePasswordScreen(user: user),
+          ),
+        );
+        return;
+      }
+
+      if (user.role == UserRole.student) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const StudentDashboardScreen(),
+          ),
+        );
+        return;
+      } else if (user.role == UserRole.admin) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
+        return;
       } else if (user.role == UserRole.teacher) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -234,6 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _buildRoleButton('Admin', UserRole.admin),
                       _buildRoleButton('Teacher', UserRole.teacher),
                       _buildRoleButton('Parent', UserRole.parent),
+                      _buildRoleButton('Student', UserRole.student),
                     ],
                   ),
                 ),
@@ -501,6 +521,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return 'Teacher ID';
       case UserRole.parent:
         return 'Parent Phone';
+      case UserRole.student:
+        return 'Student Username / ID';
     }
   }
 }

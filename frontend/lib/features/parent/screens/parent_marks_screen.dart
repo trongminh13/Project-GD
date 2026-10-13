@@ -3,7 +3,8 @@ import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/marks_service.dart';
 
 class ParentMarksScreen extends StatefulWidget {
-  const ParentMarksScreen({super.key});
+  final String? studentId;
+  const ParentMarksScreen({super.key, this.studentId});
 
   @override
   State<ParentMarksScreen> createState() => _ParentMarksScreenState();
@@ -31,8 +32,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
   }
 
   Future<void> _loadMarks() async {
-    // Dynamic fetching from backend service
-    final data = await MarksService().getStudentMarks('student123');
+    String targetId = widget.studentId ?? '1';
+    final data = await MarksService().getStudentMarks(targetId);
     if (mounted) {
       setState(() {
         _marksData = data;

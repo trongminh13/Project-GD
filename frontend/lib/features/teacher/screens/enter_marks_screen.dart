@@ -196,6 +196,8 @@ class _EnterMarksScreenState extends State<EnterMarksScreen> {
                                 widget.assessment.className,
                                 widget.assessment.id,
                                 marksData,
+                                subject: widget.assessment.subject,
+                                maxMarks: widget.assessment.maxMarks,
                               );
                                 if (!context.mounted) return;
                                 if (success) {

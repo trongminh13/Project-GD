@@ -1,3 +1,5 @@
+import "package:ashadeep/features/student/screens/student_dashboard_screen.dart";
+import "package:ashadeep/features/auth/screens/force_change_password_screen.dart";
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -75,7 +77,23 @@ class _SplashScreenState extends State<SplashScreen>
         final user = User.fromJson(userData);
         if (!mounted) return;
 
-        if (user.role == UserRole.admin) {
+        if (user.mustChangePassword) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => ForceChangePasswordScreen(user: user),
+            ),
+          );
+          return;
+        }
+
+        if (user.role == UserRole.student) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const StudentDashboardScreen(),
+            ),
+          );
+          return;
+        } else if (user.role == UserRole.admin) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const DashboardScreen()),
           );

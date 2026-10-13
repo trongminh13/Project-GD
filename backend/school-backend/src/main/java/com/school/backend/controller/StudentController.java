@@ -1,6 +1,7 @@
 package com.school.backend.controller;
 
 import com.school.backend.entity.Student;
+import com.school.backend.payload.request.StudentCreateRequest;
 import com.school.backend.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -48,8 +49,10 @@ public class StudentController {
         return ResponseEntity.ok(wards);
     }
 
+    // IDOR Protection: PARENT is restricted from directly accessing arbitrary student IDs.
+    // PARENT must use /my-wards instead.
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
         return studentService.getStudentById(id)
                 .map(ResponseEntity::ok)
@@ -58,8 +61,9 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Student createStudent(@RequestBody Student student) {
-        return studentService.saveStudent(student);
+    public ResponseEntity<Student> createStudent(@RequestBody StudentCreateRequest request) {
+        Student created = studentService.createStudentFromRequest(request);
+        return ResponseEntity.ok(created);
     }
 
     @DeleteMapping("/cleanup-duplicates")

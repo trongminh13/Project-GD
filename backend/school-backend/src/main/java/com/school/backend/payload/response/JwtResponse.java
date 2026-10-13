@@ -9,13 +9,22 @@ public class JwtResponse {
     private String type = "Bearer";
     private Long id;
     private String username;
-    private String email; // Optional, as User entity doesn't strictly have email but Teacher/Parent do.
+    private String email;
     private List<String> roles;
+    private Boolean mustChangePassword = false;
 
     public JwtResponse(String accessToken, Long id, String username, List<String> roles) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.roles = roles;
+    }
+
+    public JwtResponse(String accessToken, Long id, String username, List<String> roles, Boolean mustChangePassword) {
+        this.token = accessToken;
+        this.id = id;
+        this.username = username;
+        this.roles = roles;
+        this.mustChangePassword = mustChangePassword;
     }
 }

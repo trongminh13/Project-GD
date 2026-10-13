@@ -11,7 +11,7 @@ class AttendanceService {
   /// Fetches attendance records for a specific student
   Future<Map<DateTime, String>> getStudentAttendance(String studentId) async {
     final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/attendance/$studentId');
+    final url = Uri.parse('${ApiConstants.baseUrl}/attendance/student/$studentId');
 
     try {
       final response = await http.get(
@@ -27,17 +27,14 @@ class AttendanceService {
         Map<DateTime, String> attendanceMap = {};
         for (var record in data) {
           DateTime date = DateTime.parse(record['date']);
-          // ensure utc for table calendar
           attendanceMap[DateTime.utc(date.year, date.month, date.day)] =
               record['status'];
         }
         return attendanceMap;
       }
-    } catch (e) {
-      print('Error fetching attendance: $e');
+    } catch (_) {
+      // Empty on failure
     }
-
-    // No mock data — return empty if API fails
     return {};
   }
 
@@ -50,12 +47,11 @@ class AttendanceService {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/attendance/bulk');
 
-    // Convert boolean map (true: Present, false: Absent) to API friendly format
     List<Map<String, dynamic>> payload = [];
     attendanceData.forEach((studentId, isPresent) {
       payload.add({
-        'studentId': studentId,
-        'status': isPresent ? 'Present' : 'Absent',
+        'studentId': int.tryParse(studentId) ?? studentId,
+        'status': isPresent ? 'PRESENT' : 'ABSENT',
       });
     });
 
@@ -73,10 +69,9 @@ class AttendanceService {
         }),
       );
 
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error submitting attendance: $e');
-      return false; // Return failure on error
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (_) {
+      return false;
     }
   }
 }

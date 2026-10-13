@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:ashadeep/models/school_class.dart';
+import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/services/auth_service.dart';
 
 class ClassService {
   static final ClassService _instance = ClassService._internal();
@@ -9,11 +13,64 @@ class ClassService {
 
   ClassService._internal();
 
-  // Mock Data
   final List<SchoolClass> _classes = [];
 
   List<SchoolClass> getAllClasses() {
     return _classes;
+  }
+
+  /// Fetches classes from backend API and updates local cache
+  Future<List<SchoolClass>> fetchClassesFromBackend() async {
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/classes');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        _classes.clear();
+        for (var item in data) {
+          _classes.add(SchoolClass.fromJson(item));
+        }
+      }
+    } catch (_) {}
+
+    return _classes;
+  }
+
+  Future<bool> createClassBackend(String grade, String section) async {
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/classes');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'grade': grade,
+          'section': section.isNotEmpty ? section : 'A',
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final newClass = SchoolClass.fromJson(data);
+        _classes.add(newClass);
+        return true;
+      }
+    } catch (_) {}
+
+    return false;
   }
 
   void addClass(SchoolClass newClass) {
@@ -31,6 +88,7 @@ class ClassService {
       _classes[index] = SchoolClass(
         id: oldClass.id,
         grade: oldClass.grade,
+        section: oldClass.section,
         subjects: oldClass.subjects,
         classTeacherId: teacherId,
         classTeacherName: teacherName,
@@ -55,6 +113,7 @@ class ClassService {
       _classes[index] = SchoolClass(
         id: oldClass.id,
         grade: oldClass.grade,
+        section: oldClass.section,
         subjects: oldClass.subjects,
         classTeacherId: oldClass.classTeacherId,
         classTeacherName: oldClass.classTeacherName,
@@ -73,6 +132,7 @@ class ClassService {
       _classes[index] = SchoolClass(
         id: oldClass.id,
         grade: oldClass.grade,
+        section: oldClass.section,
         subjects: oldClass.subjects,
         classTeacherId: oldClass.classTeacherId,
         classTeacherName: oldClass.classTeacherName,
@@ -81,7 +141,6 @@ class ClassService {
       );
     }
   }
-  // --- Helper Queries ---
 
   SchoolClass? getClassByClassTeacherId(String teacherId) {
     try {
@@ -91,8 +150,6 @@ class ClassService {
     }
   }
 
-  // Returns a List of timtable slots for a specific teacher across all classes
-  // Map Structure: {'day': 'Monday', 'period': 1, 'subject': 'Math', 'class': '10-A'}
   List<Map<String, dynamic>> getTeacherSchedule(String teacherName) {
     List<Map<String, dynamic>> schedule = [];
 
@@ -108,7 +165,7 @@ class ClassService {
               'period': i + 1,
               'subject': subject,
               'class': schoolClass.grade,
-              'room': '201', // Mock Room
+              'room': '201',
             });
           }
         }
