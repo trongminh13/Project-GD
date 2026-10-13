@@ -52,8 +52,8 @@ class AuditLogScreen extends StatelessWidget {
               },
               leading: CircleAvatar(
                 backgroundColor: isSystem
-                    ? AppColors.warning.withOpacity(0.1)
-                    : AppColors.primaryOf(context).withOpacity(0.1),
+                    ? AppColors.warning.withValues(alpha: 0.1)
+                    : AppColors.primaryOf(context).withValues(alpha: 0.1),
                 child: Icon(
                   isSystem ? Icons.settings : Icons.security,
                   color: isSystem ? AppColors.warning : AppColors.primaryOf(context),

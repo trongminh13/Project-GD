@@ -269,8 +269,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
         ? [const Color(0xFF5C6BC0), const Color(0xFF3949AB)]
         : [const Color(0xFF1A237E), const Color(0xFF0D1454)];
     final shadowColor = isDark
-        ? const Color(0xFF5C6BC0).withOpacity(0.4)
-        : const Color(0xFF1A237E).withOpacity(0.4);
+        ? const Color(0xFF5C6BC0).withValues(alpha: 0.4)
+        : const Color(0xFF1A237E).withValues(alpha: 0.4);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -297,12 +297,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
               ],
             ),
             child: CircleAvatar(
               radius: 35,
-              backgroundColor: AppColors.primaryOf(context).withOpacity(0.15),
+              backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.15),
               child: Icon(
                 Icons.person_rounded,
                 size: 40,
@@ -321,7 +321,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -345,7 +345,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
                 Text(
                   "Adm No: $admNo | $className",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                   ),
                 ),

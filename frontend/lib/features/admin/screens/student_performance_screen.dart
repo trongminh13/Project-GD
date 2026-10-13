@@ -194,7 +194,7 @@ class _StudentPerformanceScreenState extends State<StudentPerformanceScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity(0.1)),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.1)),
           child: Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         ),
         const SizedBox(height: 8),

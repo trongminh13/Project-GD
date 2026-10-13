@@ -117,7 +117,7 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
                   Text(
                     'Enter teacher details to add to directory.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                     ),
                   ),
@@ -209,7 +209,7 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 5,
-                        shadowColor: AppColors.primaryOf(context).withOpacity(0.5),
+                        shadowColor: AppColors.primaryOf(context).withValues(alpha: 0.5),
                       ),
                       child: const Text(
                         'SAVE TEACHER',
@@ -290,7 +290,7 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
-        prefixIcon: Icon(icon, color: AppColors.primaryOf(context).withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: AppColors.primaryOf(context).withValues(alpha: 0.7)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.borderOf(context)),

@@ -121,7 +121,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryOf(context).withOpacity(0.3),
+                        color: AppColors.primaryOf(context).withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -166,7 +166,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
@@ -368,7 +368,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 12),

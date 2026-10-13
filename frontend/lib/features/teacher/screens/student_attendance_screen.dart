@@ -77,8 +77,8 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: isPresent
-                        ? AppColors.success.withOpacity(0.1)
-                        : AppColors.error.withOpacity(0.1),
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : AppColors.error.withValues(alpha: 0.1),
                     child: Text(
                       student.admissionNumber,
                       style: TextStyle(
@@ -167,7 +167,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                         _attendance,
                       );
 
-                  if (!mounted) return;
+                  if (!context.mounted) return;
 
                   if (success) {
                     int absentCount = _attendance.values

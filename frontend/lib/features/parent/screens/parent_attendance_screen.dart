@@ -129,7 +129,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                       calendarStyle: CalendarStyle(
                         outsideDaysVisible: false,
                         todayDecoration: BoxDecoration(
-                          color: AppColors.primaryOf(context).withOpacity(0.3),
+                          color: AppColors.primaryOf(context).withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
                         selectedDecoration: BoxDecoration(
@@ -278,7 +278,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -293,7 +293,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
           ),
           Text(
             label,
-            style: TextStyle(color: color.withOpacity(0.8), fontSize: 12),
+            style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 12),
           ),
         ],
       ),
@@ -338,7 +338,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry.value).withOpacity(0.1),
+                        color: _getStatusColor(entry.value).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -377,7 +377,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry.value).withOpacity(0.1),
+                        color: _getStatusColor(entry.value).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -407,12 +407,12 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = isDark
         ? [
-            const Color(0xFF5C6BC0).withOpacity(0.8),
-            const Color(0xFF3949AB).withOpacity(0.8),
+            const Color(0xFF5C6BC0).withValues(alpha: 0.8),
+            const Color(0xFF3949AB).withValues(alpha: 0.8),
           ]
         : [
-            const Color(0xFF1A237E).withOpacity(0.8),
-            const Color(0xFF0D1454).withOpacity(0.8),
+            const Color(0xFF1A237E).withValues(alpha: 0.8),
+            const Color(0xFF0D1454).withValues(alpha: 0.8),
           ];
 
     return Container(
@@ -469,7 +469,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
             Text(
               'No records for this day.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontStyle: FontStyle.italic,
               ),
             ),

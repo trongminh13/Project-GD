@@ -40,7 +40,7 @@ class TeacherDetailScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: AppColors.secondaryOf(context).withOpacity(0.1),
+                    backgroundColor: AppColors.secondaryOf(context).withValues(alpha: 0.1),
                     child: Icon(Icons.person, size: 40, color: AppColors.secondaryOf(context)),
                   ),
                   const SizedBox(width: 16),

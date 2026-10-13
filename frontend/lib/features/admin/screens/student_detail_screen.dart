@@ -68,7 +68,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundColor: AppColors.primaryOf(context).withOpacity(0.1),
+                backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.1),
                 backgroundImage: widget.student.photoUrl.startsWith('http')
                     ? NetworkImage(widget.student.photoUrl)
                     : AssetImage(widget.student.photoUrl) as ImageProvider,
@@ -182,7 +182,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
         leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.1),
+          backgroundColor: statusColor.withValues(alpha: 0.1),
           child: Icon(statusIcon, color: statusColor),
         ),
         title: Text(

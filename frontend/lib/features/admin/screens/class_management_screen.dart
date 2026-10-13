@@ -265,7 +265,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
               leading: CircleAvatar(
-                backgroundColor: AppColors.secondaryOf(context).withOpacity(0.1),
+                backgroundColor: AppColors.secondaryOf(context).withValues(alpha: 0.1),
                 child: Text(
                   schoolClass.grade,
                   style: TextStyle(

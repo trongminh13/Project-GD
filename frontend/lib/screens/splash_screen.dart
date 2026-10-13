@@ -67,11 +67,13 @@ class _SplashScreenState extends State<SplashScreen>
         final isValid = await _validateToken(token);
         if (!isValid) {
           await AuthService().logout();
+          if (!mounted) return;
           _navigateToLogin();
           return;
         }
 
         final user = User.fromJson(userData);
+        if (!mounted) return;
 
         if (user.role == UserRole.admin) {
           Navigator.of(context).pushReplacement(
@@ -101,6 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
 
+    if (!mounted) return;
     _navigateToLogin();
   }
 
@@ -146,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

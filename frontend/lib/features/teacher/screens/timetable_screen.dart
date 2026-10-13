@@ -77,7 +77,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.white
-                          : Colors.white.withOpacity(0.2),
+                          : Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
@@ -123,9 +123,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
                 return Card(
                   elevation: isNow ? 8 : 2,
-                  shadowColor: isNow ? AppColors.primaryOf(context).withOpacity(0.4) : null,
+                  shadowColor: isNow ? AppColors.primaryOf(context).withValues(alpha: 0.4) : null,
                   color: isNow
-                      ? AppColors.primaryOf(context).withOpacity(0.08)
+                      ? AppColors.primaryOf(context).withValues(alpha: 0.08)
                       : (isPast ? AppColors.surfaceAltOf(context) : Theme.of(context).colorScheme.surface),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

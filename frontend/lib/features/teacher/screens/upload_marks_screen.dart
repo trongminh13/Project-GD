@@ -93,7 +93,7 @@ class _UploadMarksScreenState extends State<UploadMarksScreen> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.primaryOf(context).withOpacity(0.1),
+                      backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.1),
                       child: Icon(Icons.assignment, color: AppColors.primaryOf(context)),
                     ),
                     title: Text(

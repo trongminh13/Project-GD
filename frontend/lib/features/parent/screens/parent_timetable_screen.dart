@@ -111,12 +111,12 @@ class _ParentTimetableScreenState extends State<ParentTimetableScreen>
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isBreak
-                ? AppColors.warning.withOpacity(0.08)
+                ? AppColors.warning.withValues(alpha: 0.08)
                 : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isBreak
-                  ? AppColors.warning.withOpacity(0.3)
+                  ? AppColors.warning.withValues(alpha: 0.3)
                   : AppColors.borderOf(context),
             ),
           ),
@@ -129,8 +129,8 @@ class _ParentTimetableScreenState extends State<ParentTimetableScreen>
                 ),
                 decoration: BoxDecoration(
                   color: isBreak
-                      ? AppColors.warning.withOpacity(0.15)
-                      : AppColors.primaryOf(context).withOpacity(0.1),
+                      ? AppColors.warning.withValues(alpha: 0.15)
+                      : AppColors.primaryOf(context).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

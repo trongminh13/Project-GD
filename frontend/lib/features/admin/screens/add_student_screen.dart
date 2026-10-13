@@ -196,7 +196,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   Text(
                     'Ensure all details are correct before saving.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                     ),
                   ),
@@ -301,7 +301,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 5,
-                        shadowColor: AppColors.primaryOf(context).withOpacity(0.5),
+                        shadowColor: AppColors.primaryOf(context).withValues(alpha: 0.5),
                       ),
                       child: const Text(
                         'SAVE STUDENT',
@@ -379,7 +379,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey[600]),
-        prefixIcon: Icon(icon, color: AppColors.primaryOf(context).withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: AppColors.primaryOf(context).withValues(alpha: 0.7)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[200]!),

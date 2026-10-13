@@ -168,7 +168,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isAbsent ? AppColors.error.withOpacity(0.1) : AppColors.success.withOpacity(0.1),
+              color: isAbsent ? AppColors.error.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(status, style: TextStyle(color: isAbsent ? AppColors.error : AppColors.success, fontWeight: FontWeight.bold, fontSize: 12)),

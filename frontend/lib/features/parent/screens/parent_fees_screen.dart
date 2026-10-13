@@ -182,13 +182,13 @@ class _ParentFeesScreenState extends State<ParentFeesScreen>
                               Text(
                                 "Total Pending",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 16,
                                 ),
                               ),
                               Icon(
                                 Icons.school,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 size: 30,
                               ),
                             ],
@@ -208,7 +208,7 @@ class _ParentFeesScreenState extends State<ParentFeesScreen>
                               Text(
                                 "Due by 10 Oct 2025",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 14,
                                 ),
                               ),
@@ -240,8 +240,8 @@ class _ParentFeesScreenState extends State<ParentFeesScreen>
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isPaid
-                                  ? AppColors.success.withOpacity(0.1)
-                                  : AppColors.warning.withOpacity(0.1),
+                                  ? AppColors.success.withValues(alpha: 0.1)
+                                  : AppColors.warning.withValues(alpha: 0.1),
                             ),
                           ),
                           child: Row(
@@ -299,7 +299,7 @@ class _ParentFeesScreenState extends State<ParentFeesScreen>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.success.withOpacity(
+                                        color: AppColors.success.withValues(alpha: 
                                           0.1,
                                         ),
                                         borderRadius: BorderRadius.circular(20),

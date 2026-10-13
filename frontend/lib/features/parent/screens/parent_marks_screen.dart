@@ -104,8 +104,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
         ? [const Color(0xFF5C6BC0), const Color(0xFF3949AB)]
         : [const Color(0xFF1A237E), const Color(0xFF0D1454)];
     final shadowColor = isDark
-        ? const Color(0xFF5C6BC0).withOpacity(0.4)
-        : const Color(0xFF1A237E).withOpacity(0.4);
+        ? const Color(0xFF5C6BC0).withValues(alpha: 0.4)
+        : const Color(0xFF1A237E).withValues(alpha: 0.4);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -130,7 +130,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
           Text(
             "Overall Performance",
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -148,7 +148,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -194,7 +194,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryOf(context).withOpacity(0.1),
+                        color: AppColors.primaryOf(context).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -242,7 +242,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withOpacity(0.2),
+                            color: AppColors.warning.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

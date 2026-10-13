@@ -310,7 +310,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                               },
                               child: Container(
                                 color: isSelected
-                                    ? AppColors.primaryOf(context).withOpacity(0.08)
+                                    ? AppColors.primaryOf(context).withValues(alpha: 0.08)
                                     : null,
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.symmetric(
@@ -327,7 +327,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                       : CircleAvatar(
                                           radius: 24,
                                           backgroundColor: AppColors.primaryOf(context)
-                                              .withOpacity(0.1),
+                                              .withValues(alpha: 0.1),
                                           child: Text(
                                             student.name.isNotEmpty
                                                 ? student.name

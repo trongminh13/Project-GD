@@ -30,22 +30,12 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Only run Excel import if no students exist (prevents duplicates on restart)
+        // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
         if (studentRepository.count() == 0) {
-            try {
-                java.io.File file = new java.io.File(
-                        "d:/misc/Java/Student Management System/St. james Convent School Student details.xlsx");
-                if (file.exists()) {
-                    System.out.println("Starting direct data migration from known Excel file...");
-                    String result = dataMigrationService.processExcelData(new java.io.FileInputStream(file));
-                    System.out.println("Migration Result: " + result);
-                }
-            } catch (Exception e) {
-                System.err.println("Migration on startup failed: " + e.getMessage());
-            }
+            System.out.println("No students found. Please use the Admin Dashboard > Bulk Import to load student data.");
         } else {
             System.out.println(
-                    "Students already exist in database (" + studentRepository.count() + "). Skipping Excel import.");
+                    "Students already exist in database (" + studentRepository.count() + "). Skipping import.");
         }
         // Create or Update Admin to ensure password is known
         User admin = userRepository.findByUsername("admin").orElse(new User());

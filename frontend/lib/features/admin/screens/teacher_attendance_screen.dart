@@ -87,7 +87,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                     ), // Reduced padding for compact look
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.primaryOf(context).withOpacity(0.1),
+                        backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.1),
                         child: Text(
                           teacher['name'][0],
                           style: TextStyle(

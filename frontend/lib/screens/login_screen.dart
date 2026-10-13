@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await _authService.sendOtpBackend(_idController.text.trim());
 
     setState(() => _isLoading = false);
+    if (!mounted) return;
 
     if (result['success'] == true) {
       setState(() => _isOtpSent = true);
@@ -76,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) FocusScope.of(context).requestFocus(_otpFocusNode);
       });
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
@@ -470,7 +472,7 @@ class _LoginScreenState extends State<LoginScreen> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 4,
                     ),
                   ]

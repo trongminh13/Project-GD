@@ -204,7 +204,7 @@ class _ParentPerformanceScreenState extends State<ParentPerformanceScreen>
                                 toY: value,
                                 gradient: LinearGradient(
                                   colors: [
-                                    _getBarColor(value).withOpacity(0.7),
+                                    _getBarColor(value).withValues(alpha: 0.7),
                                     _getBarColor(value),
                                   ],
                                   begin: Alignment.bottomCenter,
@@ -257,8 +257,8 @@ class _ParentPerformanceScreenState extends State<ParentPerformanceScreen>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                _getGradeColor(exam['grade']).withOpacity(0.2),
-                                _getGradeColor(exam['grade']).withOpacity(0.05),
+                                _getGradeColor(exam['grade']).withValues(alpha: 0.2),
+                                _getGradeColor(exam['grade']).withValues(alpha: 0.05),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

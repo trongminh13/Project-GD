@@ -79,8 +79,9 @@ class ApiConstants {
   // URLs are now loaded dynamically based on the build environment:
   // - Release Mode (Play Store): Uses the secure production HTTPS domain
   // - Debug Mode (Local Dev): Uses the local IPv4 address from your `.env` file
+  // ⚠️ IMPORTANT: Replace this URL with your actual backend domain before releasing to production!
   static const String _productionUrl =
-      'https://api.yourdomain.com/api'; // [TODO: Replace with actual backend URL before release]
+      'https://api.yourdomain.com/api'; // TODO: Set this to your deployed backend URL
 
   static String get baseUrl {
     if (kReleaseMode) {

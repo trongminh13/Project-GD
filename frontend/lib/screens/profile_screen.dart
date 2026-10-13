@@ -197,7 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 50,
                       backgroundColor: AppColors.primaryOf(
                         context,
-                      ).withOpacity(0.1),
+                      ).withValues(alpha: 0.1),
                       child: Icon(
                         Icons.person,
                         size: 60,

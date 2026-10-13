@@ -95,7 +95,7 @@ class _EnterMarksScreenState extends State<EnterMarksScreen> {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: AppColors.primaryOf(context).withOpacity(0.1),
+                          backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.1),
                           child: Text(
                             student.admissionNumber,
                             style: TextStyle(
@@ -164,7 +164,7 @@ class _EnterMarksScreenState extends State<EnterMarksScreen> {
                 ),
                 onPressed: widget.assessment.isLocked
                     ? null
-                    : () {
+                    : () async {
                         // Validate all inputs
                         bool isValid = true;
                         for (var controller in _marksControllers.values) {
@@ -191,14 +191,13 @@ class _EnterMarksScreenState extends State<EnterMarksScreen> {
                           }
 
                           // Use MarksService to upload to backend
-                          MarksService()
+                          final success = await MarksService()
                               .uploadClassMarks(
                                 widget.assessment.className,
                                 widget.assessment.id,
                                 marksData,
-                              )
-                              .then((success) {
-                                if (!mounted) return;
+                              );
+                                if (!context.mounted) return;
                                 if (success) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -217,7 +216,6 @@ class _EnterMarksScreenState extends State<EnterMarksScreen> {
                                     ),
                                   );
                                 }
-                              });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

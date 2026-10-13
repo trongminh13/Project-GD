@@ -88,7 +88,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                     contentPadding: const EdgeInsets.all(12),
                     leading: CircleAvatar(
                       radius: 28,
-                      backgroundColor: isPresent ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                      backgroundColor: isPresent ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
                       child: Text(
                         teacher.name.isNotEmpty ? teacher.name.substring(0, 1) : 'T',
                         style: TextStyle(

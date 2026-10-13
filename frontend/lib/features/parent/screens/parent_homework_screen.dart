@@ -141,7 +141,7 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: _getSubjectColor(task['subject']).withOpacity(0.1),
+                      color: _getSubjectColor(task['subject']).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
