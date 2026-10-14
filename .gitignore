@@ -159,3 +159,7 @@ backend/school-backend/boot.log
 *.dump
 *.sql.bak
 *.tar
+
+# Demo & Mockups
+Demo*.html
+"Demo ứng dụng giáo dục.html"

@@ -39,6 +39,15 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     SchoolClassRepository schoolClassRepository;
 
+    @Autowired
+    com.school.backend.repository.AcademicYearRepository academicYearRepository;
+
+    @Autowired
+    com.school.backend.repository.SubjectRepository subjectRepository;
+
+    @Autowired
+    com.school.backend.repository.TeachingAssignmentRepository teachingAssignmentRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
@@ -48,16 +57,56 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println(
                     "Students already exist in database (" + studentRepository.count() + "). Skipping import.");
         }
-        // Create or Update Admin to ensure password is known
-        User admin = userRepository.findByUsername("admin").orElse(new User());
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setRole(Role.ADMIN);
-        userRepository.save(admin);
-        System.out.println("Admin user updated/created: admin / admin123");
+        // Create Admin user only if not already existing (preserve existing credentials)
+        userRepository.findByUsername("admin").ifPresentOrElse(
+                existingAdmin -> System.out.println("Admin user already exists. Skipping password reset to preserve credentials."),
+                () -> {
+                    User admin = new User();
+                    admin.setUsername("admin");
+                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    admin.setRole(Role.ADMIN);
+                    userRepository.save(admin);
+                    System.out.println("Initial admin user created: admin / admin123");
+                }
+        );
 
-        // Create Teacher
-        User teacherUser = userRepository.findByUsername("T001").orElseGet(() -> {
+        // Seed AcademicYear
+        com.school.backend.entity.AcademicYear currentYear = academicYearRepository.findByIsCurrentTrue().orElseGet(() -> {
+            com.school.backend.entity.AcademicYear ay = new com.school.backend.entity.AcademicYear();
+            ay.setName("2026-2027");
+            ay.setStartDate(java.time.LocalDate.of(2026, 9, 1));
+            ay.setEndDate(java.time.LocalDate.of(2027, 6, 30));
+            ay.setIsCurrent(true);
+            ay.setStatus("ACTIVE");
+            return academicYearRepository.save(ay);
+        });
+
+        // Seed Subjects
+        com.school.backend.entity.Subject math = subjectRepository.findByName("Mathematics").orElseGet(() -> {
+            com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
+            s.setName("Mathematics");
+            s.setCode("MATH101");
+            return subjectRepository.save(s);
+        });
+
+        com.school.backend.entity.Subject english = subjectRepository.findByName("English").orElseGet(() -> {
+            com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
+            s.setName("English");
+            s.setCode("ENG101");
+            return subjectRepository.save(s);
+        });
+
+        subjectRepository.findByName("Science").orElseGet(() -> {
+            com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
+            s.setName("Science");
+            s.setCode("SCI101");
+            return subjectRepository.save(s);
+        });
+
+        List<SchoolClass> classes = schoolClassRepository.findAll();
+
+        // 1. Teacher T001: Homeroom & Math Teacher of Class 1
+        User teacherUser1 = userRepository.findByUsername("T001").orElseGet(() -> {
             User teacher = new User();
             teacher.setUsername("T001");
             teacher.setPassword(passwordEncoder.encode("teacher123"));
@@ -65,24 +114,93 @@ public class DataSeeder implements CommandLineRunner {
             return userRepository.save(teacher);
         });
 
-        if (teacherRepository.findByUserId(teacherUser.getId()).isEmpty()) {
-            Teacher devTeacher = new Teacher();
-            devTeacher.setUser(teacherUser);
-            devTeacher.setName("Rajesh Sharma");
-            devTeacher.setEmail("teacher@ashadeep.edu");
-            devTeacher.setPhone("9876543210");
-            devTeacher.setQualification("M.Sc Mathematics, B.Ed");
-            devTeacher.setSubjectSpecialization("Mathematics");
-            devTeacher = teacherRepository.save(devTeacher);
+        Teacher devTeacher = teacherRepository.findByUserId(teacherUser1.getId()).orElseGet(() -> {
+            Teacher t = new Teacher();
+            t.setUser(teacherUser1);
+            t.setName("Rajesh Sharma");
+            t.setEmail("teacher@ashadeep.edu");
+            t.setPhone("9876543210");
+            t.setQualification("M.Sc Mathematics, B.Ed");
+            t.setSubjectSpecialization("Mathematics");
+            return teacherRepository.save(t);
+        });
 
-            List<SchoolClass> classes = schoolClassRepository.findAll();
-            if (!classes.isEmpty() && classes.get(0).getClassTeacher() == null) {
-                SchoolClass sc = classes.get(0);
+        if (!classes.isEmpty()) {
+            SchoolClass sc = classes.get(0);
+            if (sc.getClassTeacher() == null) {
                 sc.setClassTeacher(devTeacher);
-                schoolClassRepository.save(sc);
             }
-            System.out.println("Teacher profile created & linked: T001 (Rajesh Sharma)");
+            if (sc.getHomeroomTeacher() == null) {
+                sc.setHomeroomTeacher(devTeacher);
+            }
+            schoolClassRepository.save(sc);
+
+            if (teachingAssignmentRepository.findByTeacherIdAndSchoolClassIdAndAcademicYearIsCurrentTrue(devTeacher.getId(), sc.getId()).isEmpty()) {
+                com.school.backend.entity.TeachingAssignment ta = new com.school.backend.entity.TeachingAssignment();
+                ta.setTeacher(devTeacher);
+                ta.setSchoolClass(sc);
+                ta.setSubject(math);
+                ta.setAcademicYear(currentYear);
+                ta.setAssignmentType("HOMEROOM_AND_SUBJECT");
+                teachingAssignmentRepository.save(ta);
+            }
         }
+        System.out.println("Teacher profile T001 created & linked as Homeroom Teacher");
+
+        // 2. Teacher T002: English Subject Teacher of Class 1 (NOT Homeroom)
+        User teacherUser2 = userRepository.findByUsername("T002").orElseGet(() -> {
+            User teacher = new User();
+            teacher.setUsername("T002");
+            teacher.setPassword(passwordEncoder.encode("teacher123"));
+            teacher.setRole(Role.TEACHER);
+            return userRepository.save(teacher);
+        });
+
+        Teacher teacher2 = teacherRepository.findByUserId(teacherUser2.getId()).orElseGet(() -> {
+            Teacher t = new Teacher();
+            t.setUser(teacherUser2);
+            t.setName("Priya Singh");
+            t.setEmail("priya@ashadeep.edu");
+            t.setPhone("9876543211");
+            t.setQualification("M.A English, B.Ed");
+            t.setSubjectSpecialization("English");
+            return teacherRepository.save(t);
+        });
+
+        if (!classes.isEmpty()) {
+            SchoolClass sc = classes.get(0);
+            if (teachingAssignmentRepository.findByTeacherIdAndSchoolClassIdAndAcademicYearIsCurrentTrue(teacher2.getId(), sc.getId()).isEmpty()) {
+                com.school.backend.entity.TeachingAssignment ta = new com.school.backend.entity.TeachingAssignment();
+                ta.setTeacher(teacher2);
+                ta.setSchoolClass(sc);
+                ta.setSubject(english);
+                ta.setAcademicYear(currentYear);
+                ta.setAssignmentType("SUBJECT_TEACHER");
+                teachingAssignmentRepository.save(ta);
+            }
+        }
+        System.out.println("Teacher profile T002 created & linked as Subject Teacher");
+
+        // 3. Teacher T003: Stranger Teacher (No assignment to Class 1)
+        User teacherUser3 = userRepository.findByUsername("T003").orElseGet(() -> {
+            User teacher = new User();
+            teacher.setUsername("T003");
+            teacher.setPassword(passwordEncoder.encode("teacher123"));
+            teacher.setRole(Role.TEACHER);
+            return userRepository.save(teacher);
+        });
+
+        teacherRepository.findByUserId(teacherUser3.getId()).orElseGet(() -> {
+            Teacher t = new Teacher();
+            t.setUser(teacherUser3);
+            t.setName("Amit Patel");
+            t.setEmail("amit@ashadeep.edu");
+            t.setPhone("9876543212");
+            t.setQualification("M.Sc Physics, B.Ed");
+            t.setSubjectSpecialization("Science");
+            return teacherRepository.save(t);
+        });
+        System.out.println("Teacher profile T003 created as unassigned teacher");
 
         // Demo parent creation removed - use Excel import or admin dashboard to add parents
 

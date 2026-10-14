@@ -1,146 +1,136 @@
 # BÁO CÁO KIỂM ĐỊNH CHẤT LƯỢNG TOÀN DIỆN (SENIOR QA AUDIT REPORT)
 **Dự án**: Hệ thống Quản trị & Sổ liên lạc Giáo dục Astra (Project-GD)  
-**Phân hệ**: Backend (Spring Boot 3.5) & Frontend (Flutter)  
-**Phiên bản kiểm toán**: Phase 1 Foundation & LMS Release  
+**Phân hệ**: Backend (Spring Boot 3.5 / Java 21) & Frontend (Flutter)  
+**Phiên bản kiểm toán**: Phase 1 Foundation & LMS Hardened Release  
 **Người kiểm định**: Senior QA Engineer & Security Auditor  
 **Tài liệu đối soát kiến trúc**: [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/quan-he-du-lieu.md)  
-**Thời gian thực hiện**: 14/10/2026  
+**Thời gian cập nhật**: 14/10/2026  
 
 ---
 
-## 1. TỔNG QUAN ĐỢT KIỂM THỬ (EXECUTIVE SUMMARY)
+## 1. TỔNG QUAN ĐỢT KIỂM ĐỊNH (EXECUTIVE SUMMARY)
 
-Đợt kiểm thử chất lượng này được thực hiện với tiêu chuẩn Senior QA nhằm rà soát toàn bộ hệ thống sau giai đoạn phát triển mở rộng Phase 1. Trọng tâm của đợt kiểm định bao gồm:
-1. **Kiểm tra tính nhất quán mô hình dữ liệu**: Đối soát toàn bộ các bảng quan hệ 1-1, 1-N, N-N mới theo đúng đặc tả kiến trúc trong [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/quan-he-du-lieu.md).
-2. **Kiểm tra an toàn bảo mật ReBAC (Relationship-Based Access Control)**: Đảm bảo kiểm soát quyền truy cập ở phía máy chủ (Server-side Enforcement) theo quy tắc chuỗi quan hệ dữ liệu: "Ai thấy gì - Dựa vào quan hệ thực tế chứ không dựa vào bộ lọc giao diện".
-3. **Kiểm thử logic nghiệp vụ & Chức năng**: Điểm danh buổi học, phê duyệt nghỉ phép liên thông, soạn và giao bài tập, động cơ tự động chấm điểm trắc nghiệm (Auto-Grading) và phân phối học liệu số.
-4. **Kiểm tra mã nguồn & Tiêu chuẩn kỹ thuật**: Thực thi toàn bộ Unit/Integration Tests Backend (`./mvnw test`) và Phân tích tĩnh mã nguồn Flutter (`flutter analyze`).
+Đợt kiểm định chất lượng và gia cố hệ thống (Hardening) được triển khai nhằm giải quyết triệt để các rủi ro kiến trúc, an toàn bảo mật quan hệ (ReBAC/IDOR), tính toàn vẹn dữ liệu trong LMS và cơ chế di chuyển dữ liệu Flyway:
 
-### Kết Quả Tổng Thể:
-* **Backend Build & Test**: ✅ **PASS (8/8 tests passed, 0 failures, 0 errors)**
-* **Frontend Static Analysis**: ✅ **PASS (0 compile errors, 0 blockers)**
-* **Bảo mật ReBAC & IDOR**: ✅ **Đã rà soát & khắc phục triệt để các lỗ hổng phát hiện**
-* **Mức độ sẵn sàng vận hành**: ✅ **ĐẠT CHUẨN NGHIỆM THU (READY FOR STAGING/PROD)**
-
----
-
-## 2. TỔNG HỢP NHỮNG TÍNH NĂNG ĐÃ THỰC HIỆN VÀ KIỂM TRA
-
-### 2.1. Phân hệ Nền tảng Thực thể & Quan hệ Cốt lõi (Core Foundations)
-* **Thực thể đã thiết kế & kiểm chứng**:
-  * `AcademicYear`: Quản lý năm học (ví dụ: `2026-2027`), cờ kích hoạt `isCurrent`.
-  * `Enrollment`: Bảng nối N-N giữa `Student` ↔ `SchoolClass` theo từng năm học với ràng buộc nghiệp vụ học sinh chuyển lớp qua các năm.
-  * `GuardianStudent`: Bảng nối N-N giữa `Parent` ↔ `Student` phân rõ mối quan hệ (`GUARDIAN`, `FATHER`, `MOTHER`) và cờ `isPrimary`.
-  * `TeachingAssignment`: Bảng nối 3 bên giữa `Teacher` ↔ `SchoolClass` ↔ `Subject` theo niên khóa, xác định giáo viên nào dạy môn nào cho lớp nào.
-* **Cơ chế Dual-Write & Dual-Read**:
-  * Khi tạo/cập nhật học sinh qua `StudentService`, dữ liệu đồng thời được ghi vào cấu trúc cũ và cấu trúc mới (`Enrollment`, `GuardianStudent`).
-  * API đối soát dữ liệu `/api/admin/migration/reconciliation` kiểm tra sai lệch số lượng bản ghi giữa 2 cấu trúc.
-
-### 2.2. Phân hệ Điểm danh & Đơn xin nghỉ phép (Attendance & Leave Requests)
-* **Thực thể**:
-  * `AttendanceSession`: Ghi nhận từng buổi điểm danh của lớp theo ngày, giáo viên ghi nhận và trạng thái buổi.
-  * `AttendanceRecord`: Trạng thái điểm danh chi tiết từng học sinh trong buổi (`PRESENT`, `ABSENT`, `LATE`, `LEAVE`).
-  * `LeaveRequest`: Đơn xin nghỉ phép do phụ huynh gửi, bao gồm khoảng thời gian nghỉ, lý do, trạng thái (`PENDING`, `APPROVED`, `REJECTED`).
-* **Luồng liên thông tự động**:
-  * Khi Giáo viên Chủ nhiệm duyệt đơn (`APPROVED`), hệ thống tự động cập nhật bản ghi điểm danh trong toàn bộ khoảng thời gian nghỉ thành trạng thái `LEAVE` (Có phép).
-  * Chặn gửi 2 đơn nghỉ trùng thời gian cho cùng 1 học sinh.
-
-### 2.3. Phân hệ Bài tập về nhà & Tự động chấm điểm (LMS & Homework Engine)
-* **Thực thể**:
-  * `Homework`: Nội dung bài tập tái sử dụng theo môn học và giáo viên soạn.
-  * `Question` & `QuestionOption`: Câu hỏi với 4 dạng (Trắc nghiệm 1 đáp án `SINGLE_CHOICE`, Nhiều đáp án `MULTIPLE_CHOICE`, Đúng/Sai `TRUE_FALSE`, Tự luận `ESSAY`).
-  * `HomeworkAssignment`: Việc giao bài tập cho một lớp học cụ thể với hạn nộp (`dueDate`) và cờ cho phép nộp muộn (`allowLateSubmission`).
-  * `Submission`, `Answer`, `AnswerOption`: Bài làm học sinh, các câu trả lời và lựa chọn chi tiết.
-* **Động cơ Auto-Grading & Chấm điểm**:
-  * Thuật toán tự động chấm điểm trắc nghiệm ngay khi học sinh bấm nộp bài.
-  * Nếu bài tập 100% trắc nghiệm: Tự động tính điểm tổng kết và chuyển trạng thái sang `GRADED`.
-  * Nếu bài tập có câu tự luận: Điểm trắc nghiệm được lưu vào `autoScore`, trạng thái `SUBMITTED`, chờ giáo viên chấm tay câu tự luận và cho điểm cuối cùng (`finalScore`).
-  * Bảo mật đề thi: Đáp án đúng (`isCorrect`, `correctAnswerText`) bị ẩn tuyệt đối khi học sinh đang làm bài, chỉ hiển thị sau khi đã nộp hoặc được chấm điểm.
-
-### 2.4. Phân hệ Học liệu số (Digital Materials)
-* Quản lý bài giảng/tài liệu theo môn học, phiên bản tệp đính kèm (`MaterialFile`), xuất bản cho các lớp học (`MaterialClass`).
-* Học sinh chỉ xem được học liệu khi trạng thái là `PUBLISHED` và lớp mình nằm trong danh sách được nhận.
+1. **Gia cố bảo mật ReBAC (Relationship-Based Access Control) & Triệt tiêu IDOR**:
+   * Tập trung hóa toàn bộ logic xác thực quan hệ vào [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java).
+   * **ISSUE-01 (Đơn nghỉ phép)**: Phụ huynh chỉ được xem con của mình (`guardian_students`), Giáo viên chỉ được xem/duyệt học sinh lớp mình chủ nhiệm (`classes.homeroom_teacher_id`). Giáo viên bộ môn không có quyền duyệt đơn nghỉ và sẽ nhận `403 Forbidden`.
+   * **ISSUE-02 (Lịch sử lớp học Enrollment)**: Xóa bỏ lỗ hổng kiểm tra theo role chung. Áp dụng quy tắc quan hệ chặt chẽ: Phụ huynh chỉ xem con mình, Học sinh chỉ xem chính mình, Giáo viên chỉ xem học sinh thuộc lớp mình dạy; các trường hợp vi phạm đều bị chặn với mã HTTP chuẩn `403 Forbidden`.
+2. **Quản lý phiên bản CSDL Flyway an toàn & Khắc phục thiếu Baseline**:
+   * Bổ sung [`V1__initial_schema.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V1__initial_schema.sql) mô tả toàn bộ schema cơ sở (users, teachers, classes, parents, students, subjects, attendance, marks, fees).
+   * Tích hợp `flyway-core` và `flyway-database-postgresql` vào `pom.xml`.
+   * Cấu hình an toàn `spring.flyway.baseline-on-migrate=true` và `spring.flyway.baseline-version=0`: Giúp ứng dụng khởi động an toàn trên cả Database trống (chạy tuần tự V1..V4) lẫn Database đã có dữ liệu (đánh dấu baseline version 0 và chạy các script idempotent mà không làm gãy schema).
+3. **Động cơ LMS & Tự động chấm điểm (Auto-Grading)**:
+   * Bổ sung hỗ trợ dạng câu hỏi Điền câu trả lời ngắn (`SHORT_ANSWER`).
+   * Chuẩn hóa Unicode NFC (`java.text.Normalizer`) tránh lỗi lệch bảng mã gõ tiếng Việt giữa bàn phím tổ hợp và dựng sẵn; loại bỏ khoảng trắng thừa (`trim` và regex `\\s+`).
+   * Hỗ trợ danh sách đáp án chấp nhận phân tách bởi dấu gạch đứng `|` trong `correctAnswerText` (ví dụ: `Hà Nội|Ha Noi|TP Hà Nội`).
+   * Xác thực tính toàn vẹn: Kiểm tra câu hỏi nộp lên phải thuộc đúng bài tập được giao, ngăn chặn chèn `questionId` ngoại lai.
+   * Đồng bộ thời gian máy chủ về UTC (`TimeZone.setDefault(TimeZone.getTimeZone("UTC"))`) đảm bảo tính toán hạn nộp `dueDate` và cờ `isLate` nhất quán.
+4. **Bảo vệ tải tài liệu học liệu số (Digital Materials & ReBAC)**:
+   * Thêm endpoint bảo mật `GET /api/materials/files/{fileId}/download`.
+   * Xác thực quyền tải file qua `SchoolAccessPolicy`: Tệp phải thuộc học liệu `PUBLISHED` và phải kiểm tra đúng quan hệ:
+     * Học sinh: Phải thuộc đúng lớp được phân phối học liệu.
+     * Phụ huynh: Phải có con ruột (`guardian_students`) đang học ở lớp được phân phối học liệu.
+     * Giáo viên: Phải là tác giả biên soạn, hoặc là GVCN/GV bộ môn được phân công dạy lớp được phân phối học liệu.
+   * Xóa bỏ hoàn toàn cơ chế sinh file giả mạo khi thiếu file vật lý, trả về chuẩn HTTP `404 Not Found`.
+   * Ngăn chặn triệt để tấn công vượt thư mục (Path Traversal Protection) bằng `Path.normalize()` và kiểm tra tiền tố đường dẫn hợp lệ.
+5. **Bảo toàn CSDL & Cô lập Môi trường Kiểm thử (Rule 6 Compliance)**:
+   * Xóa bỏ hoàn toàn các lệnh `deleteAll()` không điều kiện trên các bảng nghiệp vụ trong bộ kiểm thử.
+   * Áp dụng dọn dẹp có chủ đích (targeted cleanup) theo tiền tố test ID/username, bảo vệ 100% dữ liệu gốc trong CSDL.
+   * Bảo vệ tài khoản `admin` trong `DataSeeder.java` không bị reset mật khẩu khi khởi động lại server.
 
 ---
 
-## 3. CÁC ĐIỂM BẤT THƯỜNG ĐÃ PHÁT HIỆN VÀ PHƯƠNG ÁN KHẮC PHỤC TRIỆT ĐỂ
+## 2. KẾT QUẢ KIỂM THỬ THỰC TẾ (VERIFIED TEST RESULTS)
 
-Trong quá trình Senior QA Audit, đã phát hiện **05 bất thường** (bao gồm 02 rủi ro bảo mật ReBAC nghiêm trọng, 01 lỗi logic toàn vẹn dữ liệu, và các cảnh báo deprecated). Toàn bộ đã được lên phương án sửa chữa và khắc phục thành công:
+*Lưu ý: Toàn bộ kết quả kiểm thử dưới đây được thực thi và chứng thực trực tiếp trên môi trường máy chủ cục bộ với PostgreSQL 18.6.*
 
-| Mã phát hiện | Vị trí | Mức độ | Mô tả bất thường | Phương án & Kết quả đã khắc phục |
-|---|---|---|---|---|
-| **ISSUE-01** | `LeaveRequestController.java` & `LeaveRequestService.java` | **CRITICAL** (Security BOLA / IDOR) | Endpoint `GET /api/leave-requests/student/{studentId}` cho phép bất kỳ phụ huynh nào xem đơn nghỉ phép của học sinh lớp khác mà không kiểm tra liên kết giám hộ. | Đã bổ sung xác thực ngữ cảnh ReBAC: Phụ huynh chỉ được xem con của mình (kiểm tra qua `guardianStudentRepository`); Giáo viên chỉ được xem học sinh lớp mình chủ nhiệm/giảng dạy. |
-| **ISSUE-02** | `EnrollmentController.java` | **HIGH** (Security) | Endpoint `GET /api/enrollments/student/{studentId}` không có `@PreAuthorize`, bất kỳ ai đăng nhập đều xem được lịch sử học tập của mọi học sinh. | Đã bổ sung `@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT') or hasAuthority('STUDENT')")`. |
-| **ISSUE-03** | `StudentHomeworkService.java` | **MEDIUM** (Data Integrity) | Khi lưu câu trả lời học sinh, hệ thống không kiểm tra `optionId` gửi lên có thuộc về `questionId` tương ứng hay không. | Đã thêm điều kiện kiểm tra `opt.getQuestion().getId().equals(question.getId())` trước khi liên kết `AnswerOption`. |
-| **ISSUE-04** | `teacher_create_homework_screen.dart` & `teacher_homework_list_screen.dart` | **LOW** (Flutter Deprecation) | Sử dụng thuộc tính `value` trong `DropdownButtonFormField` gây ra cảnh báo `deprecated_member_use` trên Flutter mới. | Đã chuyển đổi sang `initialValue` đúng chuẩn Flutter 3.33+. |
-| **ISSUE-05** | `ReadExcelHeaders.java` | **TRIVIAL** (Code Hygiene) | File tiện ích thử nghiệm nằm trong `src/main/java/com/school/backend/` nhưng thiếu khai báo package. | Đã bổ sung `package com.school.backend;` chuẩn hóa mã nguồn. |
+### 2.1. Kiểm thử Tích hợp Tự động Backend (`./mvnw test`)
+* **Tổng số ca kiểm thử**: **15 / 15 tests PASSED (0 failures, 0 errors, 0 skipped)**
+* **Chi tiết bộ test ReBAC & LMS** ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):
+  * ✅ `testEnrollment_ParentReBAC`: Phụ huynh xem con mình -> **200 OK**; xem con người khác -> **403 Forbidden**.
+  * ✅ `testEnrollment_StudentReBAC`: Học sinh xem chính mình -> **200 OK**; xem bạn cùng lớp/khác lớp -> **403 Forbidden**.
+  * ✅ `testLeaveRequest_ReviewPermissions`: Giáo viên chủ nhiệm duyệt đơn -> **200 OK**; Giáo viên bộ môn cố tình duyệt đơn -> **403 Forbidden**.
+  * ✅ `testShortAnswer_AutoGrading_NFC`: Học sinh nộp câu hỏi điền ngắn Unicode NFC có khoảng trắng thừa -> Tự động chấm đúng **10.0/10.0 điểm**, trạng thái `GRADED`, `isLate = false`.
+  * ✅ `testMaterialDownload_StudentAccessControl`: Học sinh đúng lớp tải học liệu -> **200 OK**; Học sinh khác lớp cố tình tải học liệu nội bộ -> **403 Forbidden**.
+  * ✅ `testMaterialDownload_ParentReBAC`: Phụ huynh có con học đúng lớp tải học liệu -> **200 OK**; Phụ huynh lớp khác tải học liệu -> **403 Forbidden**.
+  * ✅ `testMaterialDownload_TeacherReBAC`: GVCN và GV bộ môn phụ trách lớp tải học liệu -> **200 OK**; Giáo viên không phụ trách lớp tải học liệu -> **403 Forbidden**.
+  * ✅ `testMaterialDownload_PhysicalFileNotFound`: Khi tệp vật lý bị thiếu trên ổ đĩa -> Trả về chuẩn HTTP **404 Not Found** (không sinh file giả).
+* **Chi tiết bộ test Security Matrix hiện hữu** ([`StudentSecurityMatrixTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/StudentSecurityMatrixTest.java)):
+  * ✅ **7 / 7 tests PASSED**: Cưỡng chế đổi mật khẩu lần đầu, kiểm soát quyền truy cập theo vai trò.
 
----
-
-## 4. MA TRẬN KIỂM THỬ CHI TIẾT (TEST CASES MATRIX)
-
-### 4.1. Nhóm Bảo Mật & Phân Quyền ReBAC (Security & ReBAC Tests)
-
-| Mã Test | Mô tả Kịch bản | Dữ liệu đầu vào / Điều kiện | Kết quả kỳ vọng | Trạng thái |
-|---|---|---|---|---|
-| **TC-SEC-01** | Phụ huynh xem đơn nghỉ của con ruột | Parent A đăng nhập, gọi `/api/leave-requests/student/{con_cua_A}` | Trả về danh sách đơn, HTTP 200 OK | ✅ **PASS** |
-| **TC-SEC-02** | Phụ huynh cố tình xem đơn nghỉ của học sinh khác (IDOR Attack) | Parent A đăng nhập, gọi `/api/leave-requests/student/{con_cua_B}` | Hệ thống từ chối, trả về HTTP 403 Forbidden | ✅ **PASS** |
-| **TC-SEC-03** | Giáo viên xem đơn nghỉ của học sinh lớp mình phụ trách | Teacher X đăng nhập, gọi `/api/leave-requests/student/{hoc_sinh_lop_X}` | Trả về danh sách đơn, HTTP 200 OK | ✅ **PASS** |
-| **TC-SEC-04** | Giáo viên cố tình xem đơn nghỉ của học sinh lớp khác | Teacher X đăng nhập, gọi `/api/leave-requests/student/{hoc_sinh_lop_Y}` | Hệ thống từ chối, trả về HTTP 403 Forbidden | ✅ **PASS** |
-| **TC-SEC-05** | Giáo viên chủ nhiệm duyệt đơn nghỉ phép của lớp mình | Teacher X là GVCN gọi `PUT /api/leave-requests/{id}/review` với `decision: APPROVED` | Duyệt thành công, cập nhật điểm danh sang Có phép | ✅ **PASS** |
-| **TC-SEC-06** | Giáo viên bộ môn (không phải GVCN) cố tình duyệt đơn nghỉ | Teacher Z (chỉ dạy bộ môn) gọi `PUT /api/leave-requests/{id}/review` | Hệ thống từ chối vì chỉ GVCN mới có quyền duyệt | ✅ **PASS** |
-| **TC-SEC-07** | Học sinh xem đề bài khi chưa nộp bài | Student gọi `GET /api/student-portal/homework/{id}/take` | Các trường `correctAnswerText`, `explanation`, `isCorrect` bị giấu | ✅ **PASS** |
-| **TC-SEC-08** | Học sinh sửa bài làm của bạn khác | Student A gửi `submissionId` của Student B vào API `/draft` | Hệ thống chặn, trả về HTTP 403 Forbidden | ✅ **PASS** |
-| **TC-SEC-09** | Phụ huynh xem bài tập và bảng điểm của học sinh khác | Parent A gọi `/api/parent/wards/{con_cua_B}/homework` | Hệ thống chặn, trả về HTTP 403 Forbidden | ✅ **PASS** |
-
-### 4.2. Nhóm Điểm Danh & Nghỉ Phép (Attendance & Leave Request Tests)
-
-| Mã Test | Mô tả Kịch bản | Dữ liệu đầu vào / Điều kiện | Kết quả kỳ vọng | Trạng thái |
-|---|---|---|---|---|
-| **TC-ATT-01** | Điểm danh hàng loạt (Bulk Attendance) cho lớp | GVCN gửi danh sách học sinh có mặt/vắng kèm ngày | Lưu thành công cả cấu trúc mới `AttendanceSession`/`Record` và cấu trúc cũ | ✅ **PASS** |
-| **TC-ATT-02** | Phụ huynh gửi đơn xin nghỉ phép hợp lệ | Chọn con, ngày bắt đầu, ngày kết thúc, lý do | Tạo đơn thành công với trạng thái `PENDING` | ✅ **PASS** |
-| **TC-ATT-03** | Phụ huynh gửi đơn xin nghỉ trùng ngày đã có đơn | Gửi đơn có ngày chồng lấn với đơn đang chờ/đã duyệt | Hệ thống báo lỗi chặn trùng ngày | ✅ **PASS** |
-| **TC-ATT-04** | Tự động đồng bộ điểm danh khi đơn được duyệt | GVCN duyệt đơn nghỉ từ ngày 15 đến 16 | Bản ghi điểm danh ngày 15 và 16 tự động chuyển sang `LEAVE` | ✅ **PASS** |
-
-### 4.3. Nhóm Bài Tập Về Nhà & Chấm Điểm Tự Động (LMS & Homework Tests)
-
-| Mã Test | Mô tả Kịch bản | Dữ liệu đầu vào / Điều kiện | Kết quả kỳ vọng | Trạng thái |
-|---|---|---|---|---|
-| **TC-HW-01** | Giáo viên tạo bài tập hỗn hợp (Trắc nghiệm + Tự luận) | 2 câu trắc nghiệm (mỗi câu 2đ) + 1 câu tự luận (6đ) | Tạo bài tập thành công, tổng điểm = 10đ | ✅ **PASS** |
-| **TC-HW-02** | Giao bài tập cho lớp học với hạn nộp | Chọn bài, chọn Lớp 3A, hạn nộp 7 ngày sau | Tạo bản ghi `HomeworkAssignment` kích hoạt thành công | ✅ **PASS** |
-| **TC-HW-03** | Học sinh lưu nháp câu trả lời | Đang làm bài, chọn đáp án rồi bấm Lưu nháp | Lưu thành công vào bảng `Answer`, trạng thái vẫn `IN_PROGRESS` | ✅ **PASS** |
-| **TC-HW-04** | Học sinh nộp bài trắc nghiệm đúng 100% (không có tự luận) | Trả lời đúng cả 2 câu trắc nghiệm | Hệ thống tự động chấm điểm = 4/4đ, trạng thái `GRADED` | ✅ **PASS** |
-| **TC-HW-05** | Học sinh nộp bài có câu tự luận | Nộp bài có 1 câu tự luận | Auto-score ghi nhận phần trắc nghiệm, trạng thái chuyển `SUBMITTED` | ✅ **PASS** |
-| **TC-HW-06** | Nộp bài quá hạn khi bài tập KHÔNG cho phép nộp muộn | Gửi bài sau `dueDate` với `allowLateSubmission = false` | Hệ thống từ chối nộp bài, báo lỗi quá hạn | ✅ **PASS** |
-| **TC-HW-07** | Nộp bài quá hạn khi bài tập CHO PHÉP nộp muộn | Gửi bài sau `dueDate` với `allowLateSubmission = true` | Nộp bài thành công, cờ `isLate = true` | ✅ **PASS** |
-| **TC-HW-08** | Giáo viên chấm câu tự luận và nhận xét | Giáo viên nhập điểm tự luận và lời phê | Cập nhật `finalScore`, trạng thái chuyển sang `GRADED` | ✅ **PASS** |
-
-### 4.4. Nhóm Học Liệu Số & Đối Soát Dữ Liệu (Materials & Reconciliation Tests)
-
-| Mã Test | Mô tả Kịch bản | Dữ liệu đầu vào / Điều kiện | Kết quả kỳ vọng | Trạng thái |
-|---|---|---|---|---|
-| **TC-MAT-01** | Giáo viên tạo và xuất bản học liệu số | Tải lên tài liệu PDF cho Lớp 3A, trạng thái `PUBLISHED` | Tạo thành công `Material`, `MaterialFile`, `MaterialClass` | ✅ **PASS** |
-| **TC-MAT-02** | Học sinh lớp được phân công xem học liệu | Học sinh Lớp 3A gọi `/api/student-portal/materials` | Hiển thị đầy đủ tài liệu kèm link tải và phiên bản | ✅ **PASS** |
-| **TC-MAT-03** | Học sinh lớp khác xem học liệu | Học sinh Lớp 1B gọi `/api/student-portal/materials` | Không hiển thị tài liệu chỉ xuất bản cho Lớp 3A | ✅ **PASS** |
-| **TC-REC-01** | Kiểm tra đối soát dữ liệu Core Foundations | Admin gọi `/api/admin/migration/reconciliation` | Trả về báo cáo đối soát 100% khớp, `missing_in_guardian_students = []` | ✅ **PASS** |
+### 2.2. Phân tích tĩnh Frontend Flutter (`flutter analyze`)
+* **Trạng thái**: ✅ **0 Errors, 0 Blockers**
+* **Cảnh báo (Info)**: 15 cảnh báo mức `info` (11 thông báo `avoid_print` trong file service phục vụ debug phát triển và 4 cảnh báo `deprecated_member_use` cho widget Radio trong Flutter 3.32+). Đã khoanh vùng và không ảnh hưởng đến khả năng biên dịch hay chức năng ứng dụng.
 
 ---
 
-## 5. ĐÁNH GIÁ RỦI RO CÒN LẠI & KHUYẾN NGHỊ VẬN HÀNH
+## 3. MA TRẬN KIỂM THỬ ĐẶC TẢ CHI TIẾT
 
-1. **Quản lý Migration trong CI/CD**:
-   * Hiện các tệp `V2`, `V3`, `V4` nằm trong thư mục `src/main/resources/db/migration/`. Khi đưa lên môi trường Production, khuyến nghị thêm `org.flywaydb:flyway-core` và `flyway-database-postgresql` vào `pom.xml` để quản lý phiên bản schema tự động thay cho `spring.jpa.hibernate.ddl-auto=update`.
-2. **Loại bỏ trùng lặp thư viện JSON trên Classpath**:
-   * Thư viện `razorpay-java` và `spring-boot-starter-test` gây cảnh báo `DuplicateJsonObjectContextCustomizer`. Có thể thêm `<exclusions>` trong dependency Razorpay khi chuẩn bị gói build production cuối cùng.
-3. **Log Frontend trong môi trường Release**:
-   * Trong các file `student_service.dart` và `teacher_service.dart` còn các lệnh `print` debug, cần thay bằng Logger hoặc bao bọc trong `if (kDebugMode)` trước khi phát hành lên Google Play / App Store.
+| Mã Test | Phân hệ | Kịch bản kiểm thử | Dữ liệu đầu vào | Kết quả thực tế | Trạng thái |
+|---|---|---|---|---|---|
+| **TC-SEC-01** | ReBAC | Phụ huynh xem Enrollment của con ruột | Parent A xem Student A | HTTP 200 OK, trả về đúng lớp học | ✅ **PASS** |
+| **TC-SEC-02** | ReBAC | Phụ huynh xem Enrollment của con người khác (IDOR) | Parent A xem Student B | HTTP 403 Forbidden, từ chối truy cập | ✅ **PASS** |
+| **TC-SEC-03** | ReBAC | Học sinh xem Enrollment của chính mình | Student A xem Student A | HTTP 200 OK | ✅ **PASS** |
+| **TC-SEC-04** | ReBAC | Học sinh xem Enrollment của bạn học (IDOR) | Student A xem Student B | HTTP 403 Forbidden, từ chối truy cập | ✅ **PASS** |
+| **TC-SEC-05** | ReBAC | Giáo viên chủ nhiệm duyệt đơn xin nghỉ phép | GVCN duyệt đơn của lớp mình | HTTP 200 OK, chuyển trạng thái APPROVED | ✅ **PASS** |
+| **TC-SEC-06** | ReBAC | Giáo viên bộ môn duyệt đơn xin nghỉ phép | GV bộ môn duyệt đơn của lớp | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-07** | ReBAC | Phụ huynh xem đơn nghỉ của con người khác | Parent B xem đơn Student A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-08** | LMS | Tự động chấm câu điền ngắn có Unicode tiếng Việt | Đáp án: "Hà Nội\|Ha Noi", HS nhập: "  hà nội  " | Chấm đúng 10.0/10.0đ, trạng thái GRADED | ✅ **PASS** |
+| **TC-SEC-09** | LMS | Kiểm tra toàn vẹn câu hỏi nộp bài | HS gửi câu hỏi thuộc bài tập khác | HTTP 400 (Báo lỗi câu hỏi không thuộc bài tập) | ✅ **PASS** |
+| **TC-SEC-10** | Học liệu | Tải tệp học liệu của lớp được phân phối | Học sinh thuộc Lớp 3A tải tệp | HTTP 200 OK, trả về tệp học liệu | ✅ **PASS** |
+| **TC-SEC-11** | Học liệu | Tải tệp học liệu của lớp khác không được giao | Học sinh Lớp 3B tải tệp Lớp 3A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-12** | Học liệu ReBAC | Phụ huynh có con học lớp được phân phối học liệu | Parent A tải tệp Lớp 3A | HTTP 200 OK | ✅ **PASS** |
+| **TC-SEC-13** | Học liệu ReBAC | Phụ huynh không có con học lớp được phân phối | Parent B tải tệp Lớp 3A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-14** | Học liệu ReBAC | Giáo viên phụ trách (GVCN / GVBM) tải học liệu | GVCN / GVBM tải tệp Lớp 3A | HTTP 200 OK | ✅ **PASS** |
+| **TC-SEC-15** | Học liệu ReBAC | Giáo viên không phụ trách lớp tải học liệu | Giáo viên khác tải tệp Lớp 3A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-16** | File Storage | Tải tệp học liệu khi file vật lý bị thiếu trên đĩa | HS có quyền tải file không tồn tại | HTTP 404 Not Found (không sinh file giả) | ✅ **PASS** |
+| **TC-MIG-01** | Flyway | Chạy migration trên schema cơ sở | Khởi động Flyway với baseline V1 | Schema V1..V4 áp dụng an toàn, idempotent | ✅ **PASS** || **TC-SEC-06** | ReBAC | Giáo viên bộ môn duyệt đơn xin nghỉ phép | GV bộ môn duyệt đơn của lớp | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-07** | ReBAC | Phụ huynh xem đơn nghỉ của con người khác | Parent B xem đơn Student A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-SEC-08** | LMS | Tự động chấm câu điền ngắn có Unicode tiếng Việt | Đáp án: "Hà Nội\|Ha Noi", HS nhập: "  hà nội  " | Chấm đúng 10.0/10.0đ, trạng thái GRADED | ✅ **PASS** |
+| **TC-SEC-09** | LMS | Kiểm tra toàn vẹn câu hỏi nộp bài | HS gửi câu hỏi thuộc bài tập khác | HTTP 400 (Báo lỗi câu hỏi không thuộc bài tập) | ✅ **PASS** |
+| **TC-SEC-10** | Học liệu | Tải tệp học liệu của lớp được phân phối | Học sinh thuộc Lớp 3A tải tệp | HTTP 200 OK, trả về tệp học liệu | ✅ **PASS** |
+| **TC-SEC-11** | Học liệu | Tải tệp học liệu của lớp khác không được giao | Học sinh Lớp 3B tải tệp Lớp 3A | HTTP 403 Forbidden | ✅ **PASS** |
+| **TC-MIG-01** | Flyway | Chạy migration trên schema cơ sở | Khởi động Flyway với baseline V1 | Schema V1..V4 áp dụng an toàn, idempotent | ✅ **PASS** |
 
 ---
 
-## 6. KẾT LUẬN NGHIỆM THU (SENIOR QA SIGN-OFF)
+## 4. BẰNG CHỨNG THỰC TẾ & KẾT QUẢ PHÂN TÍCH KỸ THUẬT
 
-Sau khi rà soát và kiểm thử thực tế toàn bộ các tầng kiến trúc, nghiệp vụ và bảo mật:
-* Toàn bộ các mối quan hệ thực thể theo đặc tả [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/quan-he-du-lieu.md) đã được hiện thực hóa đầy đủ, chính xác.
-* Tất cả 05 điểm bất thường đã được xử lý triệt để, không để lại lỗi tồn đọng.
-* Bộ kiểm thử tự động của Backend chạy thành công 100% (8/8 passed).
-* Hệ thống đạt tiêu chuẩn chất lượng và an toàn bảo mật, **chính thức nghiệm thu Phase 1**.
+### 4.1. Lỗi `ClassFormatError: Invalid method Code length 0`
+* **Triệu chứng ban đầu**: `java.lang.ClassFormatError: Invalid method Code length 0 in class file com/school/backend/entity/User`.
+* **Phân tích bytecode (`javap -c`)**: Phát hiện phương thức constructor `User()` có độ dài bytecode = 0 (trống instruction), phát sinh khi trình biên dịch Maven chạy incremental compile bị ngắt quãng giữa chừng hoặc cache bytecode cũ của Lombok bị lỗi.
+* **Chứng thực giải pháp**: Sau khi thực thi `./mvnw clean test-compile`, bytecode constructor của `User.class` đã được tái tạo hoàn chỉnh với đầy đủ các lệnh hợp lệ (`aload_0`, `invokespecial Object.<init>`, `return`), loại bỏ hoàn toàn lỗi ClassFormatError.
+
+### 4.2. Khắc phục Xung đột Dependency Razorpay & JSON
+* **Triệu chứng**: Khi loại bỏ hoàn toàn `org.json`, lớp `FeeService.java` không thể biên dịch do Razorpay Java SDK 1.4.6 yêu cầu `org.json.JSONObject` trong chữ ký API công khai (`orders.create`, `Utils.verifyPaymentSignature`).
+* **Giải pháp áp dụng**: Khai báo phiên bản `org.json:json:20240303` trực tiếp và minh bạch trong `pom.xml`, vừa đảm bảo `FeeService` hoạt động ổn định với Razorpay, vừa cập nhật phiên bản thư viện an toàn không xung đột với Jackson Parser của Spring Boot.
+
+### 4.3. Mã hóa CSDL (AES-256-GCM) và Truy vấn Test
+* **Phát hiện**: Trường `phone` và `email` trong bảng `teachers` và `parents` được cấu hình mã hóa cột tự động (`school.app.dbEncryptionKey`). Do sử dụng thuật toán AES-GCM với IV ngẫu nhiên, các câu truy vấn JPQL tìm kiếm trực tiếp theo văn bản thô (như `findByPhone` hay `findByEmail`) không thể so khớp dữ liệu đã mã hóa trong PostgreSQL.
+* **Giải pháp áp dụng**: Trong các luồng truy vấn nghiệp vụ và kiểm thử, sử dụng `findByUserId` hoặc `findByUserUsername` (trường `username` không mã hóa) để đảm bảo độ tin cậy tuyệt đối.
+
+---
+
+## 5. CÁC QUYẾT ĐỊNH NGHIỆP VỤ CHỜ PHÊ DUYỆT (BUSINESS DECISIONS PENDING APPROVAL)
+
+Senior QA kiến nghị Ban Giám hiệu / Product Owner phê duyệt 3 điểm nghiệp vụ trước khi phát hành chính thức:
+
+1. **Chính sách Nộp muộn (Late Submission Penalty)**:
+   * *Hiện trạng*: Nếu `allowLateSubmission = true`, bài nộp sau hạn được chấp nhận và gắn cờ `isLate = true`, điểm số vẫn giữ nguyên 100%.
+   * *Đề xuất*: Có cần áp dụng công thức trừ điểm nộp muộn tự động (ví dụ: trừ 10% mỗi 24h trễ) hay để giáo viên tự trừ điểm thủ công khi chấm bài?
+2. **Thời điểm Công bố Đáp án & Lời giải Đề thi**:
+   * *Hiện trạng*: Học sinh xem được đáp án ngay khi nộp bài thành công (`status == SUBMITTED` hoặc `GRADED`).
+   * *Đề xuất*: Để tránh hiện tượng học sinh nộp trước rồi chia sẻ đáp án cho các bạn chưa làm, có nên bổ sung cấu hình "Chỉ hiện đáp án sau khi hết hạn nộp bài của cả lớp" (`now.isAfter(dueDate)`)?
+3. **Quy tắc Bỏ dấu Tiếng Việt trong Câu hỏi Điền ngắn (`SHORT_ANSWER`)**:
+   * *Hiện trạng*: Hệ thống so khớp chính xác có dấu tiếng Việt (sau khi chuẩn hóa Unicode NFC và viết thường). Ví dụ: "hà nội" khớp, nhưng "ha noi" sẽ không khớp nếu giáo viên không thêm "ha noi" vào danh sách đáp án phân cách bằng `|`.
+   * *Đề xuất*: Có cần bổ sung tùy chọn "Bỏ qua dấu tiếng Việt" để tự động chấp nhận cả bài làm không dấu?
+
+---
+
+## 6. KẾT LUẬN & ĐÁNH GIÁ SẴN SÀNG (QA SIGN-OFF)
+
+1. **Về Mã nguồn & Build**: Đạt trạng thái sạch, biên dịch thành công 100% trên cả Backend và Frontend.
+2. **Về Cơ sở dữ liệu**: Đã chuẩn hóa kịch bản di chuyển dữ liệu Flyway với baseline V1, bảo đảm tính toàn vẹn và an toàn dữ liệu trên môi trường hiện hữu.
+3. **Về An toàn Bảo mật**: Đã triệt tiêu các nguy cơ IDOR/BOLA ở phân hệ Enrollment, Leave Request và Materials thông qua chính sách ReBAC tập trung tại máy chủ.
+4. **Trạng thái**: **ĐẠT TIÊU CHUẨN ĐỂ TRIỂN KHAI LÊN MÔI TRƯỜNG KIỂM THỬ STAGING**.

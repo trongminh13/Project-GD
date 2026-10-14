@@ -41,4 +41,11 @@ public class MaterialController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return ResponseEntity.ok(materialService.getMaterialsForStudent(auth.getName()));
     }
+
+    @GetMapping("/materials/files/{fileId}/download")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('STUDENT') or hasAuthority('PARENT')")
+    public ResponseEntity<?> downloadMaterialFile(@PathVariable Long fileId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return materialService.downloadFile(fileId, auth);
+    }
 }

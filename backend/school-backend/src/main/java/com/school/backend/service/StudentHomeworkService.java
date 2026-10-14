@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -228,6 +229,8 @@ public class StudentHomeworkService {
                 throw new IllegalArgumentException("Đã quá thời hạn nộp bài tập và không cho phép nộp muộn.");
             }
             sub.setIsLate(true);
+        } else {
+            sub.setIsLate(false);
         }
 
         // Lưu câu trả lời từ request
@@ -277,6 +280,13 @@ public class StudentHomeworkService {
                 autoScore += ans.getScore();
                 answerRepository.save(ans);
 
+            } else if ("SHORT_ANSWER".equals(q.getQuestionType())) {
+                boolean isCorrect = checkShortAnswer(ans.getAnswerText(), q.getCorrectAnswerText());
+                ans.setIsAutoGraded(true);
+                ans.setScore(isCorrect ? q.getPoints() : 0.0);
+                autoScore += ans.getScore();
+                answerRepository.save(ans);
+
             } else if ("ESSAY".equals(q.getQuestionType())) {
                 hasEssay = true;
                 ans.setIsAutoGraded(false);
@@ -299,12 +309,29 @@ public class StudentHomeworkService {
         return submissionRepository.save(sub);
     }
 
+    private boolean checkShortAnswer(String studentAnswer, String correctAnswerText) {
+        if (studentAnswer == null || correctAnswerText == null) return false;
+        String normalizedStudent = Normalizer.normalize(studentAnswer.trim(), Normalizer.Form.NFC).replaceAll("\\s+", " ").toLowerCase();
+        String[] possibleAnswers = correctAnswerText.split("\\|");
+        for (String expected : possibleAnswers) {
+            String normalizedExpected = Normalizer.normalize(expected.trim(), Normalizer.Form.NFC).replaceAll("\\s+", " ").toLowerCase();
+            if (normalizedStudent.equals(normalizedExpected)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void saveAnswersFromRequest(Submission sub, SubmissionSubmitRequest req) {
         if (req == null || req.getAnswers() == null) return;
 
         for (AnswerSubmitRequest aReq : req.getAnswers()) {
             Question question = questionRepository.findById(aReq.getQuestionId())
                     .orElseThrow(() -> new NoSuchElementException("Câu hỏi không tồn tại."));
+
+            if (question.getHomework() == null || !question.getHomework().getId().equals(sub.getAssignment().getHomework().getId())) {
+                throw new IllegalArgumentException("Câu hỏi ID " + aReq.getQuestionId() + " không thuộc bài tập này.");
+            }
 
             Answer ans = answerRepository.findBySubmissionIdAndQuestionId(sub.getId(), question.getId())
                     .orElseGet(() -> {

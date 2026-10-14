@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface MaterialFileRepository extends JpaRepository<MaterialFile, Long> {
+    List<MaterialFile> findByMaterialId(Long materialId);
     List<MaterialFile> findByMaterialIdOrderByVersionDesc(Long materialId);
 }

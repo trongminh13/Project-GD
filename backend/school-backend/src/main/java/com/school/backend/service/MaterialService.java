@@ -40,6 +40,9 @@ public class MaterialService {
     @Autowired
     private EnrollmentRepository enrollmentRepository;
 
+    @Autowired
+    private com.school.backend.security.SchoolAccessPolicy accessPolicy;
+
     @Transactional
     public Material createMaterial(MaterialCreateRequest req, String teacherUsername) {
         Teacher teacher = teacherRepository.findByUserUsername(teacherUsername)
@@ -127,5 +130,36 @@ public class MaterialService {
             }
         }
         return result;
+    }
+
+    public org.springframework.http.ResponseEntity<?> downloadFile(Long fileId, org.springframework.security.core.Authentication auth) {
+        MaterialFile mf = accessPolicy.verifyCanDownloadMaterialFile(auth, fileId);
+        String fileUrl = mf.getFileUrl();
+        if (fileUrl != null && (fileUrl.startsWith("http://") || fileUrl.startsWith("https://"))) {
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                    .location(java.net.URI.create(fileUrl))
+                    .build();
+        }
+
+        try {
+            java.nio.file.Path baseDir = java.nio.file.Paths.get("uploads/materials").toAbsolutePath().normalize();
+            java.nio.file.Files.createDirectories(baseDir);
+            java.nio.file.Path resolvedPath = baseDir.resolve(mf.getFileName()).normalize();
+            if (!resolvedPath.startsWith(baseDir)) {
+                throw new SecurityException("Phát hiện hành vi Path Traversal bất hợp pháp.");
+            }
+
+            if (!java.nio.file.Files.exists(resolvedPath) || !java.nio.file.Files.isReadable(resolvedPath)) {
+                return org.springframework.http.ResponseEntity.notFound().build();
+            }
+
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(resolvedPath.toUri());
+            return org.springframework.http.ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + mf.getFileName() + "\"")
+                    .body(resource);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Không thể đọc tệp tin: " + e.getMessage());
+        }
     }
 }
