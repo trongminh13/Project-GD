@@ -46,7 +46,7 @@
 *Lưu ý: Toàn bộ kết quả kiểm thử dưới đây được thực thi và chứng thực trực tiếp trên môi trường máy chủ cục bộ với PostgreSQL 18.6.*
 
 ### 2.1. Kiểm thử Tích hợp Tự động Backend (`./mvnw test`)
-* **Tổng số ca kiểm thử**: **15 / 15 tests PASSED (0 failures, 0 errors, 0 skipped)**
+* **Tổng số ca kiểm thử**: **16 / 16 tests PASSED (0 failures, 0 errors, 0 skipped)**
 * **Chi tiết bộ test ReBAC & LMS** ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):
   * ✅ `testEnrollment_ParentReBAC`: Phụ huynh xem con mình -> **200 OK**; xem con người khác -> **403 Forbidden**.
   * ✅ `testEnrollment_StudentReBAC`: Học sinh xem chính mình -> **200 OK**; xem bạn cùng lớp/khác lớp -> **403 Forbidden**.
@@ -109,6 +109,11 @@
 ### 4.3. Mã hóa CSDL (AES-256-GCM) và Truy vấn Test
 * **Phát hiện**: Trường `phone` và `email` trong bảng `teachers` và `parents` được cấu hình mã hóa cột tự động (`school.app.dbEncryptionKey`). Do sử dụng thuật toán AES-GCM với IV ngẫu nhiên, các câu truy vấn JPQL tìm kiếm trực tiếp theo văn bản thô (như `findByPhone` hay `findByEmail`) không thể so khớp dữ liệu đã mã hóa trong PostgreSQL.
 * **Giải pháp áp dụng**: Trong các luồng truy vấn nghiệp vụ và kiểm thử, sử dụng `findByUserId` hoặc `findByUserUsername` (trường `username` không mã hóa) để đảm bảo độ tin cậy tuyệt đối.
+
+### 4.4. Xung đột AST Lombok và Eclipse JDT LS ("Flexible Constructor Bodies")
+* **Triệu chứng**: Trình phân tích mã nguồn Eclipse JDT Language Server (ECJ) trong IDE báo lỗi: `The Java feature 'Flexible Constructor Bodies' is only available with source level 25 and above` tại annotation `@AllArgsConstructor` trong [`StudentMarkDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentMarkDto.java).
+* **Nguyên nhân**: Tính năng "Flexible Constructor Bodies" (JEP 513, tiêu chuẩn hóa ở Java 25) cho phép thực thi câu lệnh trước `super()` trong constructor. Khi Lombok xử lý `@AllArgsConstructor`, nó tạo AST chứa các phép gán trường. Trình biên dịch ECJ của Eclipse JDT LS trong IDE diễn giải cấu trúc AST tổng hợp này như các câu lệnh đứng trước constructor invocation, và do source level của dự án là Java 17/21 (< 25) nên phát sinh lỗi biên dịch giả (false-positive).
+* **Giải pháp áp dụng**: Khai báo constructor đầy đủ tham số tường minh (explicit constructor) trong [`StudentMarkDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentMarkDto.java) thay vì dựa vào `@AllArgsConstructor` của Lombok. Cách này ngăn chặn việc inject AST lỗi từ Lombok vào ECJ, tương thích 100% với `@Builder` và `@NoArgsConstructor`, đồng thời duy trì build sạch sẽ và nhất quán trên cả IDE lẫn Maven CLI.
 
 ---
 

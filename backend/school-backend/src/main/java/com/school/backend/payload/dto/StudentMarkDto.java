@@ -10,11 +10,18 @@ import java.math.BigDecimal;
 @Data
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class StudentMarkDto {
     private String examName;
     private String subjectName;
     private BigDecimal score;
     private BigDecimal maxScore;
     private String grade;
+
+    public StudentMarkDto(String examName, String subjectName, BigDecimal score, BigDecimal maxScore, String grade) {
+        this.examName = examName;
+        this.subjectName = subjectName;
+        this.score = score;
+        this.maxScore = maxScore;
+        this.grade = grade;
+    }
 }
