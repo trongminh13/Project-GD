@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/services/homework_service.dart';
 
 class ParentHomeworkScreen extends StatefulWidget {
-  const ParentHomeworkScreen({super.key});
+  final int? studentId;
+  const ParentHomeworkScreen({super.key, this.studentId});
 
   @override
   State<ParentHomeworkScreen> createState() => _ParentHomeworkScreenState();
 }
 
 class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _service = HomeworkService();
 
-  // Mock Data
-  final List<Map<String, dynamic>> _assignments = [];
+  bool _isLoading = true;
+  int? _resolvedStudentId;
+  List<dynamic> _assignments = [];
 
   @override
   void initState() {
@@ -22,9 +26,30 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_resolvedStudentId == null) {
+      final argId = ModalRoute.of(context)?.settings.arguments;
+      _resolvedStudentId = widget.studentId ?? (argId is int ? argId : int.tryParse(argId?.toString() ?? '51')) ?? 51;
+      _loadHomework();
+    }
+  }
+
+  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadHomework() async {
+    if (_resolvedStudentId == null) return;
+    setState(() => _isLoading = true);
+    final list = await _service.getWardHomework(_resolvedStudentId!);
+    if (!mounted) return;
+    setState(() {
+      _assignments = list;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -37,7 +62,7 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Assignments',
+          'Bài tập của con',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -56,33 +81,38 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
               labelColor: Colors.white,
               unselectedLabelColor: AppColors.textSecondaryOf(context),
               indicator: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: tabGradientColors,
-                ),
+                gradient: LinearGradient(colors: tabGradientColors),
                 borderRadius: BorderRadius.circular(26),
               ),
               tabs: const [
-                Tab(text: 'Pending'),
-                Tab(text: 'Completed'),
+                Tab(text: 'Chưa nộp / Đang làm'),
+                Tab(text: 'Đã nộp / Đã có điểm'),
               ],
             ),
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAssignmentList(filterStatus: 'Pending'),
-          _buildAssignmentList(filterStatus: 'Completed'),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadHomework,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAssignmentList(filterCompleted: false),
+                  _buildAssignmentList(filterCompleted: true),
+                ],
+              ),
+            ),
     );
   }
 
-  Widget _buildAssignmentList({required String filterStatus}) {
-    final filteredList = _assignments
-        .where((a) => a['status'] == filterStatus)
-        .toList();
+  Widget _buildAssignmentList({required bool filterCompleted}) {
+    final filteredList = _assignments.where((a) {
+      final status = (a['submissionStatus'] ?? 'NOT_STARTED').toString();
+      final isFinished = (status == 'SUBMITTED' || status == 'GRADED');
+      return filterCompleted ? isFinished : !isFinished;
+    }).toList();
 
     if (filteredList.isEmpty) {
       return Center(
@@ -103,10 +133,10 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              "No $filterStatus Assignments",
+              filterCompleted ? "Chưa có bài tập nào đã nộp" : "Không có bài tập nào cần làm",
               style: TextStyle(
                 color: AppColors.textTertiaryOf(context),
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -120,13 +150,37 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
       itemCount: filteredList.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
-        final task = filteredList[index];
-        final isPending = filterStatus == 'Pending';
+        final task = filteredList[index] as Map<String, dynamic>;
+        final title = task['title'] ?? 'Bài tập';
+        final subject = task['subjectName'] ?? 'Toán';
+        final desc = task['description'] ?? '';
+        final teacher = task['teacherName'] ?? '';
+        final dueDate = (task['dueDate'] ?? '').toString().split('T').first;
+        final status = (task['submissionStatus'] ?? 'NOT_STARTED').toString();
+        final finalScore = task['finalScore'];
+        final autoScore = task['autoScore'];
+        final feedback = task['teacherFeedback'] as String?;
+
+        Color statusColor = Colors.orange;
+        String statusLabel = 'Chưa làm';
+        if (status == 'IN_PROGRESS') {
+          statusColor = Colors.blue;
+          statusLabel = 'Đang làm dở';
+        } else if (status == 'SUBMITTED') {
+          statusColor = Colors.purple;
+          statusLabel = 'Đã nộp (Chờ chấm)';
+        } else if (status == 'GRADED') {
+          statusColor = Colors.green;
+          statusLabel = 'Đạt: ${finalScore ?? autoScore} đ';
+        }
 
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+            ],
           ),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -136,81 +190,77 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: _getSubjectColor(task['subject']).withValues(alpha: 0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      task['subject'],
-                      style: TextStyle(
-                        color: _getSubjectColor(task['subject']),
+                      subject,
+                      style: const TextStyle(
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 14,
-                        color: isPending
-                            ? AppColors.error
-                            : AppColors.textTertiaryOf(context),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${task['dueDate']}",
-                        style: TextStyle(
-                          color: isPending
-                              ? AppColors.error
-                              : AppColors.textTertiaryOf(context),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                task['title'],
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.black87,
-                ),
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
               ),
-              const SizedBox(height: 8),
-              Text(
-                task['description'],
-                style: TextStyle(
-                  color: AppColors.textSecondaryOf(context),
-                  fontSize: 14,
-                  height: 1.5,
+              if (desc.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  desc,
+                  style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 13, height: 1.4),
                 ),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text('GV: $teacher', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  const Spacer(),
+                  Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text('Hạn nộp: $dueDate', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                ],
               ),
-              if (isPending) ...[
-                const SizedBox(height: 16),
-                SizedBox(
+              if (feedback != null && feedback.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryOf(context),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.comment_outlined, size: 16, color: Colors.orange),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Lời phê của thầy/cô: $feedback',
+                          style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text("Mark as Done"),
+                    ],
                   ),
                 ),
               ],
@@ -219,14 +269,5 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
         );
       },
     );
-  }
-
-  Color _getSubjectColor(String subject) {
-    if (subject == 'Mathematics') return AppColors.primary;
-    if (subject == 'Science') return AppColors.success;
-    if (subject == 'English') return AppColors.warning;
-    if (subject == 'History') return Colors.brown;
-    if (subject == 'Computer') return Colors.purple;
-    return Colors.grey;
   }
 }

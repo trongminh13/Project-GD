@@ -23,4 +23,16 @@ public class SchoolClass {
     @OneToOne
     @JoinColumn(name = "class_teacher_id", referencedColumnName = "id")
     private Teacher classTeacher;
+
+    @ManyToOne
+    @JoinColumn(name = "homeroom_teacher_id", referencedColumnName = "id")
+    private Teacher homeroomTeacher;
+
+    public Teacher getEffectiveHomeroomTeacher() {
+        return homeroomTeacher != null ? homeroomTeacher : classTeacher;
+    }
+
+    public String getName() {
+        return (grade != null ? grade : "") + (section != null && !section.isEmpty() ? " " + section : "");
+    }
 }

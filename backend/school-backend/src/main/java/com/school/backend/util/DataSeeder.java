@@ -1,6 +1,11 @@
 package com.school.backend.util;
 
 import com.school.backend.entity.Parent;
+import com.school.backend.entity.Teacher;
+import com.school.backend.entity.SchoolClass;
+import com.school.backend.repository.TeacherRepository;
+import com.school.backend.repository.SchoolClassRepository;
+import java.util.List;
 import com.school.backend.entity.User;
 import com.school.backend.enums.Role;
 import com.school.backend.repository.ParentRepository;
@@ -28,6 +33,12 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     com.school.backend.repository.StudentRepository studentRepository;
 
+    @Autowired
+    TeacherRepository teacherRepository;
+
+    @Autowired
+    SchoolClassRepository schoolClassRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
@@ -46,13 +57,31 @@ public class DataSeeder implements CommandLineRunner {
         System.out.println("Admin user updated/created: admin / admin123");
 
         // Create Teacher
-        if (userRepository.findByUsername("T001").isEmpty()) {
+        User teacherUser = userRepository.findByUsername("T001").orElseGet(() -> {
             User teacher = new User();
             teacher.setUsername("T001");
             teacher.setPassword(passwordEncoder.encode("teacher123"));
             teacher.setRole(Role.TEACHER);
-            userRepository.save(teacher);
-            System.out.println("Teacher user created: T001 / teacher123");
+            return userRepository.save(teacher);
+        });
+
+        if (teacherRepository.findByUserId(teacherUser.getId()).isEmpty()) {
+            Teacher devTeacher = new Teacher();
+            devTeacher.setUser(teacherUser);
+            devTeacher.setName("Rajesh Sharma");
+            devTeacher.setEmail("teacher@ashadeep.edu");
+            devTeacher.setPhone("9876543210");
+            devTeacher.setQualification("M.Sc Mathematics, B.Ed");
+            devTeacher.setSubjectSpecialization("Mathematics");
+            devTeacher = teacherRepository.save(devTeacher);
+
+            List<SchoolClass> classes = schoolClassRepository.findAll();
+            if (!classes.isEmpty() && classes.get(0).getClassTeacher() == null) {
+                SchoolClass sc = classes.get(0);
+                sc.setClassTeacher(devTeacher);
+                schoolClassRepository.save(sc);
+            }
+            System.out.println("Teacher profile created & linked: T001 (Rajesh Sharma)");
         }
 
         // Demo parent creation removed - use Excel import or admin dashboard to add parents

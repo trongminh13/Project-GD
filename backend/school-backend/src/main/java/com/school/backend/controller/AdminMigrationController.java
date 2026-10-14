@@ -1,11 +1,14 @@
 package com.school.backend.controller;
 
 import com.school.backend.service.DataMigrationService;
+import com.school.backend.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -14,12 +17,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdminMigrationController {
 
     private final DataMigrationService dataMigrationService;
+    private final StudentService studentService;
 
     @GetMapping("/ping")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> ping(jakarta.servlet.http.HttpServletRequest request) {
-        System.out.println("PING DEBUG - Authorization Header: " + request.getHeader("Authorization"));
         return ResponseEntity.ok("pong");
+    }
+
+    @GetMapping("/reconciliation")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getReconciliationReport() {
+        return ResponseEntity.ok(studentService.reconcileCoreFoundationsData());
     }
 
     @PostMapping("/upload-excel")

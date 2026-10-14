@@ -6,13 +6,16 @@ import 'package:ashadeep/core/theme/theme_manager.dart';
 import 'package:ashadeep/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
+  if (!kIsWeb) {
+    try {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initializeApp skipped/error: $e');
+    }
   }
   try {
     await dotenv.load(fileName: ".env");

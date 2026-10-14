@@ -1,12 +1,15 @@
 package com.school.backend.service;
 
 import com.school.backend.entity.Attendance;
+import com.school.backend.entity.Enrollment;
 import com.school.backend.entity.Marks;
+import com.school.backend.entity.SchoolClass;
 import com.school.backend.entity.Student;
 import com.school.backend.payload.dto.StudentAttendanceDto;
 import com.school.backend.payload.dto.StudentMarkDto;
 import com.school.backend.payload.dto.StudentProfileDto;
 import com.school.backend.repository.AttendanceRepository;
+import com.school.backend.repository.EnrollmentRepository;
 import com.school.backend.repository.MarksRepository;
 import com.school.backend.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,9 @@ public class StudentPortalService {
     @Autowired
     private MarksRepository marksRepository;
 
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+
     private Student getStudentByUserId(Long userId) {
         return studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -40,13 +46,19 @@ public class StudentPortalService {
 
     public StudentProfileDto getProfileByUserId(Long userId) {
         Student student = getStudentByUserId(userId);
+        
+        // Dual-Read: Ưu tiên lấy lớp từ bản ghi enrollment của năm học hiện tại
+        SchoolClass activeClass = enrollmentRepository.findByStudentIdAndAcademicYearIsCurrentTrue(student.getId())
+                .map(Enrollment::getSchoolClass)
+                .orElse(student.getSchoolClass());
+
         return StudentProfileDto.builder()
                 .id(student.getId())
                 .admissionNumber(student.getAdmissionNumber())
                 .name(student.getName())
                 .rollNo(student.getRollNo())
-                .grade(student.getSchoolClass() != null ? student.getSchoolClass().getGrade() : null)
-                .section(student.getSchoolClass() != null ? student.getSchoolClass().getSection() : null)
+                .grade(activeClass != null ? activeClass.getGrade() : null)
+                .section(activeClass != null ? activeClass.getSection() : null)
                 .dob(student.getDob())
                 .gender(student.getGender())
                 .photoUrl(student.getPhotoUrl())

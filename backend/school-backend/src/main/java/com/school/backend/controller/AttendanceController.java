@@ -34,7 +34,9 @@ public class AttendanceController {
     @PostMapping("/bulk")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public ResponseEntity<List<Attendance>> markBulkAttendance(@RequestBody BulkAttendanceRequest request) {
-        List<Attendance> result = attendanceService.saveBulkAttendance(request);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("TEACHER"));
+        List<Attendance> result = attendanceService.saveBulkAttendance(request, auth.getName(), isTeacher);
         return ResponseEntity.ok(result);
     }
 
@@ -48,7 +50,9 @@ public class AttendanceController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isParent = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("PARENT"));
-        List<Attendance> list = attendanceService.getAttendanceByStudentSecure(studentId, auth.getName(), isParent);
+        boolean isTeacher = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("TEACHER"));
+        List<Attendance> list = attendanceService.getAttendanceByStudentSecure(studentId, auth.getName(), isParent, isTeacher);
         return ResponseEntity.ok(list);
     }
 }

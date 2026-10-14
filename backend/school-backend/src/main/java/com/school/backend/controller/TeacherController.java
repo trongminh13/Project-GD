@@ -19,7 +19,7 @@ public class TeacherController {
     private TeacherService teacherService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('PARENT')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")
     public Page<Teacher> getAllTeachers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

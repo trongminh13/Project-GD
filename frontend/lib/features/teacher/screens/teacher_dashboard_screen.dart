@@ -1,3 +1,5 @@
+import 'package:ashadeep/features/teacher/screens/teacher_homework_list_screen.dart';
+import 'package:ashadeep/features/teacher/screens/teacher_leave_approval_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ashadeep/utils/constants.dart';
@@ -335,6 +337,38 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const ProfileScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  FadeInListItem(
+                    index: 6,
+                    child: _buildActionCard(
+                      context,
+                      'Duyệt đơn nghỉ',
+                      Icons.assignment_late_rounded,
+                      Colors.orange.shade800,
+                      () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TeacherLeaveApprovalScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  FadeInListItem(
+                    index: 7,
+                    child: _buildActionCard(
+                      context,
+                      'Bài tập & LMS',
+                      Icons.menu_book_rounded,
+                      const Color(0xFF6A1B9A),
+                      () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TeacherHomeworkListScreen(),
                           ),
                         );
                       },
