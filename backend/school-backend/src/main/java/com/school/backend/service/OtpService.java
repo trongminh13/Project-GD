@@ -54,6 +54,9 @@ public class OtpService {
                 : "****";
         log.info("Generated OTP for phone {} (valid for 5 minutes)", maskedPhone);
 
+        // DEV MODE log: Hiển thị mã OTP trực tiếp trên console để phục vụ kiểm thử cục bộ
+        log.info("🔔 [DEV MODE] Mã OTP cho SĐT {}: [{}] (hiệu lực: 5 phút)", phone, otp);
+
         // Gửi SMS
         sendSms(phone, otp);
 
@@ -62,7 +65,7 @@ public class OtpService {
 
     private void sendSms(String phone, String otp) {
         if (apiKey == null || apiKey.trim().isEmpty() || apiKey.contains("placeholder") || apiKey.contains("test")) {
-            log.debug("SMS API key not configured or in test mode. Skipping external SMS dispatch.");
+            log.info("🔔 [DEV MODE] Bỏ qua gửi SMS thật ra mạng ngoài. Sử dụng mã OTP [{}] ở trên để kiểm thử.", otp);
             return;
         }
 
