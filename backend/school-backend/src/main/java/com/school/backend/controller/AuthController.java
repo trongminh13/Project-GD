@@ -22,6 +22,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -121,6 +122,8 @@ public class AuthController {
                 }
             }
             return ResponseEntity.status(401).body(new MessageResponse("Tên đăng nhập hoặc mật khẩu không chính xác."));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401).body(new MessageResponse("Xác thực không thành công: " + e.getMessage()));
         }
     }
 
@@ -198,21 +201,19 @@ public class AuthController {
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
 
-        // Handle Role
+        // Security Hardening (P0): Chặn leo thang đặc quyền (Privilege Escalation)
+        // Đăng ký công khai chỉ áp dụng cho vai trò PARENT.
+        // Các vai trò đặc quyền (ADMIN, TEACHER, STUDENT) bắt buộc phải do Quản trị viên cấp nội bộ.
         Set<String> strRoles = signUpRequest.getRole();
-        Role role;
-
-        if (strRoles == null || strRoles.isEmpty()) {
-            role = Role.PARENT; // Default role
-        } else {
-            String roleStr = strRoles.iterator().next();
-            try {
-                role = Role.valueOf(roleStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid Role!"));
+        if (strRoles != null && !strRoles.isEmpty()) {
+            for (String r : strRoles) {
+                if (!Role.PARENT.name().equalsIgnoreCase(r)) {
+                    return ResponseEntity.badRequest().body(new MessageResponse(
+                            "Lỗi bảo mật: Đăng ký công khai chỉ áp dụng cho tài khoản Phụ huynh (PARENT)."));
+                }
             }
         }
-        user.setRole(role);
+        user.setRole(Role.PARENT);
 
         userRepository.save(user);
 

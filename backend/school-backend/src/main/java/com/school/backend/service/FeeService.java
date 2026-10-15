@@ -74,7 +74,6 @@ public class FeeService {
         return statement;
     }
 
-    @Transactional
     public String createRazorpayOrder(RazorpayOrderRequest request) throws RazorpayException {
         if (request == null || request.getStudentId() == null) {
             throw new IllegalArgumentException("Student ID is required to create order");
@@ -98,6 +97,8 @@ public class FeeService {
             finalAmount = BigDecimal.valueOf(100); // Minimum fallback
         }
 
+        // External Network I/O is performed OUTSIDE of database transaction
+        // to prevent connection pool exhaustion in HikariCP.
         RazorpayClient razorpay = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
 
         JSONObject orderRequest = new JSONObject();
@@ -109,24 +110,35 @@ public class FeeService {
         Order order = razorpay.orders.create(orderRequest);
         String orderId = order.get("id");
 
-        // Server saves PENDING transaction
-        FeePayment pendingPayment = new FeePayment();
-        pendingPayment.setStudent(student);
-        pendingPayment.setFeeStructure(feeStructure);
-        pendingPayment.setAmountPaid(finalAmount);
-        pendingPayment.setTransactionId(orderId);
-        pendingPayment.setStatus("PENDING");
-        pendingPayment.setMode("ONLINE");
-        pendingPayment.setPaymentDate(LocalDate.now());
-        feePaymentRepository.save(pendingPayment);
+        // Save PENDING transaction
+        savePendingPayment(student, feeStructure, finalAmount, orderId);
 
         return orderId;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
+    public FeePayment savePendingPayment(Student student, FeeStructure feeStructure, BigDecimal amount, String orderId) {
+        FeePayment pendingPayment = new FeePayment();
+        pendingPayment.setStudent(student);
+        pendingPayment.setFeeStructure(feeStructure);
+        pendingPayment.setAmountPaid(amount);
+        pendingPayment.setTransactionId(orderId);
+        pendingPayment.setStatus("PENDING");
+        pendingPayment.setMode("ONLINE");
+        pendingPayment.setPaymentDate(LocalDate.now());
+        return feePaymentRepository.save(pendingPayment);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
     public FeePayment verifyRazorpayPayment(RazorpayVerifyRequest request) throws RazorpayException {
         if (request.getRazorpayOrderId() == null || request.getRazorpayPaymentId() == null || request.getRazorpaySignature() == null) {
             throw new IllegalArgumentException("Missing Razorpay signature or payment details");
+        }
+
+        // Idempotency: Check if this payment ID was already processed
+        FeePayment alreadyProcessed = feePaymentRepository.findFirstByTransactionId(request.getRazorpayPaymentId()).orElse(null);
+        if (alreadyProcessed != null && "PAID".equalsIgnoreCase(alreadyProcessed.getStatus())) {
+            return alreadyProcessed;
         }
 
         JSONObject options = new JSONObject();
@@ -166,9 +178,9 @@ public class FeeService {
                 return feePaymentRepository.save(fallbackPayment);
             }
 
-            throw new RuntimeException("Payment record not found for Order ID: " + request.getRazorpayOrderId());
+            throw new IllegalStateException("Payment record not found for Order ID: " + request.getRazorpayOrderId());
         } else {
-            throw new RuntimeException("Invalid Razorpay Signature");
+            throw new IllegalArgumentException("Invalid Razorpay Signature");
         }
     }
 

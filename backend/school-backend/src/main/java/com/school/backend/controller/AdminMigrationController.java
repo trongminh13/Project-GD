@@ -2,7 +2,6 @@ package com.school.backend.controller;
 
 import com.school.backend.service.DataMigrationService;
 import com.school.backend.service.StudentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +12,15 @@ import java.util.Map;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/admin/migration")
-@RequiredArgsConstructor
 public class AdminMigrationController {
 
     private final DataMigrationService dataMigrationService;
     private final StudentService studentService;
+
+    public AdminMigrationController(DataMigrationService dataMigrationService, StudentService studentService) {
+        this.dataMigrationService = dataMigrationService;
+        this.studentService = studentService;
+    }
 
     @GetMapping("/ping")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -41,6 +44,8 @@ public class AdminMigrationController {
         try {
             String result = dataMigrationService.processExcelData(file.getInputStream());
             return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error processing file: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error processing file: " + e.getMessage());
         }

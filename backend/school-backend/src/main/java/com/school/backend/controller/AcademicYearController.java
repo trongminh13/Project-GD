@@ -18,11 +18,13 @@ public class AcademicYearController {
     private AcademicYearRepository academicYearRepository;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AcademicYear>> getAll() {
         return ResponseEntity.ok(academicYearRepository.findAll());
     }
 
     @GetMapping("/current")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AcademicYear> getCurrent() {
         return academicYearRepository.findByIsCurrentTrue()
                 .map(ResponseEntity::ok)

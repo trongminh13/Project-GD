@@ -125,12 +125,16 @@ public class AttendanceService {
 
         LocalDate targetDate = LocalDate.now();
         if (request.getDate() != null && !request.getDate().isBlank()) {
+            String dateStr = request.getDate().trim();
             try {
-                String dateStr = request.getDate().trim();
                 if (dateStr.length() >= 10) {
                     targetDate = LocalDate.parse(dateStr.substring(0, 10));
+                } else {
+                    throw new IllegalArgumentException("Định dạng ngày điểm danh không hợp lệ: " + dateStr + ". Yêu cầu định dạng yyyy-MM-dd.");
                 }
-            } catch (Exception ignored) {}
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new IllegalArgumentException("Định dạng ngày điểm danh không hợp lệ: " + dateStr + ". Yêu cầu định dạng yyyy-MM-dd.", e);
+            }
         }
 
         Teacher callingTeacher = null;

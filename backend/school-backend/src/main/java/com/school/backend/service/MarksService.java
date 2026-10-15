@@ -80,7 +80,7 @@ public class MarksService {
         }
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public List<Marks> saveBulkMarks(BulkMarksRequest request, String currentUsername, boolean isTeacher) {
         if (request == null || request.getRecords() == null || request.getRecords().isEmpty()) {
             return new ArrayList<>();
@@ -89,25 +89,29 @@ public class MarksService {
         // 1. Resolve Exam
         Exam exam = null;
         if (request.getExamId() != null) {
-            exam = examRepository.findById(request.getExamId()).orElse(null);
-        } else if (request.getAssessmentId() != null) {
+            exam = examRepository.findById(request.getExamId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy kỳ thi với ID: " + request.getExamId()));
+        } else if (request.getAssessmentId() != null && !request.getAssessmentId().isBlank()) {
             try {
-                Long parsedId = Long.parseLong(request.getAssessmentId());
+                Long parsedId = Long.parseLong(request.getAssessmentId().trim());
                 exam = examRepository.findById(parsedId).orElse(null);
-            } catch (NumberFormatException ignored) {}
-        }
-
-        if (exam == null) {
-            String examName = (request.getAssessmentId() != null && !request.getAssessmentId().isBlank())
-                    ? "Assessment " + request.getAssessmentId()
-                    : "Regular Assessment";
+            } catch (NumberFormatException e) {
+                // Non-numeric assessment identifier descriptor
+            }
+            if (exam == null) {
+                String examName = "Assessment " + request.getAssessmentId().trim();
+                Exam newExam = new Exam();
+                newExam.setName(examName);
+                exam = examRepository.save(newExam);
+            }
+        } else {
             List<Exam> existingExams = examRepository.findAll();
             if (!existingExams.isEmpty()) {
                 exam = existingExams.get(0);
             } else {
-                exam = new Exam();
-                exam.setName(examName);
-                exam = examRepository.save(exam);
+                Exam defaultExam = new Exam();
+                defaultExam.setName("Regular Assessment");
+                exam = examRepository.save(defaultExam);
             }
         }
 

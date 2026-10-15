@@ -770,4 +770,52 @@ public class SecurityReBACTest {
                         .header("Authorization", "Bearer " + tokenStudentA))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("P0 Hardening: Đăng ký công khai không được phép chọn vai trò ADMIN -> Phải trả về 400 Bad Request")
+    void testSignup_CannotRegisterAsAdmin() throws Exception {
+        String payload = """
+                {
+                    "username": "hacker_admin_test",
+                    "email": "hacker@test.com",
+                    "password": "Password123@",
+                    "role": ["ADMIN"]
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", org.hamcrest.Matchers.containsString("Lỗi bảo mật")));
+    }
+
+    @Test
+    @DisplayName("P0 Hardening: Chuỗi JSON của User và Student tuyệt đối không bao giờ chứa password hash")
+    void testUserSerialization_PasswordNeverExposed() throws Exception {
+        String userJson = objectMapper.writeValueAsString(userStudentA);
+        org.junit.jupiter.api.Assertions.assertFalse(userJson.contains("\"password\""),
+                "User JSON serialization must NOT contain password field!");
+
+        String studentJson = objectMapper.writeValueAsString(studentA);
+        org.junit.jupiter.api.Assertions.assertFalse(studentJson.contains("\"password\""),
+                "Student JSON serialization must NOT contain password field!");
+    }
+
+    @Test
+    @DisplayName("P0 Hardening: Phụ huynh B cố tình xem sao kê học phí của con Phụ huynh A (IDOR) -> Phải nhận 403 Forbidden")
+    void testFeeStatement_ParentReBAC_IDOR() throws Exception {
+        String tokenParentA = jwtUtils.generateTokenFromUsername(userParentA.getUsername());
+        String tokenParentB = jwtUtils.generateTokenFromUsername(userParentB.getUsername());
+
+        // Phụ huynh A xem con mình -> 200 OK
+        mockMvc.perform(get("/api/fees/statement/" + studentA.getId())
+                        .header("Authorization", "Bearer " + tokenParentA))
+                .andExpect(status().isOk());
+
+        // Phụ huynh B xem con người khác -> 403 Forbidden
+        mockMvc.perform(get("/api/fees/statement/" + studentA.getId())
+                        .header("Authorization", "Bearer " + tokenParentB))
+                .andExpect(status().isForbidden());
+    }
 }

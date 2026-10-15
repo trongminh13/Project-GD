@@ -1,8 +1,10 @@
 package com.school.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.school.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @JsonIgnore
+    @ToString.Exclude
     @Column(nullable = false)
     private String password;
 

@@ -1,0 +1,93 @@
+### AUTH & PROFILE API COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Đăng nhập ADMIN
+# @name adminLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "adminPassword123!"
+}
+
+### Lưu token ADMIN
+@adminToken = {{adminLogin.response.body.token}}
+
+### 2. Đăng nhập sai mật khẩu (Test Lockout đếm số lần)
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "gv_chunhiem_3a",
+  "password": "WrongPassword123"
+}
+
+### 3. Đăng nhập TEACHER (GVCN 3A)
+# @name teacherLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "gv_chunhiem_3a",
+  "password": "teacherPassword123!"
+}
+
+@teacherToken = {{teacherLogin.response.body.token}}
+
+### 4. Đăng nhập PARENT
+# @name parentLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "ph_con_3a",
+  "password": "parentPassword123!"
+}
+
+@parentToken = {{parentLogin.response.body.token}}
+
+### 5. Đăng nhập STUDENT
+# @name studentLogin
+POST {{baseUrl}}/api/auth/signin
+Content-Type: application/json
+
+{
+  "username": "hs_3a_01",
+  "password": "studentPassword123!"
+}
+
+@studentToken = {{studentLogin.response.body.token}}
+
+### 6. Đổi mật khẩu
+POST {{baseUrl}}/api/auth/change-password
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "oldPassword": "adminPassword123!",
+  "newPassword": "adminPasswordNew456@"
+}
+
+### 7. Gửi OTP (Rate limit 60s)
+POST {{baseUrl}}/api/auth/send-otp
+Content-Type: application/json
+
+{
+  "phone": "0912345678"
+}
+
+### 8. Lấy hồ sơ Profile cá nhân
+GET {{baseUrl}}/api/profile
+Authorization: Bearer {{adminToken}}
+
+### 9. Cập nhật hồ sơ Profile cá nhân
+PUT {{baseUrl}}/api/profile
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "name": "Nguyễn Thị Lan (Đã cập nhật)",
+  "phone": "0988776655",
+  "address": "Phòng 301, Tòa nhà A"
+}

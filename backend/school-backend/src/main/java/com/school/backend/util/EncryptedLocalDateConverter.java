@@ -3,6 +3,8 @@ package com.school.backend.util;
 import com.school.backend.config.EncryptionConfig;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -10,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 @Converter
 public class EncryptedLocalDateConverter implements AttributeConverter<LocalDate, String> {
 
+    private static final Logger log = LoggerFactory.getLogger(EncryptedLocalDateConverter.class);
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static EncryptionConfig.StringEncryptor encryptor;
 
@@ -53,7 +56,7 @@ public class EncryptedLocalDateConverter implements AttributeConverter<LocalDate
                     // Try MM/dd/yyyy format
                     return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("MM/dd/yyyy"));
                 } catch (Exception e3) {
-                    System.err.println("Warning: Could not parse date: " + dateStr);
+                    log.warn("Could not parse date string: '{}' with any supported format (ISO, dd/MM/yyyy, MM/dd/yyyy). Returning null.", dateStr);
                     return null;
                 }
             }
