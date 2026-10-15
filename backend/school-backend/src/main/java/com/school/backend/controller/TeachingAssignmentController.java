@@ -17,15 +17,22 @@ public class TeachingAssignmentController {
     @Autowired
     private TeachingAssignmentRepository teachingAssignmentRepository;
 
+    @Autowired
+    private com.school.backend.security.SchoolAccessPolicy accessPolicy;
+
     @GetMapping("/teacher/{teacherId}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public ResponseEntity<List<TeachingAssignment>> getByTeacher(@PathVariable Long teacherId) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        accessPolicy.verifyCanAccessTeacherAssignments(auth, teacherId);
         return ResponseEntity.ok(teachingAssignmentRepository.findByTeacherIdAndAcademicYearIsCurrentTrue(teacherId));
     }
 
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public ResponseEntity<List<TeachingAssignment>> getByClass(@PathVariable Long classId) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        accessPolicy.verifyTeacherCanManageClassAttendance(auth, classId);
         return ResponseEntity.ok(teachingAssignmentRepository.findBySchoolClassIdAndAcademicYearIsCurrentTrue(classId));
     }
 }

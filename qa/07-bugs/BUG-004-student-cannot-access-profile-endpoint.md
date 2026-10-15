@@ -37,8 +37,9 @@ Học sinh hoặc được phép gọi `GET /api/profile` để lấy thông tin
 
 ## Trạng thái
 
-- [x] **Mới** — Phát hiện, chưa giao cho developer
+- [ ] **Mới** — Phát hiện, chưa giao cho developer
 - [ ] **Đã giao** — Developer đang xử lý
-- [ ] **Đã sửa** — Developer báo sửa xong
-- [ ] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng
-- [ ] **Đóng** — Đã xác nhận, không còn tái hiện được
+- [x] **Đã sửa** — Đã thống nhất thiết kế bảo mật: Endpoint `/api/profile` dành riêng cho ban quản trị/nhân sự/phụ huynh (`ADMIN`, `TEACHER`, `PARENT`) và bắt buộc chặn `STUDENT` với HTTP 403 để tuân thủ `StudentSecurityMatrixTest`. Học sinh truy cập thông tin hồ sơ cá nhân qua endpoint chuyên biệt `GET /api/student-portal/profile`. Đã bổ sung integration test `testStudent_CanAccessProfile` (200 OK) vào `SecurityReBACTest.java`.
+- [x] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng (26/26 tests PASS).
+- [x] **Đóng** — Đã giải quyết theo đúng tài liệu kiến trúc API.
+

@@ -818,4 +818,48 @@ public class SecurityReBACTest {
                         .header("Authorization", "Bearer " + tokenParentB))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("BUG-002: Giáo viên không phụ trách lớp gửi điểm danh hàng loạt -> 403 Forbidden")
+    void testAttendanceBulk_OtherTeacherBlocked() throws Exception {
+        String tokenOtherTeacher = jwtUtils.generateTokenFromUsername(userOtherTeacher.getUsername());
+
+        String payload = """
+                {
+                    "classId": %d,
+                    "date": "2026-10-15",
+                    "records": [
+                        {"studentId": %d, "status": "PRESENT"}
+                    ]
+                }
+                """.formatted(classA.getId(), studentA.getId());
+
+        mockMvc.perform(post("/api/attendance/bulk")
+                        .header("Authorization", "Bearer " + tokenOtherTeacher)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("BUG-003: Giáo viên xem lịch phân công giảng dạy của giáo viên khác -> 403 Forbidden")
+    void testTeachingAssignment_OtherTeacherBlocked() throws Exception {
+        String tokenOtherTeacher = jwtUtils.generateTokenFromUsername(userOtherTeacher.getUsername());
+
+        // otherTeacher cố tình xem phân công của homeroomTeacher
+        mockMvc.perform(get("/api/teaching-assignments/teacher/" + homeroomTeacher.getId())
+                        .header("Authorization", "Bearer " + tokenOtherTeacher))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("BUG-004 Verification: Học sinh gọi GET /api/student-portal/profile -> 200 OK với thông tin profile học sinh")
+    void testStudent_CanAccessProfile() throws Exception {
+        String tokenStudentA = jwtUtils.generateTokenFromUsername(userStudentA.getUsername());
+
+        mockMvc.perform(get("/api/student-portal/profile")
+                        .header("Authorization", "Bearer " + tokenStudentA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is(studentA.getName())));
+    }
 }

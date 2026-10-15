@@ -46,8 +46,8 @@ hoặc chỉ cho phép ADMIN xem mọi giáo viên, còn TEACHER chỉ được 
 
 ## Trạng thái
 
-- [x] **Mới** — Phát hiện, chưa giao cho developer
+- [ ] **Mới** — Phát hiện, chưa giao cho developer
 - [ ] **Đã giao** — Developer đang xử lý
-- [ ] **Đã sửa** — Developer báo sửa xong
-- [ ] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng
-- [ ] **Đóng** — Đã xác nhận, không còn tái hiện được
+- [x] **Đã sửa** — Đã tích hợp SchoolAccessPolicy.verifyCanAccessTeacherAssignments trong getByTeacher và verifyTeacherCanManageClassAttendance trong getByClass. Đã kiểm chứng qua test testTeachingAssignment_OtherTeacherBlocked (403 Forbidden).
+- [x] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng (26/26 tests PASS)
+- [x] **Đóng** — Đã xác nhận, không còn tái hiện được

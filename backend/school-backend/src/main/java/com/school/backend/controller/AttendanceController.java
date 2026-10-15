@@ -19,6 +19,9 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService;
 
+    @Autowired
+    private com.school.backend.security.SchoolAccessPolicy accessPolicy;
+
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('PARENT') or hasAuthority('TEACHER')")
     public ResponseEntity<List<Attendance>> getStudentAttendance(@PathVariable Long studentId) {
@@ -35,6 +38,9 @@ public class AttendanceController {
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public ResponseEntity<List<Attendance>> markBulkAttendance(@RequestBody BulkAttendanceRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (request != null && request.getClassId() != null) {
+            accessPolicy.verifyTeacherCanManageClassAttendance(auth, request.getClassId());
+        }
         boolean isTeacher = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("TEACHER"));
         List<Attendance> result = attendanceService.saveBulkAttendance(request, auth.getName(), isTeacher);
         return ResponseEntity.ok(result);
@@ -43,6 +49,10 @@ public class AttendanceController {
     @PostMapping("/mark")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     public Attendance markAttendance(@RequestBody Attendance attendance) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (attendance != null && attendance.getStudent() != null && attendance.getStudent().getId() != null) {
+            accessPolicy.verifyCanAccessStudent(auth, attendance.getStudent().getId());
+        }
         return attendanceService.markAttendance(attendance);
     }
 

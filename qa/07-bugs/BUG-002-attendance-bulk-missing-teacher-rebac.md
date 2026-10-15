@@ -56,8 +56,8 @@ Hệ thống phải gọi policy check `SchoolAccessPolicy.verifyTeacherCanManag
 
 ## Trạng thái
 
-- [x] **Mới** — Phát hiện, chưa giao cho developer
+- [ ] **Mới** — Phát hiện, chưa giao cho developer
 - [ ] **Đã giao** — Developer đang xử lý
-- [ ] **Đã sửa** — Developer báo sửa xong
-- [ ] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng
-- [ ] **Đóng** — Đã xác nhận, không còn tái hiện được
+- [x] **Đã sửa** — Đã tích hợp SchoolAccessPolicy.verifyTeacherCanManageClassAttendance trong markBulkAttendance và verifyCanAccessStudent trong markAttendance. Đã kiểm chứng qua test testAttendanceBulk_OtherTeacherBlocked (403 Forbidden).
+- [x] **Đã kiểm tra lại** — QA chạy lại, xác nhận sửa đúng (26/26 tests PASS)
+- [x] **Đóng** — Đã xác nhận, không còn tái hiện được

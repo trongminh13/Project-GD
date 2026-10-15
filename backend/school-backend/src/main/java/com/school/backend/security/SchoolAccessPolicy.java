@@ -226,6 +226,47 @@ public class SchoolAccessPolicy {
     }
 
     /**
+     * Xác thực quyền quản lý/điểm danh của giáo viên đối với một lớp học (BUG-002 ReBAC):
+     * Giáo viên phải là GVCN hoặc được phân công giảng dạy tại lớp đó.
+     */
+    public void verifyTeacherCanManageClassAttendance(Authentication auth, Long classId) {
+        if (isAdmin(auth)) return;
+
+        Teacher teacher = teacherRepository.findByUserUsername(auth.getName())
+                .orElseThrow(() -> new AccessDeniedException("Hồ sơ giáo viên không tồn tại."));
+
+        SchoolClass sc = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học với ID: " + classId));
+
+        boolean isHomeroom = sc.getEffectiveHomeroomTeacher() != null
+                && sc.getEffectiveHomeroomTeacher().getId().equals(teacher.getId());
+
+        boolean isAssigned = teachingAssignmentRepository
+                .findByTeacherIdAndAcademicYearIsCurrentTrue(teacher.getId()).stream()
+                .anyMatch(ta -> ta.getSchoolClass().getId().equals(classId));
+
+        if (!isHomeroom && !isAssigned) {
+            throw new AccessDeniedException("Bạn không có quyền điểm danh cho lớp học này.");
+        }
+    }
+
+    /**
+     * Xác thực quyền xem phân công giảng dạy của một giáo viên (BUG-003 IDOR):
+     * - ADMIN: Xem mọi giáo viên
+     * - TEACHER: Bắt buộc chỉ được xem của chính mình.
+     */
+    public void verifyCanAccessTeacherAssignments(Authentication auth, Long teacherId) {
+        if (isAdmin(auth)) return;
+
+        Teacher currentTeacher = teacherRepository.findByUserUsername(auth.getName())
+                .orElseThrow(() -> new AccessDeniedException("Hồ sơ giáo viên không tồn tại."));
+
+        if (!currentTeacher.getId().equals(teacherId)) {
+            throw new AccessDeniedException("Giáo viên chỉ có quyền xem phân công giảng dạy của chính mình.");
+        }
+    }
+
+    /**
      * Xác thực quyền của giáo viên khi xem danh sách bài nộp hoặc chấm điểm bài tập:
      * Giáo viên phải là người giao bài, hoặc GVCN lớp đó, hoặc được phân công dạy lớp đó.
      */

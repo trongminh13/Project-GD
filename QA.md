@@ -4,7 +4,7 @@
 **Phiên bản kiểm toán**: Phase 1 Foundation & LMS Hardened Release  
 **Người kiểm định**: Senior QA Engineer & Security Auditor  
 **Tài liệu đối soát kiến trúc**: [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/quan-he-du-lieu.md)  
-**Thời gian cập nhật**: 15/10/2026 (Bổ sung Hardening: Global Exception Handler & Converter Logging)  
+**Thời gian cập nhật**: 15/10/2026 (Hoàn tất đóng 100% 5 Bugs QA, Khóa BOLA/ReBAC & 26/26 Tests PASS)  
 
 ---
 
@@ -51,7 +51,7 @@
 *Lưu ý: Toàn bộ kết quả kiểm thử dưới đây được thực thi và chứng thực trực tiếp trên môi trường máy chủ cục bộ với PostgreSQL 18.6.*
 
 ### 2.1. Kiểm thử Tích hợp Tự động Backend (`./mvnw test`)
-* **Tổng số ca kiểm thử**: **23 / 23 tests PASSED (0 failures, 0 errors, 0 skipped)**
+* **Tổng số ca kiểm thử**: **26 / 26 tests PASSED (0 failures, 0 errors, 0 skipped)**
 * **Chi tiết bộ test ReBAC, LMS & Security Hardening** ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):
   * ✅ `testEnrollment_ParentReBAC`: Phụ huynh xem con mình -> **200 OK**; xem con người khác -> **403 Forbidden**.
   * ✅ `testEnrollment_StudentReBAC`: Học sinh xem chính mình -> **200 OK**; xem bạn cùng lớp/khác lớp -> **403 Forbidden**.
@@ -64,6 +64,9 @@
   * ✅ `testSignup_CannotRegisterAsAdmin`: Chặn đăng ký công khai với vai trò ADMIN -> Trả về chuẩn HTTP **400 Bad Request**.
   * ✅ `testUserSerialization_PasswordNeverExposed`: Kiểm chứng chuỗi JSON của User và Student tuyệt đối không bao giờ chứa trường `password`.
   * ✅ `testFeeStatement_ParentReBAC_IDOR`: Phụ huynh B xem sao kê học phí của con Phụ huynh A -> Trả về chuẩn HTTP **403 Forbidden** (chống IDOR/BOLA tài chính).
+  * ✅ `testAttendanceBulk_OtherTeacherBlocked`: Giáo viên không phụ trách lớp gửi điểm danh hàng loạt -> Trả về chuẩn HTTP **403 Forbidden** (khóa BOLA BUG-002).
+  * ✅ `testTeachingAssignment_OtherTeacherBlocked`: Giáo viên xem phân công của giáo viên khác -> Trả về chuẩn HTTP **403 Forbidden** (chống IDOR BUG-003).
+  * ✅ `testStudent_CanAccessProfile`: Học sinh gọi cổng thông tin hồ sơ `GET /api/student-portal/profile` -> Trả về chuẩn HTTP **200 OK** với `StudentProfileDto` (xác thực kiến trúc BUG-004).
 * **Chi tiết bộ test Security Matrix hiện hữu** ([`StudentSecurityMatrixTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/StudentSecurityMatrixTest.java)):
   * ✅ **7 / 7 tests PASSED**: Cưỡng chế đổi mật khẩu lần đầu, kiểm soát quyền truy cập theo vai trò.
 * **Chi tiết bộ test Transaction Rollback thực tế** ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java)):
@@ -160,6 +163,17 @@
   * *Dịch vụ OTP*: Trong [`OtpService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/OtpService.java), bổ sung cơ chế thời hạn hết hạn (TTL 5 phút), giới hạn tối đa 5 lần thử xác minh chống tấn công vét cạn (Brute-Force), chuyển sang sử dụng `ConcurrentHashMap` an toàn đa luồng và che giấu PII trong log. Đồng thời tự động bypass gọi API ra internet và in rõ mã OTP ra log console ở chế độ DEV MODE để phục vụ kiểm thử cục bộ.
 * **Đồng bộ Ma trận Phân quyền QA**: Cập nhật [`qa/01-endpoint-inventory.md`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/01-endpoint-inventory.md) phản ánh chính xác việc endpoint `GET /api/students/{id}` đã bị chặn đối với vai trò `PARENT` ở tầng controller (bắt buộc dùng `/api/students/my-wards`).
 
+### 4.9. Xử lý Triệt để Các Lỗ hổng Nghiệp vụ ReBAC & IDOR Còn Lại (BUG-002, BUG-003, BUG-004)
+* **BUG-002 — BOLA/ReBAC trong Điểm danh hàng loạt (`AttendanceController`)**:
+  * *Vấn đề*: Endpoint `POST /api/attendance/bulk` chỉ kiểm tra vai trò `TEACHER` chung mà không xác minh xem giáo viên có phụ trách hoặc giảng dạy lớp học đó không.
+  * *Giải pháp*: Bổ sung trường `classId` vào [`BulkAttendanceRequest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/request/BulkAttendanceRequest.java). Tích hợp `accessPolicy.verifyTeacherCanManageClassAttendance(auth, request.getClassId())` vào [`AttendanceController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AttendanceController.java) để chặn giáo viên ngoại lai (HTTP 403 Forbidden). Đồng thời bảo vệ endpoint điểm danh đơn lẻ bằng `verifyCanAccessStudent`.
+* **BUG-003 — IDOR Phân công giảng dạy (`TeachingAssignmentController`)**:
+  * *Vấn đề*: Giáo viên có thể tùy ý xem lịch phân công giảng dạy của bất kỳ giáo viên nào khác qua `GET /api/teaching-assignments/teacher/{teacherId}`.
+  * *Giải pháp*: Bổ sung hàm kiểm tra `verifyCanAccessTeacherAssignments(auth, teacherId)` trong [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java). Chỉ ADMIN hoặc chính giáo viên sở hữu ID mới có quyền xem phân công; giáo viên khác gọi vào sẽ nhận ngay HTTP **403 Forbidden**. Đồng thời siết quyền `GET /api/teaching-assignments/class/{classId}` chỉ cho phép GVCN/GV bộ môn của lớp đó.
+* **BUG-004 — Phân định rõ Endpoint Hồ sơ Học sinh (`ProfileController` vs `StudentPortalController`)**:
+  * *Vấn đề*: Endpoint chung `GET /api/profile` chặn vai trò `STUDENT` (HTTP 403 Forbidden).
+  * *Giải pháp*: Duy trì thiết kế an toàn `@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")` tại [`ProfileController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/ProfileController.java) nhằm bảo vệ ma trận phân quyền hệ thống lõi và tuân thủ `StudentSecurityMatrixTest`. Thống nhất kiến trúc API: Học sinh truy cập thông tin cá nhân và lớp học qua cổng chuyên biệt `GET /api/student-portal/profile` (trả về `StudentProfileDto`). Đã viết test `testStudent_CanAccessProfile` xác minh trả về HTTP **200 OK**.
+
 ---
 
 ## 5. CÁC QUYẾT ĐỊNH NGHIỆP VỤ CHỜ PHÊ DUYỆT (BUSINESS DECISIONS PENDING APPROVAL)
@@ -220,12 +234,12 @@ Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đ�
 
 5. **Kết quả Thực tế & Lỗi Phát hiện**:
    - [2026-10-15-lan-01.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/06-execution-reports/2026-10-15-lan-01.md): Báo cáo lần chạy 1: 35 ca đã chạy thực tế (27 PASS, 5 FAIL, 3 Chặn chờ quyết định).
-   - **5 Bugs mở ghi nhận độc lập**:
-     - [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md): Endpoint cấu hình năm học thiếu `@PreAuthorize`.
-     - [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md): Điểm danh hàng loạt thiếu xác minh giáo viên phụ trách lớp.
-     - [BUG-003](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-003-teaching-assignment-idor.md): Xem phân công giảng dạy của giáo viên khác qua ID.
-     - [BUG-004](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-004-student-cannot-access-profile-endpoint.md): Học sinh bị thiếu role tại `/api/profile`.
-     - [BUG-005](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-005-sms-debug-route-live-api.md): Endpoint debug SMS gọi API thật ngoài Internet.
+   - **5 Bugs ghi nhận độc lập (Đã xử lý & đóng 100%)**:
+     - [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md): Endpoint cấu hình năm học thiếu `@PreAuthorize` → [x] **Đã sửa & Đóng**.
+     - [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md): Điểm danh hàng loạt thiếu xác minh giáo viên phụ trách lớp → [x] **Đã sửa & Đóng**.
+     - [BUG-003](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-003-teaching-assignment-idor.md): Xem phân công giảng dạy của giáo viên khác qua ID → [x] **Đã sửa & Đóng**.
+     - [BUG-004](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-004-student-cannot-access-profile-endpoint.md): Học sinh bị thiếu role tại `/api/profile` → [x] **Đã đóng** (theo thiết kế dùng `/api/student-portal/profile`).
+     - [BUG-005](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-005-sms-debug-route-live-api.md): Endpoint debug SMS gọi API thật ngoài Internet → [x] **Đã sửa & Đóng**.
 
 6. **Biên bản Nghiệm thu & Phát hành**:
    - [uat-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/08-signoff/uat-checklist.md): Kịch bản nghiệm thu thực tế cho Admin, Giáo viên, Phụ huynh, Học sinh.

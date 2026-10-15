@@ -5,6 +5,7 @@ import java.util.List;
 
 @Data
 public class BulkAttendanceRequest {
+    private Long classId;
     private String className;
     private String date;
     private List<Record> records;
