@@ -1,7 +1,8 @@
 enum UserRole {
   admin,
   teacher,
-  parent, // Future use
+  parent,
+  student,
 }
 
 class User {
@@ -10,6 +11,7 @@ class User {
   final UserRole role;
   final String? photoUrl;
   final String? token;
+  final bool mustChangePassword;
 
   User({
     required this.id,
@@ -17,19 +19,22 @@ class User {
     required this.role,
     this.photoUrl,
     this.token,
+    this.mustChangePassword = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'].toString(),
-      name: json['username'] ?? 'User', // Backend sends 'username'
-      role: _parseRole(json['roles'][0]), // Backend sends list of roles
+      name: json['username'] ?? 'User',
+      role: _parseRole(json['roles'] != null && (json['roles'] as List).isNotEmpty
+          ? json['roles'][0]
+          : ''),
       token: json['token'],
+      mustChangePassword: json['mustChangePassword'] == true,
     );
   }
 
   static UserRole _parseRole(String role) {
-    // Normalize string just in case
     final normalized = role.toUpperCase();
     if (normalized == 'ROLE_ADMIN' || normalized == 'ADMIN') {
       return UserRole.admin;
@@ -37,6 +42,8 @@ class User {
       return UserRole.teacher;
     } else if (normalized == 'ROLE_PARENT' || normalized == 'PARENT') {
       return UserRole.parent;
+    } else if (normalized == 'ROLE_STUDENT' || normalized == 'STUDENT') {
+      return UserRole.student;
     }
     return UserRole.parent; // Fallback
   }

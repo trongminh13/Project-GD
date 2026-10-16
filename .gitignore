@@ -154,3 +154,12 @@ flowchart/
 frontend/%USERPROFILE%/
 backend/school-backend/HELP.md
 backend/school-backend/boot.log
+
+# Database Dumps & Backups
+*.dump
+*.sql.bak
+*.tar
+
+# Demo & Mockups
+Demo*.html
+"Demo ứng dụng giáo dục.html"

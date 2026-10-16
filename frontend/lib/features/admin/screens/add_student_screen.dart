@@ -42,9 +42,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _loadClasses();
   }
 
-  void _loadClasses() {
-    _allSchoolClasses = ClassService().getAllClasses();
-    _availableGrades = _allSchoolClasses.map((e) => e.grade).toSet().toList();
+  void _loadClasses() async {
+    _allSchoolClasses = await ClassService().fetchClassesFromBackend();
+    if (!mounted) return;
+    setState(() {
+      _availableGrades = _allSchoolClasses.map((e) => e.grade).toSet().toList();
+    });
     // Sort grades using priority order: Nursery, LKG, UKG, 1-12
     const classOrder = [
       'Nursery',

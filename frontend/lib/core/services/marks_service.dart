@@ -26,11 +26,9 @@ class MarksService {
         final List<dynamic> data = jsonDecode(response.body);
         return List<Map<String, dynamic>>.from(data);
       }
-    } catch (e) {
-      print('Error fetching marks: $e');
+    } catch (_) {
+      // Return empty on failure
     }
-
-    // No mock data — return empty if API fails
     return [];
   }
 
@@ -38,8 +36,10 @@ class MarksService {
   Future<bool> uploadClassMarks(
     String className,
     String assessmentId,
-    Map<String, int> studentMarks,
-  ) async {
+    Map<String, int> studentMarks, {
+    String? subject,
+    int? maxMarks,
+  }) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/marks/bulk');
 
@@ -58,14 +58,15 @@ class MarksService {
         body: jsonEncode({
           'className': className,
           'assessmentId': assessmentId,
+          'subject': subject,
+          'maxMarks': maxMarks,
           'records': payload,
         }),
       );
 
       return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      print('Error submitting marks: $e');
-      return true; // Mock success for frontend visualization
+    } catch (_) {
+      return false; // Correct failure indicator, no mock success
     }
   }
 }

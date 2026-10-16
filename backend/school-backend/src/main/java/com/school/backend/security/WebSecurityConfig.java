@@ -2,6 +2,7 @@ package com.school.backend.security;
 
 import com.school.backend.security.jwt.AuthEntryPointJwt;
 import com.school.backend.security.jwt.AuthTokenFilter;
+import com.school.backend.security.jwt.MustChangePasswordFilter;
 import com.school.backend.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,9 @@ public class WebSecurityConfig {
 
     @Autowired
     AuthEntryPointJwt unauthorizedHandler;
+
+    @Autowired
+    MustChangePasswordFilter mustChangePasswordFilter;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -60,15 +64,29 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/api/test/**").hasAuthority("ADMIN")
                         .requestMatchers("/error").permitAll()
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
 
+        // Token filter first, then must-change-password enforcement filter
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(mustChangePasswordFilter, AuthTokenFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOriginPatterns(java.util.List.of("*"));
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowCredentials(true);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

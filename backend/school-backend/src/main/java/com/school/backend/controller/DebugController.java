@@ -2,10 +2,10 @@ package com.school.backend.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/test")
 public class DebugController {
@@ -14,6 +14,7 @@ public class DebugController {
     private String apiKey;
 
     @GetMapping("/sms")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> testSms(@RequestParam String phone, @RequestParam String otp) {
         try {
             String url = "https://www.fast2sms.com/dev/bulkV2?authorization=" + apiKey +

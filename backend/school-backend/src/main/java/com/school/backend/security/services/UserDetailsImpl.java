@@ -21,13 +21,16 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
 
+    private boolean mustChangePassword;
+
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String username, String password,
+    public UserDetailsImpl(Long id, String username, String password, boolean mustChangePassword,
             Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.mustChangePassword = mustChangePassword;
         this.authorities = authorities;
     }
 
@@ -39,6 +42,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getId(),
                 user.getUsername(),
                 user.getPassword(),
+                Boolean.TRUE.equals(user.getMustChangePassword()),
                 authorities);
     }
 
@@ -59,6 +63,10 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public String getUsername() {
         return username;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
     }
 
     @Override

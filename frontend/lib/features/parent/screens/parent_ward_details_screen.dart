@@ -1,3 +1,4 @@
+import 'package:ashadeep/features/parent/screens/parent_leave_request_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/widgets/fade_in_list_item.dart';
@@ -174,6 +175,26 @@ class ParentWardDetailsScreen extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => const ParentHomeworkScreen(),
                         settings: RouteSettings(arguments: wardId),
+                      ),
+                    ),
+                  ),
+                ),
+                FadeInListItem(
+                  index: 7,
+                  child: _buildActionCard(
+                    context,
+                    "Đơn xin nghỉ",
+                    "Xin nghỉ phép",
+                    Icons.event_busy_rounded,
+                    const Color(0xFFFF9A8B),
+                    const Color(0xFFFF6A88),
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ParentLeaveRequestScreen(
+                          studentId: wardId,
+                          studentName: wardName,
+                        ),
                       ),
                     ),
                   ),

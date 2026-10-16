@@ -21,13 +21,16 @@ public class ExcelAnalyzer implements CommandLineRunner {
         System.out.println("====== EXCEL ANALYSIS STARTED ======");
 
         String excelPath = "d:/misc/Java/Student Management System/Excels";
+        Path path = Paths.get(excelPath);
 
-        try (Stream<Path> paths = Files.walk(Paths.get(excelPath))) {
-            paths.filter(Files::isRegularFile)
-                    .filter(p -> p.toString().endsWith(".xlsx"))
-                    .forEach(this::analyzeFile);
-        } catch (Exception e) {
-            System.err.println("Error inspecting folder: " + e.getMessage());
+        if (Files.exists(path)) {
+            try (Stream<Path> paths = Files.walk(path)) {
+                paths.filter(Files::isRegularFile)
+                        .filter(p -> p.toString().endsWith(".xlsx"))
+                        .forEach(this::analyzeFile);
+            } catch (Exception e) {
+                System.err.println("Error inspecting folder: " + e.getMessage());
+            }
         }
 
         System.out.println("====== EXCEL ANALYSIS COMPLETED ======");

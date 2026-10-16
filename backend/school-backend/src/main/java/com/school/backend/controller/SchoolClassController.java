@@ -37,4 +37,37 @@ public class SchoolClassController {
                         .body(c))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<SchoolClass> createClass(@RequestBody SchoolClass schoolClass) {
+        if (schoolClass.getSection() == null || schoolClass.getSection().isBlank()) {
+            schoolClass.setSection("A");
+        }
+        SchoolClass saved = schoolClassRepository.save(schoolClass);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<SchoolClass> updateClass(@PathVariable Long id, @RequestBody SchoolClass updated) {
+        return schoolClassRepository.findById(id)
+                .map(existing -> {
+                    if (updated.getGrade() != null) existing.setGrade(updated.getGrade());
+                    if (updated.getSection() != null) existing.setSection(updated.getSection());
+                    if (updated.getClassTeacher() != null) existing.setClassTeacher(updated.getClassTeacher());
+                    return ResponseEntity.ok(schoolClassRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteClass(@PathVariable Long id) {
+        if (schoolClassRepository.existsById(id)) {
+            schoolClassRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }

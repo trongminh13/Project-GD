@@ -1,0 +1,59 @@
+### FEES & BULK IMPORT API COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Phụ huynh xem sao kê học phí con mình
+GET {{baseUrl}}/api/fees/statement/1
+Authorization: Bearer {{parentToken}}
+
+### 2. Tạo đơn thanh toán Razorpay Sandbox
+POST {{baseUrl}}/api/fees/create-order
+Authorization: Bearer {{parentToken}}
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "amount": 2000000,
+  "currency": "INR",
+  "receipt": "REC_TEST_001"
+}
+
+### 3. Xác thực thanh toán
+POST {{baseUrl}}/api/fees/verify-payment
+Authorization: Bearer {{parentToken}}
+Content-Type: application/json
+
+{
+  "razorpayOrderId": "order_test_123",
+  "razorpayPaymentId": "pay_test_456",
+  "razorpaySignature": "valid_hmac_signature_here",
+  "studentId": 1,
+  "amount": 2000000
+}
+
+### 4. Admin ghi nhận nộp tiền mặt
+POST {{baseUrl}}/api/fees/pay
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "amount": 1000000,
+  "paymentMethod": "CASH",
+  "remarks": "Thu tiền mặt trực tiếp"
+}
+
+### 5. Upload File Excel học sinh hợp lệ
+POST {{baseUrl}}/api/upload/students
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="01-valid-students.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< /home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/04-test-data/excel-samples/01-valid-students.xlsx
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 6. Admin xem báo cáo đối soát Migration
+GET {{baseUrl}}/api/admin/migration/reconciliation
+Authorization: Bearer {{adminToken}}

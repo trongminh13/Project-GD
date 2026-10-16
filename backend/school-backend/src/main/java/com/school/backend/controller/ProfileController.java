@@ -10,13 +10,13 @@ import com.school.backend.repository.UserRepository;
 import com.school.backend.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/profile")
 public class ProfileController {
@@ -28,6 +28,7 @@ public class ProfileController {
     ParentRepository parentRepository;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")
     public ResponseEntity<?> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -47,11 +48,10 @@ public class ProfileController {
                 profileDto.setName(parent.getName());
                 profileDto.setPhone(parent.getPhone());
                 profileDto.setAddress(parent.getAddress());
-                // Dummy email for now since parent entity lacks email
                 profileDto.setEmail(parent.getPhone() + "@placeholder.com");
             }
         } else if (user.getRole() == Role.ADMIN) {
-            profileDto.setName("System Administrator"); // Admin data mock
+            profileDto.setName("System Administrator");
             profileDto.setPhone("N/A");
             profileDto.setEmail(user.getUsername() + "@school.admin");
             profileDto.setAddress("School Main Office");
@@ -66,6 +66,7 @@ public class ProfileController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")
     public ResponseEntity<?> updateProfile(@RequestBody ProfileDto profileDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -84,7 +85,6 @@ public class ProfileController {
                     parent.setName(profileDto.getName());
                 if (profileDto.getPhone() != null && !profileDto.getPhone().isEmpty()) {
                     parent.setPhone(profileDto.getPhone());
-                    // Update username to match new phone number for login consistency
                     user.setUsername(profileDto.getPhone());
                     userRepository.save(user);
                 }

@@ -1,0 +1,12 @@
+If:
+  PathMatch: .*/windows/.*
+CompileFlags:
+  Add:
+    - -w
+    - -ferror-limit=0
+Diagnostics:
+  Suppress:
+    - pp_file_not_found
+    - "*"
+  UnusedIncludes: None
+  MissingIncludes: None

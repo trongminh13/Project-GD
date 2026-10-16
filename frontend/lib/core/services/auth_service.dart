@@ -18,7 +18,7 @@ class AuthService {
     }
   }
 
-  // --- Backend Login (Admin/Teacher) ---
+  // --- Backend Login (Admin/Teacher/Student) ---
   Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/signin');
     try {
@@ -38,7 +38,19 @@ class AuthService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', jsonEncode(data));
 
-        return {'success': true, 'user': user};
+        return {
+          'success': true,
+          'user': user,
+          'mustChangePassword': user.mustChangePassword,
+        };
+      } else if (response.statusCode == 423) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': false,
+          'locked': true,
+          'message': data['message'] ??
+              'Tài khoản đã bị tạm khóa do nhập sai mật khẩu 5 lần. Vui lòng thử lại sau 15 phút.',
+        };
       } else {
         final data = jsonDecode(response.body);
         return {
@@ -48,6 +60,49 @@ class AuthService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Network Error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> changePassword(
+    String oldPassword,
+    String newPassword,
+  ) async {
+    final token = await getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/change-password');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        final rawUser = prefs.getString('user_data');
+        if (rawUser != null) {
+          final userMap = jsonDecode(rawUser);
+          userMap['mustChangePassword'] = false;
+          await prefs.setString('user_data', jsonEncode(userMap));
+        }
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Đổi mật khẩu thành công.',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Không thể đổi mật khẩu.',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi kết nối: $e'};
     }
   }
 

@@ -1,0 +1,96 @@
+### HOMEWORK & MATERIALS API COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Giáo viên tạo bài tập mới
+POST {{baseUrl}}/api/teacher/homework
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "title": "Ôn tập Toán tuần 7",
+  "subjectId": 1,
+  "questions": [
+    {
+      "questionType": "SINGLE_CHOICE",
+      "questionText": "3 x 5 = ?",
+      "points": 5.0,
+      "options": [
+        {"optionText": "15", "isCorrect": true},
+        {"optionText": "10", "isCorrect": false}
+      ]
+    },
+    {
+      "questionType": "SHORT_ANSWER",
+      "questionText": "Thủ đô của Việt Nam là gì?",
+      "points": 5.0,
+      "correctAnswer": "Hà Nội|Ha Noi"
+    }
+  ]
+}
+
+### 2. Giáo viên giao bài tập cho lớp 3A
+POST {{baseUrl}}/api/teacher/homework/1/assign
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "classId": 1,
+  "dueDate": "2026-10-30T23:59:59",
+  "allowLateSubmission": false
+}
+
+### 3. Học sinh xem danh sách bài tập của lớp
+GET {{baseUrl}}/api/student-portal/homework
+Authorization: Bearer {{studentToken}}
+
+### 4. Học sinh mở đề làm bài (Take)
+GET {{baseUrl}}/api/student-portal/homework/1/take
+Authorization: Bearer {{studentToken}}
+
+### 5. Học sinh lưu nháp (Draft)
+POST {{baseUrl}}/api/student-portal/homework/submissions/1/draft
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "answers": [
+    {"questionId": 1, "selectedOptionIds": [1]}
+  ]
+}
+
+### 6. Học sinh nộp bài chính thức (Submit)
+POST {{baseUrl}}/api/student-portal/homework/submissions/1/submit
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "answers": [
+    {"questionId": 1, "selectedOptionIds": [1]},
+    {"questionId": 2, "textAnswer": "Hà Nội"}
+  ]
+}
+
+### 7. Giáo viên xem danh sách bài nộp
+GET {{baseUrl}}/api/teacher/homework/assignments/1/submissions
+Authorization: Bearer {{teacherToken}}
+
+### 8. Giáo viên tạo học liệu
+POST {{baseUrl}}/api/teacher/materials
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "title": "Tài liệu học tập tuần 7",
+  "subjectId": 1,
+  "status": "PUBLISHED",
+  "targetClassIds": [1],
+  "fileIds": [1]
+}
+
+### 9. Học sinh xem học liệu lớp mình
+GET {{baseUrl}}/api/student-portal/materials
+Authorization: Bearer {{studentToken}}
+
+### 10. Tải file học liệu
+GET {{baseUrl}}/api/materials/files/1/download
+Authorization: Bearer {{studentToken}}

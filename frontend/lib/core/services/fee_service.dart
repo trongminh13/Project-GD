@@ -8,8 +8,8 @@ class FeeService {
   factory FeeService() => _instance;
   FeeService._internal();
 
-  /// Fetches fee statement from backend
-  Future<List<Map<String, dynamic>>> getFeeStatement(String studentId) async {
+  /// Fetches raw fee statement map containing pendingFees, paidFees, totalPending
+  Future<Map<String, dynamic>> getFeeStatementRaw(String studentId) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/fees/statement/$studentId');
     try {
@@ -21,17 +21,58 @@ class FeeService {
         },
       );
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+        final dynamic decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
       }
-    } catch (e) {
-      print('Error fetching fees: $e');
+    } catch (_) {}
+    return {'pendingFees': [], 'paidFees': [], 'totalPending': 0};
+  }
+
+  /// Normalized fee statement for UI presentation
+  Future<List<Map<String, dynamic>>> getFeeStatement(String studentId) async {
+    final raw = await getFeeStatementRaw(studentId);
+    List<Map<String, dynamic>> result = [];
+
+    final pending = raw['pendingFees'] as List? ?? [];
+    for (var f in pending) {
+      result.add({
+        'id': f['id'],
+        'title': f['feeType'] != null ? '${f['feeType']} Fee' : 'Tuition Fee',
+        'dueDate': f['dueMonth'] != null ? 'Month ${f['dueMonth']}' : 'Due Soon',
+        'amount': f['amount'] ?? 0,
+        'status': 'Pending',
+        'feeStructureId': f['id'],
+      });
     }
-    // No mock data — return empty if API fails
-    return [];
+
+    final paid = raw['paidFees'] as List? ?? [];
+    for (var p in paid) {
+      final structure = p['feeStructure'];
+      String title = 'Tuition Fee';
+      if (structure != null && structure is Map && structure['feeType'] != null) {
+        title = '${structure['feeType']} Fee';
+      }
+      result.add({
+        'id': p['id'],
+        'title': title,
+        'dueDate': p['paymentDate'] != null ? 'Paid on ${p['paymentDate']}' : 'Paid',
+        'amount': p['amountPaid'] ?? 0,
+        'status': 'Paid',
+        'transactionId': p['transactionId'],
+      });
+    }
+
+    return result;
   }
 
   /// Interacts with backend to generate Razorpay Order ID securely
-  Future<String?> createRazorpayOrder(String studentId, double amount) async {
+  Future<String?> createRazorpayOrder(
+    String studentId,
+    double amount, {
+    int? feeStructureId,
+  }) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/fees/create-order');
     try {
@@ -41,24 +82,28 @@ class FeeService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'studentId': studentId, 'amount': amount}),
+        body: jsonEncode({
+          'studentId': int.tryParse(studentId) ?? studentId,
+          'feeStructureId': feeStructureId,
+          'amount': amount,
+        }),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['orderId']; // Backend returns the razorpay order_id
+        return data['orderId'];
       }
-    } catch (e) {
-      print('Error creating Razorpay order: $e');
-    }
-    return null; // No mock order ID
+    } catch (_) {}
+    return null;
   }
 
   /// Sends Razorpay signature back to backend to save receipt and mark true
   Future<bool> verifyPayment(
     String orderId,
     String paymentId,
-    String signature,
-  ) async {
+    String signature, {
+    String? studentId,
+    int? feeStructureId,
+  }) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/fees/verify-payment');
     try {
@@ -68,16 +113,22 @@ class FeeService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'orderId': orderId,
-          'paymentId': paymentId,
-          'signature': signature,
-        }),
+        body: jsonEncode(() {
+          final map = <String, dynamic>{
+            'orderId': orderId,
+            'razorpayOrderId': orderId,
+            'paymentId': paymentId,
+            'razorpayPaymentId': paymentId,
+            'signature': signature,
+            'razorpaySignature': signature,
+          };
+          if (studentId != null) map['studentId'] = int.tryParse(studentId) ?? studentId;
+          if (feeStructureId != null) map['feeStructureId'] = feeStructureId;
+          return map;
+        }()),
       );
       return response.statusCode == 200;
-    } catch (e) {
-      print('Error verifying payment: $e');
-    }
-    return false; // No mock success
+    } catch (_) {}
+    return false;
   }
 }

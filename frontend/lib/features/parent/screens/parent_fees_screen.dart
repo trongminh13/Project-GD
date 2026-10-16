@@ -4,7 +4,8 @@ import 'package:ashadeep/core/services/fee_service.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class ParentFeesScreen extends StatefulWidget {
-  const ParentFeesScreen({super.key});
+  final String? studentId;
+  const ParentFeesScreen({super.key, this.studentId});
 
   @override
   State<ParentFeesScreen> createState() => _ParentFeesScreenState();
@@ -40,8 +41,8 @@ class _ParentFeesScreenState extends State<ParentFeesScreen>
 
   Future<void> _loadFees() async {
     setState(() => _isLoading = true);
-    // Student ID would normally be passed dynamically from profile selection
-    final data = await FeeService().getFeeStatement('student123');
+    String targetId = widget.studentId ?? '1';
+    final data = await FeeService().getFeeStatement(targetId);
     setState(() {
       _feeComponents = data;
       _isLoading = false;

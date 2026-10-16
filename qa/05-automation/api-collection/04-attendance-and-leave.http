@@ -1,0 +1,61 @@
+### ATTENDANCE & LEAVE REQUEST API COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Điểm danh hàng loạt cho lớp 3A (GVCN)
+POST {{baseUrl}}/api/attendance/bulk
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "classId": 1,
+  "date": "2026-10-15",
+  "records": [
+    {"studentId": 1, "status": "PRESENT"},
+    {"studentId": 2, "status": "ABSENT", "remarks": "Sốt nhẹ"}
+  ]
+}
+
+### 2. Điểm danh đơn lẻ
+POST {{baseUrl}}/api/attendance/mark
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "date": "2026-10-15",
+  "status": "EXCUSED"
+}
+
+### 3. Phụ huynh nộp đơn xin nghỉ phép
+# @name createLeaveRequest
+POST {{baseUrl}}/api/leave-requests
+Authorization: Bearer {{parentToken}}
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "startDate": "2026-10-20",
+  "endDate": "2026-10-21",
+  "reason": "Cháu về quê có việc gia đình"
+}
+
+### 4. Phụ huynh xem danh sách đơn nghỉ của mình
+GET {{baseUrl}}/api/leave-requests/my-requests
+Authorization: Bearer {{parentToken}}
+
+### 5. GVCN xem danh sách đơn chờ duyệt
+GET {{baseUrl}}/api/leave-requests/pending
+Authorization: Bearer {{teacherToken}}
+
+### 6. GVCN duyệt đơn nghỉ phép
+PUT {{baseUrl}}/api/leave-requests/1/review
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "status": "APPROVED"
+}
+
+### 7. Học sinh xem lịch sử điểm danh của chính mình
+GET {{baseUrl}}/api/student-portal/attendance
+Authorization: Bearer {{studentToken}}

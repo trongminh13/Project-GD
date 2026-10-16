@@ -1,0 +1,43 @@
+### CORE & CLASSES API COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Lấy danh sách năm học
+GET {{baseUrl}}/api/academic-years
+Authorization: Bearer {{adminToken}}
+
+### 2. Lấy năm học hiện tại
+GET {{baseUrl}}/api/academic-years/current
+
+### 3. Tạo năm học mới (ADMIN)
+POST {{baseUrl}}/api/academic-years
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "yearName": "2027-2028",
+  "startDate": "2027-09-01",
+  "endDate": "2028-05-31"
+}
+
+### 4. Lấy danh sách lớp học
+GET {{baseUrl}}/api/classes
+Authorization: Bearer {{adminToken}}
+
+### 5. Tạo lớp học mới
+POST {{baseUrl}}/api/classes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "grade": "3",
+  "section": "D",
+  "homeroomTeacherId": 1
+}
+
+### 6. Phụ huynh xem danh sách con mình
+GET {{baseUrl}}/api/students/my-wards
+Authorization: Bearer {{parentToken}}
+
+### 7. Học sinh xem hồ sơ cá nhân
+GET {{baseUrl}}/api/student-portal/profile
+Authorization: Bearer {{studentToken}}

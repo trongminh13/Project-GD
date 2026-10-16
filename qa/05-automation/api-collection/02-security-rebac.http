@@ -1,0 +1,48 @@
+### REBAC & SECURITY VERIFICATION COLLECTION
+@baseUrl = http://localhost:8081
+
+### 1. Phụ huynh xem Enrollment của con mình (200 OK)
+GET {{baseUrl}}/api/enrollments/student/1
+Authorization: Bearer {{parentToken}}
+
+### 2. Phụ huynh xem Enrollment của con người khác (Phải nhận 403 Forbidden)
+GET {{baseUrl}}/api/enrollments/student/2
+Authorization: Bearer {{parentToken}}
+
+### 3. Học sinh xem Enrollment của bạn học (Phải nhận 403 Forbidden)
+GET {{baseUrl}}/api/enrollments/student/2
+Authorization: Bearer {{studentToken}}
+
+### 4. GVCN duyệt đơn nghỉ phép của lớp mình (200 OK)
+PUT {{baseUrl}}/api/leave-requests/1/review
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "status": "APPROVED"
+}
+
+### 5. GV bộ môn hoặc GV lớp khác duyệt đơn nghỉ phép (Phải nhận 403 Forbidden)
+PUT {{baseUrl}}/api/leave-requests/1/review
+Authorization: Bearer {{teacherOtherToken}}
+Content-Type: application/json
+
+{
+  "status": "APPROVED"
+}
+
+### 6. Học sinh mở bài tập của lớp khác (Phải nhận 403 Forbidden)
+GET {{baseUrl}}/api/student-portal/homework/99/take
+Authorization: Bearer {{studentToken}}
+
+### 7. Học sinh đúng lớp tải file học liệu PUBLISHED (200 OK)
+GET {{baseUrl}}/api/materials/files/1/download
+Authorization: Bearer {{studentToken}}
+
+### 8. Học sinh lớp khác tải file học liệu (Phải nhận 403 Forbidden)
+GET {{baseUrl}}/api/materials/files/1/download
+Authorization: Bearer {{studentOtherToken}}
+
+### 9. Phụ huynh xem sao kê học phí con người khác (Phải nhận 403 Forbidden)
+GET {{baseUrl}}/api/fees/statement/2
+Authorization: Bearer {{parentToken}}

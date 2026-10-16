@@ -9,7 +9,6 @@ import com.school.backend.repository.ParentRepository;
 import com.school.backend.repository.SchoolClassRepository;
 import com.school.backend.repository.StudentRepository;
 import com.school.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -20,7 +19,6 @@ import java.io.InputStream;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class DataMigrationService {
 
@@ -30,7 +28,20 @@ public class DataMigrationService {
     private final SchoolClassRepository schoolClassRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional
+    public DataMigrationService(
+            UserRepository userRepository,
+            ParentRepository parentRepository,
+            StudentRepository studentRepository,
+            SchoolClassRepository schoolClassRepository,
+            PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.parentRepository = parentRepository;
+        this.studentRepository = studentRepository;
+        this.schoolClassRepository = schoolClassRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
     public String processExcelData(InputStream inputStream) {
         int studentCount = 0;
         int parentCount = 0;
@@ -205,7 +216,7 @@ public class DataMigrationService {
 
         } catch (Exception e) {
             log.error("Failed to parse Excel file", e);
-            return "Error parsing Excel: " + e.getMessage();
+            throw new IllegalArgumentException("Error parsing Excel: " + e.getMessage(), e);
         }
     }
 

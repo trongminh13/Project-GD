@@ -1,6 +1,6 @@
 # AshaDeep School Management System
 
-A full-stack school management system with a **Java/Spring Boot** backend and **Flutter** mobile/web frontend. Supports role-based access for Admins, Teachers, and Parents.
+A full-stack school management system with a **Java/Spring Boot** backend and **Flutter** mobile/web frontend. Supports role-based access for Admins, Teachers, Parents, and Students.
 
 ## Tech Stack
 
@@ -9,7 +9,7 @@ A full-stack school management system with a **Java/Spring Boot** backend and **
 | Backend | Java 17, Spring Boot 3.5, Spring Security, JPA/Hibernate |
 | Frontend | Flutter 3.10+, Dart, Provider |
 | Database | PostgreSQL |
-| Auth | JWT (role-based: ADMIN, TEACHER, PARENT) |
+| Auth | JWT (role-based: ADMIN, TEACHER, PARENT, STUDENT) |
 | Payments | Razorpay |
 | SMS | Fast2SMS |
 
@@ -29,13 +29,42 @@ A full-stack school management system with a **Java/Spring Boot** backend and **
 - View dashboard and timetable
 - Mark student attendance
 - Enter and upload marks
+- Manage homework assignments and grading
+- Review leave applications (Homeroom teachers)
 - View class details
 
 ### Parent
 - View ward's attendance, marks, and timetable
 - Track fee payments
+- Submit and track leave applications
 - View performance reports
 - Receive notices
+
+### Student
+- View personal timetable, subjects, and study materials
+- View assigned homework and submit solutions
+- Track personal attendance and grades
+- Update password on initial login
+
+## Default Credentials (Demo Accounts)
+
+The database comes pre-seeded with ready-to-use accounts for all roles:
+
+| Role | Username / ID | Password | Description / Scope |
+|------|---------------|----------|---------------------|
+| **ADMIN** | `admin` | `admin123` | Full administrative access across all modules |
+| **TEACHER** | `T001` | `teacher123` | Rajesh Sharma - Homeroom Teacher & Math Teacher (Class 1) |
+| **TEACHER** | `T002` | `teacher123` | Priya Singh - English Subject Teacher (Class 1) |
+| **TEACHER** | `T003` | `teacher123` | Amit Patel - Science Teacher (Unassigned / Other classes) |
+| **PARENT** | `9910157611` | `123456` | Developer / Demo Parent account. Also supports login via OTP (code printed to backend terminal in dev mode) |
+| **STUDENT** | `student01` | `student123` | Active student account (Class 1) |
+| **STUDENT** | `ADM-2026-TEST` | `ADM-2026-TEST@School` | Sample student with default credential format |
+
+> **Notes on Student & Parent Credentials:**
+> - **Student Default Password**: When a student is enrolled via the Admin API/portal, their default password is formatted as `<admission_number>@School` (e.g., `STU-DUAL-001@School`). For bulk imports via Excel, a secure random password is generated.
+> - **Mandatory Password Change**: Student accounts have `must_change_password = true` on creation, prompting a password update on first login.
+> - **Parent OTP Flow**: In the Flutter login screen, switching to the **Parent** tab enables login with phone number and OTP. During local development, the generated OTP is logged directly in the backend terminal console.
+
 
 ## Project Structure
 
