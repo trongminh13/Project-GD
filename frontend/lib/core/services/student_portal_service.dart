@@ -1,82 +1,71 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:ashadeep/utils/constants.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_client.dart';
 
 class StudentPortalService {
   static final StudentPortalService _instance = StudentPortalService._internal();
-  factory StudentPortalService() => _instance;
-  StudentPortalService._internal();
-
-  Future<Map<String, dynamic>?> getMyProfile() async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/profile');
-
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-    } catch (e) {
-      // Error fetching student profile
+  factory StudentPortalService({ApiClient? apiClient}) {
+    if (apiClient != null) {
+      _instance._apiClient = apiClient;
     }
+    return _instance;
+  }
+  StudentPortalService._internal() : _apiClient = ApiClient();
+
+  ApiClient _apiClient;
+
+  /// Lấy thông tin hồ sơ học sinh
+  Future<Map<String, dynamic>?> getMyProfile() async {
+    try {
+      final res = await _apiClient.get('/student-portal/profile');
+      if (res is Map<String, dynamic>) return res;
+    } catch (_) {}
     return null;
   }
 
+  /// Lấy lịch sử điểm danh / chuyên cần
   Future<List<Map<String, dynamic>>> getMyAttendance({int? month, int? year}) async {
-    final token = await AuthService().getToken();
-    String query = '';
-    if (month != null && year != null) {
-      query = '?month=$month&year=$year';
-    }
-    final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/attendance$query');
+    final queryParams = <String, dynamic>{};
+    if (month != null) queryParams['month'] = month;
+    if (year != null) queryParams['year'] = year;
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data);
+      final res = await _apiClient.get('/student-portal/attendance', queryParams: queryParams.isNotEmpty ? queryParams : null);
+      if (res is List) {
+        return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       }
-    } catch (e) {
-      // Error fetching student attendance
-    }
+    } catch (_) {}
     return [];
   }
 
+  /// Lấy bảng điểm cá nhân của học sinh
   Future<List<Map<String, dynamic>>> getMyMarks() async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/marks');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data);
+      final res = await _apiClient.get('/student-portal/marks');
+      if (res is List) {
+        return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       }
-    } catch (e) {
-      // Error fetching student marks
-    }
+    } catch (_) {}
+    return [];
+  }
+
+  /// Lấy danh sách tài liệu học tập của lớp học sinh
+  Future<List<Map<String, dynamic>>> getMyMaterials() async {
+    try {
+      final res = await _apiClient.get('/student-portal/materials');
+      if (res is List) {
+        return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /// Lấy thời khóa biểu học sinh
+  Future<List<Map<String, dynamic>>> getMyTimetable() async {
+    try {
+      final res = await _apiClient.get('/student-portal/timetable');
+      if (res is List) {
+        return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+    } catch (_) {}
     return [];
   }
 }

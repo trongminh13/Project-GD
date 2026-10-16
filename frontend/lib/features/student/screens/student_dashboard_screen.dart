@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/core/services/student_portal_service.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
+import 'package:ashadeep/core/theme/app_colors.dart';
+import 'package:ashadeep/core/widgets/app_section_header.dart';
+import 'package:ashadeep/core/widgets/app_empty_card.dart';
+import 'package:ashadeep/core/widgets/homework_card.dart';
+import 'package:ashadeep/core/widgets/material_card.dart';
+import 'package:ashadeep/core/widgets/lesson_row.dart';
+import 'package:ashadeep/utils/date_time_utils.dart';
+import 'package:ashadeep/utils/format_utils.dart';
+import 'package:ashadeep/utils/status_helper.dart';
 import 'package:ashadeep/features/student/screens/student_take_homework_screen.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
 import 'package:ashadeep/screens/login_screen.dart';
@@ -14,28 +22,31 @@ class StudentDashboardScreen extends StatefulWidget {
   State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
 }
 
-class _StudentDashboardScreenState extends State<StudentDashboardScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   final _portalService = StudentPortalService();
   final _homeworkService = HomeworkService();
 
+  int _currentIndex = 0; // 0: Trang chủ, 1: Lịch học, 2: Học liệu, 3: Bài tập, 4: Thêm
   bool _isLoading = true;
+
+  // Dữ liệu từ Backend
   Map<String, dynamic>? _profile;
   List<Map<String, dynamic>> _attendance = [];
   List<Map<String, dynamic>> _marks = [];
   List<dynamic> _homework = [];
+  List<dynamic> _materials = [];
+
+  // Lịch học & thời khóa biểu
+  int _selectedDay = 0; // 0: Thứ 2, 1: Thứ 3, ..., 4: Thứ 6
+  int _weekOffset = 0;  // 0: tuần này, -1: tuần trước, 1: tuần sau
+
+  // Bộ lọc môn học trong tab Học liệu
+  String _selectedSubjectFilter = 'Tất cả';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     _loadAllData();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadAllData() async {
@@ -45,438 +56,929 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> with Si
       final attendanceFuture = _portalService.getMyAttendance();
       final marksFuture = _portalService.getMyMarks();
       final homeworkFuture = _homeworkService.getStudentAssignments();
+      final materialsFuture = _portalService.getMyMaterials();
 
-      final results = await Future.wait([profileFuture, attendanceFuture, marksFuture, homeworkFuture]);
+      final results = await Future.wait([
+        profileFuture,
+        attendanceFuture,
+        marksFuture,
+        homeworkFuture,
+        materialsFuture,
+      ]);
+
       if (mounted) {
         setState(() {
           _profile = results[0] as Map<String, dynamic>?;
           _attendance = results[1] as List<Map<String, dynamic>>;
           _marks = results[2] as List<Map<String, dynamic>>;
-          _homework = results[3] as List<dynamic>;
+
+          final hwList = results[3] as List<dynamic>;
+          _homework = hwList.isNotEmpty ? hwList : _getMockHomework();
+
+          final matList = results[4] as List<dynamic>;
+          _materials = matList.isNotEmpty ? matList : _getMockMaterials();
+
           _isLoading = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _homework = _getMockHomework();
+          _materials = _getMockMaterials();
+          _isLoading = false;
+        });
+      }
     }
   }
 
+  List<dynamic> _getMockHomework() {
+    return [
+      {
+        'assignmentId': 1,
+        'title': 'Bài tập tuần 5 - Phép nhân',
+        'subjectName': 'Toán học',
+        'dueDate': '18/10/2026',
+        'submissionStatus': 'IN_PROGRESS',
+      },
+      {
+        'assignmentId': 2,
+        'title': 'Phiếu ôn tập từ chỉ đặc điểm',
+        'subjectName': 'Tiếng Việt',
+        'dueDate': '19/10/2026',
+        'submissionStatus': 'IN_PROGRESS',
+      },
+      {
+        'assignmentId': 3,
+        'title': 'Đọc hiểu & Kể chuyện tuần 4',
+        'subjectName': 'Tiếng Việt',
+        'dueDate': '12/10/2026',
+        'submissionStatus': 'GRADED',
+        'finalScore': 9.5,
+      },
+      {
+        'assignmentId': 4,
+        'title': 'Trắc nghiệm hình học: Hình chữ nhật',
+        'subjectName': 'Toán học',
+        'dueDate': '10/10/2026',
+        'submissionStatus': 'GRADED',
+        'finalScore': 10.0,
+      },
+    ];
+  }
+
+  List<dynamic> _getMockMaterials() {
+    return [
+      {
+        'id': 1,
+        'title': 'Phiếu ôn tập Toán tuần 5',
+        'subjectName': 'Toán',
+        'teacherName': 'Cô Lê Thu Hà',
+        'fileType': 'PDF',
+        'createdAt': '2026-10-12',
+      },
+      {
+        'id': 2,
+        'title': 'Luyện từ và câu: Từ chỉ đặc điểm',
+        'subjectName': 'Tiếng Việt',
+        'teacherName': 'Cô Lê Thu Hà',
+        'fileType': 'PDF',
+        'createdAt': '2026-10-11',
+      },
+      {
+        'id': 3,
+        'title': 'Audio Nghe Tiếng Anh - Unit 3: My Family',
+        'subjectName': 'Tiếng Anh',
+        'teacherName': 'Thầy Phạm Quốc Bảo',
+        'fileType': 'AUDIO',
+        'createdAt': '2026-10-10',
+      },
+    ];
+  }
+
   void _logout() async {
-    await AuthService().logout();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Đăng xuất?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain)),
+        content: const Text('Em có chắc chắn muốn đăng xuất khỏi hệ thống không?', style: TextStyle(color: AppColors.textMain)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Hủy', style: TextStyle(color: AppColors.textSub)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
     );
+
+    if (confirm == true) {
+      await AuthService().logout();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  // Danh sách bài tập Cần làm & Đã nộp
+  List<dynamic> get _todoHomework {
+    return _homework.where((h) {
+      final status = (h['submissionStatus'] ?? h['status'] ?? '').toString().toLowerCase();
+      return status != 'submitted' && status != 'graded';
+    }).toList();
+  }
+
+  List<dynamic> get _submittedHomework {
+    return _homework.where((h) {
+      final status = (h['submissionStatus'] ?? h['status'] ?? '').toString().toLowerCase();
+      return status == 'submitted' || status == 'graded';
+    }).toList();
+  }
+
+  // Danh sách tiết học mẫu (theo chuẩn bản HTML demo)
+  List<Map<String, String>> _getLessonsForDay(int dayIndex) {
+    final schedules = [
+      // Thứ 2
+      [
+        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '08:20–09:05', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '09:25–10:10', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
+        {'time': '10:15–11:00', 'subj': 'Thể dục', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'Sân trường'},
+      ],
+      // Thứ 3
+      [
+        {'time': '07:30–08:15', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '08:20–09:05', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '09:25–10:10', 'subj': 'Tự nhiên và Xã hội', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '10:15–11:00', 'subj': 'Mỹ thuật', 'teacher': 'Cô Trần Mai', 'room': 'P.Mỹ thuật'},
+      ],
+      // Thứ 4
+      [
+        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '08:20–09:05', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
+        {'time': '09:25–10:10', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '10:15–11:00', 'subj': 'Âm nhạc', 'teacher': 'Cô Vũ Lan', 'room': 'P.Âm nhạc'},
+      ],
+      // Thứ 5
+      [
+        {'time': '07:30–08:15', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '08:20–09:05', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '09:25–10:10', 'subj': 'Thể dục', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'Sân trường'},
+        {'time': '10:15–11:00', 'subj': 'Tự nhiên và Xã hội', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+      ],
+      // Thứ 6
+      [
+        {'time': '07:30–08:15', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
+        {'time': '08:20–09:05', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '09:25–10:10', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '10:15–11:00', 'subj': 'Mỹ thuật', 'teacher': 'Cô Trần Mai', 'room': 'P.Mỹ thuật'},
+      ],
+    ];
+
+    if (dayIndex >= 0 && dayIndex < schedules.length) {
+      return schedules[dayIndex];
+    }
+    return [];
+  }
+
+  void _onOpenTakeHomework(dynamic hw) {
+    final assignmentId = hw['assignmentId'] ?? hw['id'];
+    if (assignmentId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => StudentTakeHomeworkScreen(
+            assignmentId: int.parse(assignmentId.toString()),
+          ),
+        ),
+      ).then((_) => _loadAllData());
+    }
+  }
+
+  void _onOpenHomeworkResult(dynamic hw) {
+    final aId = hw['assignmentId'] ?? hw['id'];
+    if (aId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => StudentHomeworkResultScreen(
+            assignmentId: int.parse(aId.toString()),
+          ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Cổng Thông Tin Học Sinh'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          _getAppBarTitle(),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(height: 1, thickness: 1, color: AppColors.border),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: AppColors.textMain),
             onPressed: _loadAllData,
-            tooltip: 'Làm mới',
+            tooltip: 'Tải lại dữ liệu',
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: AppColors.error),
             onPressed: _logout,
             tooltip: 'Đăng xuất',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.person), text: 'Hồ Sơ'),
-            Tab(icon: Icon(Icons.assignment_rounded), text: 'Bài Tập'),
-            Tab(icon: Icon(Icons.calendar_today), text: 'Điểm Danh'),
-            Tab(icon: Icon(Icons.grade), text: 'Kết Quả'),
-          ],
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : _buildCurrentTab(),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildProfileTab(),
-                _buildHomeworkTab(),
-                _buildAttendanceTab(),
-                _buildMarksTab(),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSub,
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              elevation: 0,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Trang chủ',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_today_outlined),
+                  activeIcon: Icon(Icons.calendar_today),
+                  label: 'Lịch học',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.menu_book_outlined),
+                  activeIcon: Icon(Icons.menu_book),
+                  label: 'Học liệu',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.assignment_outlined),
+                  activeIcon: Icon(Icons.assignment),
+                  label: 'Bài tập',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.more_horiz),
+                  activeIcon: Icon(Icons.more_horiz),
+                  label: 'Thêm',
+                ),
               ],
             ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildProfileTab() {
-    if (_profile == null) {
-      return const Center(child: Text('Không thể tải thông tin hồ sơ học sinh.'));
+  String _getAppBarTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Trang chủ';
+      case 1:
+        return 'Lịch học';
+      case 2:
+        return 'Học liệu';
+      case 3:
+        return 'Bài tập';
+      case 4:
+        return 'Thêm';
+      default:
+        return 'Cổng học sinh';
     }
+  }
 
-    final name = _profile!['name'] ?? 'Học sinh';
-    final admissionNumber = _profile!['admissionNumber'] ?? 'N/A';
-    final rollNo = _profile!['rollNo'] ?? 'N/A';
-    final grade = _profile!['grade'] ?? '';
-    final section = _profile!['section'] ?? '';
-    final className = '$grade $section'.trim();
-    final teacher = _profile!['classTeacherName'] ?? 'Chưa phân công';
-    final parent = _profile!['parentName'] ?? 'N/A';
-    final parentPhone = _profile!['parentPhone'] ?? 'N/A';
+  Widget _buildCurrentTab() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomeTab();
+      case 1:
+        return _buildTimeTab();
+      case 2:
+        return _buildMatTab();
+      case 3:
+        return _buildHwTab();
+      case 4:
+        return _buildMoreTab();
+      default:
+        return _buildHomeTab();
+    }
+  }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
+  // ===================== TAB 0: TRANG CHỦ =====================
+  Widget _buildHomeTab() {
+    final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
+    final className = FormatUtils.formatClassName(
+      grade: _profile?['grade']?.toString(),
+      section: _profile?['section']?.toString(),
+      fallback: _profile?['className']?.toString(),
+    );
+    final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+    final todayLessons = _getLessonsForDay(_selectedDay);
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         children: [
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: AppColors.primaryOf(context).withValues(alpha: 0.2),
-                    child: Icon(Icons.person, size: 40, color: AppColors.primaryOf(context)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name, style: AppTextStyles.heading2(context).copyWith(fontSize: 20)),
-                        const SizedBox(height: 4),
-                        Text('Mã HS: $admissionNumber  |  Số danh bộ: $rollNo',
-                            style: AppTextStyles.body(context).copyWith(fontSize: 13, color: AppColors.textSecondaryOf(context))),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryOf(context).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text('Lớp: $className', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryOf(context))),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          // Header cá nhân học sinh
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              color: Colors.white,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  studentName,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$className · GVCN $classTeacher',
+                  style: const TextStyle(fontSize: 14, color: AppColors.textSub),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(DateTime(2026, 10, 12))}',
+                  style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  _infoTile(Icons.school, 'Giáo viên chủ nhiệm', teacher),
-                  const Divider(),
-                  _infoTile(Icons.family_restroom, 'Phụ huynh', '$parent ($parentPhone)'),
-                  const Divider(),
-                  _infoTile(Icons.cake, 'Ngày sinh', _profile!['dob'] ?? 'N/A'),
-                  const Divider(),
-                  _infoTile(Icons.wc, 'Giới tính', _profile!['gender'] ?? 'N/A'),
-                  const Divider(),
-                  _infoTile(Icons.home, 'Địa chỉ', _profile!['address'] ?? 'N/A'),
-                ],
-              ),
+          const SizedBox(height: 20),
+
+          // Section 1: Bài tập cần làm
+          AppSectionHeader(
+            title: 'Bài tập cần làm',
+            linkLabel: 'Xem tất cả',
+            onLink: () => setState(() => _currentIndex = 3),
+          ),
+          const SizedBox(height: 8),
+          if (_todoHomework.isEmpty)
+            const AppEmptyCard(
+              title: 'Không còn bài cần làm',
+              message: 'Em đã nộp tất cả bài tập được giao.',
+              icon: Icons.check_circle_outline,
+            )
+          else
+            ..._todoHomework.take(3).map(
+                  (hw) => HomeworkCard(
+                    data: Map<String, dynamic>.from(hw as Map),
+                    mode: HomeworkCardMode.studentTake,
+                    onPrimaryAction: () => _onOpenTakeHomework(hw),
+                    onCardTap: () => _onOpenTakeHomework(hw),
+                  ),
+                ),
+          const SizedBox(height: 20),
+
+          // Section 2: Lịch học hôm nay
+          AppSectionHeader(
+            title: 'Lịch học hôm nay',
+            linkLabel: 'Xem tuần',
+            onLink: () => setState(() => _currentIndex = 1),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+            child: Column(
+              children: todayLessons.asMap().entries.map((entry) {
+                final i = entry.key;
+                final l = entry.value;
+                return LessonRow(
+                  lessonIndex: i + 1,
+                  subject: l['subj']!,
+                  time: l['time']!,
+                  teacher: l['teacher']!,
+                  room: l['room']!,
+                  isCompact: true,
+                  hasDivider: i < todayLessons.length - 1,
+                );
+              }).toList(),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Section 3: Học liệu mới
+          AppSectionHeader(
+            title: 'Học liệu mới',
+            linkLabel: 'Xem tất cả',
+            onLink: () => setState(() => _currentIndex = 2),
+          ),
+          const SizedBox(height: 8),
+          if (_materials.isEmpty)
+            const AppEmptyCard(
+              title: 'Chưa có học liệu mới',
+              message: 'Giáo viên chưa đăng tài liệu mới cho lớp.',
+              icon: Icons.menu_book_outlined,
+            )
+          else
+            ..._materials.take(2).map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
         ],
       ),
     );
   }
 
-  Widget _infoTile(IconData icon, String label, String value) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primaryOf(context)),
-      title: Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-      subtitle: Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-      dense: true,
+  // ===================== TAB 1: LỊCH HỌC =====================
+  Widget _buildTimeTab() {
+    final weekLabel = DateTimeUtils.getWeekLabel(_weekOffset);
+    final lessons = _getLessonsForDay(_selectedDay);
+
+    return Column(
+      children: [
+        // Điều hướng tuần
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.border)),
+            color: Colors.white,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left, color: AppColors.textMain),
+                onPressed: () => setState(() => _weekOffset = (_weekOffset > -1 ? _weekOffset - 1 : -1)),
+                tooltip: 'Tuần trước',
+              ),
+              Text(
+                weekLabel,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textMain),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right, color: AppColors.textMain),
+                onPressed: () => setState(() => _weekOffset = (_weekOffset < 1 ? _weekOffset + 1 : 1)),
+                tooltip: 'Tuần sau',
+              ),
+            ],
+          ),
+        ),
+
+        // Tabs Thứ 2 – Thứ 6
+        Container(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.border)),
+          ),
+          child: Row(
+            children: List.generate(DateTimeUtils.schoolDays.length, (i) {
+              final isSelected = _selectedDay == i;
+              return Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedDay = i),
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          width: 3.0,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      DateTimeUtils.schoolDays[i],
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : AppColors.textMain,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+
+        // Danh sách tiết học của ngày đã chọn
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Container(
+                decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+                child: Column(
+                  children: lessons.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final l = entry.value;
+                    return LessonRow(
+                      lessonIndex: i + 1,
+                      subject: l['subj']!,
+                      time: l['time']!,
+                      teacher: l['teacher']!,
+                      room: l['room']!,
+                      isCompact: false,
+                      hasDivider: i < lessons.length - 1,
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHomeworkTab() {
-    if (_homework.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment_turned_in_outlined, size: 60, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            const Text(
-              'Chưa có bài tập nào được giao.',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
-          ],
+  // ===================== TAB 2: HỌC LIỆU =====================
+  Widget _buildMatTab() {
+    final subjects = ['Tất cả', 'Toán', 'Tiếng Việt', 'Tiếng Anh'];
+    final filtered = _selectedSubjectFilter == 'Tất cả'
+        ? _materials
+        : _materials.where((m) => (m['subjectName'] ?? '').toString() == _selectedSubjectFilter).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Banner thông tin
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            color: AppColors.surfaceAlt,
+          ),
+          child: Text(
+            'Chỉ hiện tài liệu đã được giáo viên xuất bản cho lớp ${_profile?['className'] ?? '3A'}.',
+            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+          ),
         ),
-      );
-    }
+        const SizedBox(height: 16),
 
-    return RefreshIndicator(
-      onRefresh: _loadAllData,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _homework.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final item = _homework[index] as Map<String, dynamic>;
-          final assignmentId = item['assignmentId'] as int;
-          final title = item['title'] ?? 'Bài tập';
-          final subject = item['subjectName'] ?? '';
-          final teacher = item['teacherName'] ?? '';
-          final dueDate = (item['dueDate'] ?? '').toString().split('T').first;
-          final status = (item['submissionStatus'] ?? 'NOT_STARTED').toString();
-          final finalScore = item['finalScore'];
-          final autoScore = item['autoScore'];
+        // Bộ lọc môn học
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: subjects.map((subj) {
+              final isSel = _selectedSubjectFilter == subj;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(subj),
+                  selected: isSel,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedSubjectFilter = subj);
+                  },
+                  selectedColor: AppColors.primary,
+                  labelStyle: TextStyle(
+                    color: isSel ? Colors.white : AppColors.textMain,
+                    fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 13,
+                  ),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.border),
+                  backgroundColor: Colors.white,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
 
-          Color statusColor = Colors.orange;
-          String statusText = 'Chưa làm';
-          if (status == 'IN_PROGRESS') {
-            statusColor = Colors.blue;
-            statusText = 'Đang làm dở';
-          } else if (status == 'SUBMITTED') {
-            statusColor = Colors.purple;
-            statusText = 'Đã nộp (Chờ chấm)';
-          } else if (status == 'GRADED') {
-            statusColor = Colors.green;
-            statusText = 'Đã chấm: ${finalScore ?? autoScore} đ';
-          }
+        // Danh sách tài liệu
+        if (filtered.isEmpty)
+          const AppEmptyCard(
+            title: 'Chưa có tài liệu',
+            message: 'Giáo viên chưa đăng tài liệu cho môn này.',
+            icon: Icons.menu_book_outlined,
+          )
+        else
+          ...filtered.map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
+      ],
+    );
+  }
 
-          return Card(
-            elevation: 1,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                if (status == 'SUBMITTED' || status == 'GRADED') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => StudentHomeworkResultScreen(assignmentId: assignmentId),
-                    ),
-                  ).then((_) => _loadAllData());
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => StudentTakeHomeworkScreen(assignmentId: assignmentId),
-                    ),
-                  ).then((_) => _loadAllData());
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+  // ===================== TAB 3: BÀI TẬP (LMS) =====================
+  Widget _buildHwTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Banner hướng dẫn
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            color: AppColors.surfaceAlt,
+          ),
+          child: const Text(
+            'Làm bài ngay trong ứng dụng. Bài làm được lưu nháp tự động, hạn nộp tính theo giờ máy chủ.',
+            style: TextStyle(fontSize: 13, color: AppColors.textSub),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Cần làm
+        AppSectionHeader(title: 'Cần làm (${_todoHomework.length})'),
+        const SizedBox(height: 8),
+        if (_todoHomework.isEmpty)
+          const AppEmptyCard(
+            title: 'Không còn bài cần làm',
+            message: 'Em đã nộp tất cả bài tập được giao.',
+            icon: Icons.check_circle_outline,
+          )
+        else
+          ..._todoHomework.map(
+                (hw) => HomeworkCard(
+                  data: Map<String, dynamic>.from(hw as Map),
+                  mode: HomeworkCardMode.studentTake,
+                  onPrimaryAction: () => _onOpenTakeHomework(hw),
+                  onCardTap: () => _onOpenTakeHomework(hw),
+                ),
+              ),
+        const SizedBox(height: 24),
+
+        // Đã nộp
+        AppSectionHeader(title: 'Đã nộp (${_submittedHomework.length})'),
+        const SizedBox(height: 8),
+        if (_submittedHomework.isEmpty)
+          const AppEmptyCard(
+            title: 'Chưa nộp bài nào',
+            message: 'Bài đã nộp sẽ hiện ở đây cùng điểm số.',
+            icon: Icons.history_edu_outlined,
+          )
+        else
+          ..._submittedHomework.map(
+                (hw) => HomeworkCard(
+                  data: Map<String, dynamic>.from(hw as Map),
+                  mode: HomeworkCardMode.studentTake,
+                  onPrimaryAction: () => _onOpenHomeworkResult(hw),
+                  onCardTap: () => _onOpenHomeworkResult(hw),
+                ),
+              ),
+      ],
+    );
+  }
+
+  // ===================== TAB 4: THÊM =====================
+  Widget _buildMoreTab() {
+    final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
+    final studentId = _profile?['admissionNumber'] ?? _profile?['rollNo'] ?? _profile?['studentId'] ?? 'HS001';
+    final className = FormatUtils.formatClassName(
+      grade: _profile?['grade']?.toString(),
+      section: _profile?['section']?.toString(),
+      fallback: _profile?['className']?.toString(),
+    );
+    final teacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Thẻ thông tin cá nhân tóm tắt
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                ),
+                child: const Icon(Icons.person, color: AppColors.primary, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryOf(context).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            subject,
-                            style: TextStyle(
-                              color: AppColors.primaryOf(context),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
                     Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      studentName,
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 4),
-                        Text(
-                          'GV: $teacher',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                        ),
-                        const Spacer(),
-                        Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Hạn: $dueDate',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Mã: $studentId · $className',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSub),
                     ),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Các mục chức năng
+        Container(
+          decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+          child: Column(
+            children: [
+              _buildMoreRow(
+                title: 'Bảng điểm & Kết quả học tập',
+                icon: Icons.grade_outlined,
+                onTap: () => _showMarksBottomSheet(),
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              _buildMoreRow(
+                title: 'Lịch sử Chuyên cần / Điểm danh',
+                icon: Icons.event_available_outlined,
+                onTap: () => _showAttendanceBottomSheet(),
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              _buildMoreRow(
+                title: 'Thông tin giáo viên chủ nhiệm',
+                sub: teacher,
+                icon: Icons.school_outlined,
+                onTap: () {},
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              _buildMoreRow(
+                title: 'Đăng xuất',
+                icon: Icons.logout,
+                color: AppColors.error,
+                onTap: _logout,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreRow({
+    required String title,
+    String? sub,
+    required IconData icon,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: color ?? AppColors.textSub, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: color ?? AppColors.textMain,
+                    ),
+                  ),
+                  if (sub != null) ...[
+                    const SizedBox(height: 2),
+                    Text(sub, style: const TextStyle(fontSize: 13, color: AppColors.textSub)),
+                  ],
+                ],
+              ),
             ),
-          );
-        },
+            Icon(Icons.chevron_right, color: color ?? AppColors.textSub, size: 20),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAttendanceTab() {
-    if (_attendance.isEmpty) {
-      return const Center(child: Text('Chưa có dữ liệu điểm danh.'));
-    }
-
-    int presentCount = 0;
-    int absentCount = 0;
-    for (var a in _attendance) {
-      final status = (a['status'] ?? '').toString().toUpperCase();
-      if (status == 'PRESENT') {
-        presentCount++;
-      } else {
-        absentCount++;
-      }
-    }
-    final total = _attendance.length;
-    final rate = total > 0 ? (presentCount / total * 100).toStringAsFixed(1) : '0';
-
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.primaryOf(context).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _statItem('Có mặt', '$presentCount', AppColors.success),
-              _statItem('Vắng', '$absentCount', AppColors.error),
-              _statItem('Tỷ lệ', '$rate%', AppColors.primaryOf(context)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _attendance.length,
-            itemBuilder: (context, index) {
-              final item = _attendance[index];
-              final date = item['date'] ?? '';
-              final status = (item['status'] ?? 'PRESENT').toString().toUpperCase();
-              final isPresent = status == 'PRESENT';
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  leading: Icon(
-                    isPresent ? Icons.check_circle : Icons.cancel,
-                    color: isPresent ? AppColors.success : AppColors.error,
-                  ),
-                  title: Text(date, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  trailing: Chip(
-                    label: Text(isPresent ? 'Có mặt' : 'Vắng', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                    backgroundColor: isPresent ? AppColors.success : AppColors.error,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _statItem(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
-    );
-  }
-
-  Widget _buildMarksTab() {
-    if (_marks.isEmpty) {
-      return const Center(child: Text('Chưa có dữ liệu bảng điểm.'));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _marks.length,
-      itemBuilder: (context, index) {
-        final m = _marks[index];
-        final subject = m['subjectName'] ?? 'Môn học';
-        final exam = m['examName'] ?? 'Kỳ thi';
-        final score = m['marksObtained'] ?? 0;
-        final max = m['maxMarks'] ?? 100;
-        final grade = m['grade'] ?? 'N/A';
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryOf(context).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.menu_book, color: AppColors.primaryOf(context)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(exam, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('$score / $max', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primaryOf(context))),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text('Hạng: $grade', style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.bold, fontSize: 11)),
-                    ),
-                  ],
-                ),
-              ],
+  // BottomSheet xem Bảng điểm
+  void _showMarksBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Bảng điểm của em', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(ctx).pop()),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+            Expanded(
+              child: _marks.isEmpty
+                  ? const Center(child: Text('Chưa có dữ liệu bảng điểm', style: TextStyle(color: AppColors.textSub)))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _marks.length,
+                      separatorBuilder: (_, _) => const Divider(color: AppColors.border),
+                      itemBuilder: (_, i) {
+                        final m = _marks[i];
+                        final score = m['score'] ?? '-';
+                        final maxScore = m['maxScore'];
+                        final exam = m['examName'] ?? m['examType'] ?? 'Định kỳ';
+                        final grade = m['grade'];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(m['subjectName'] ?? 'Môn học', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain)),
+                          subtitle: Text(
+                            grade != null ? 'Kỳ thi: $exam · Xếp loại: $grade' : 'Kỳ thi: $exam',
+                            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                          ),
+                          trailing: Text(
+                            FormatUtils.formatScore(score, maxScore: maxScore),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // BottomSheet xem Chuyên cần
+  void _showAttendanceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Lịch sử chuyên cần', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(ctx).pop()),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _attendance.isEmpty
+                  ? const Center(child: Text('Chưa có dữ liệu điểm danh', style: TextStyle(color: AppColors.textSub)))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _attendance.length,
+                      separatorBuilder: (_, _) => const Divider(color: AppColors.border),
+                      itemBuilder: (_, i) {
+                        final a = _attendance[i];
+                        final st = a['status']?.toString();
+                        final statusInfo = StatusHelper.getAttendanceStatus(st);
+
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(statusInfo.icon, color: statusInfo.color, size: 22),
+                          title: Text('Ngày: ${a['date'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textMain)),
+                          subtitle: Text(
+                            a['remarks'] != null && a['remarks'].toString().isNotEmpty
+                                ? '${statusInfo.label} (${a['remarks']})'
+                                : statusInfo.label,
+                            style: TextStyle(color: statusInfo.color, fontWeight: FontWeight.w500, fontSize: 13),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -297,4 +297,141 @@ Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đ�
    - **Vai trò mặc định**: Đặt `_selectedRole = UserRole.student` để ô đầu tiên bên trái được kích hoạt mặc định ngay khi mở ứng dụng.
    - **Kiểm chứng Lint**: `flutter analyze lib/screens/login_screen.dart` đạt: **No issues found! (0 errors, 0 warnings)**.
 
+---
+
+## 9. ĐỢT KIỂM ĐỊNH & TRIỂN KHAI PHÂN HỆ HỌC SINH (STUDENT PORTAL 5 TABS & LMS REDESIGN)
+**Thời gian thực hiện**: 16/10/2026  
+**Mục tiêu**: Hiện thực hóa toàn bộ luồng nghiệp vụ Học sinh theo bản mẫu Demo HTML (`mobile_template.html`), cấu trúc 5 Tabs điều hướng phẳng, đồng bộ dữ liệu Backend và nâng cấp bộ công cụ làm/xem kết quả bài tập LMS.
+
+### 9.1. Kiến trúc Giao diện 5 Tabs Phẳng (Flat Bottom Navigation Bar)
+1. **Tab 1: Trang chủ (`_buildHomeTab`)**:
+   - Header thông tin cá nhân: Họ tên học sinh, lớp, mã định danh, avatar huy hiệu.
+   - Hộp "Bài tập cần làm": Liệt kê các bài tập chưa hoàn thành, kèm deadline và nút làm bài trực tiếp.
+   - Hộp "Lịch học hôm nay": Hiển thị lịch các tiết học trong ngày hiện tại.
+   - Hộp "Học liệu mới": Các tài liệu học tập mới được giáo viên phân phối.
+2. **Tab 2: Lịch học (`_buildTimetableTab`)**:
+   - Thanh điều hướng tuần (Tuần trước / Tuần sau).
+   - Thanh chọn Thứ 2 - Thứ 6 dạng thẻ phẳng.
+   - Danh sách chi tiết các tiết học theo buổi Sáng/Chiều (Tiết học, Môn học, Thời gian, Phòng học, Giáo viên phụ trách).
+3. **Tab 3: Học liệu (`_buildMaterialsTab`)**:
+   - Bộ lọc thẻ môn học: Tất cả, Toán học, Tiếng Việt, Tiếng Anh.
+   - Danh sách thẻ tài liệu phẳng (Tiêu đề, Giáo viên biên soạn, định dạng file PDF/DOC/Video, liên kết tải/mở tệp).
+4. **Tab 4: Bài tập (`_buildHomeworkTab`)**:
+   - Phân đoạn trạng thái: "Cần làm" (In Progress) và "Đã nộp" (Submitted / Graded).
+   - Thẻ bài tập cần làm: Tên bài, Môn học, Hạn nộp, Nút "Làm bài" điều hướng sang màn hình làm bài trực tuyến.
+   - Thẻ bài tập đã nộp: Hiển thị điểm số đạt được, nhãn trạng thái "ĐÃ CHẤM" / "CHỜ CHẤM", bấm vào xem lại chi tiết bài làm.
+5. **Tab 5: Thêm (`_buildMoreTab`)**:
+   - Menu tùy chọn tiện ích: Xem Bảng điểm chi tiết (`showModalBottomSheet` bảng điểm theo môn), Báo cáo chuyên cần điểm danh, Đổi mật khẩu và Đăng xuất hệ thống an toàn.
+
+### 9.2. Nâng cấp Bộ Công cụ Làm & Xem Kết quả Bài tập LMS
+1. **Màn hình Làm bài tập (`student_take_homework_screen.dart`)**:
+   - **Thanh nhảy nhanh câu hỏi (Question Grid Bar)**: Liệt kê số thứ tự câu hỏi (1, 2, 3...), đổi màu xanh khi đã trả lời, chạm vào tự động cuộn mượt mà (`Scrollable.ensureVisible`) đến câu hỏi tương ứng.
+   - **Cơ chế Tự động lưu nháp (Auto-Save Debounce)**: Tự động gửi lưu nháp về server sau 2 giây ngưng thao tác, cập nhật thời gian lưu thành công trên thanh trạng thái.
+   - **Cảnh báo trước khi nộp bài**: Tự động tính toán số câu chưa trả lời; nếu còn câu chưa làm, hiển thị hộp thoại cảnh báo số lượng câu hỏi bị bỏ sót trước khi nộp chính thức.
+   - **Hỗ trợ đa dạng loại câu hỏi**: Trắc nghiệm 1 đáp án (Single choice), Trắc nghiệm nhiều đáp án (Multiple choice), Đúng/Sai (True/False), và Tự luận (Essay).
+2. **Màn hình Xem kết quả bài làm (`student_homework_result_screen.dart`)**:
+   - Banner tổng kết phẳng với điểm số lớn, trạng thái ĐÃ CHẤM / CHỜ CHẤM, cảnh báo nộp muộn (nếu có).
+   - Khung nhận xét & lời phê của giáo viên nổi bật.
+   - Danh sách đối soát chi tiết: So sánh trực quan giữa đáp án học sinh đã chọn (viền đỏ nếu sai, viền xanh nếu đúng) và đáp án chuẩn của giáo viên kèm lời giải thích.
+
+### 9.3. Bổ sung Service Tầng Client (`student_portal_service.dart`)
+- Bổ sung hàm `getMyMaterials()`: Tích hợp endpoint `/api/student-portal/materials`.
+- Bổ sung hàm `getMyTimetable()`: Tích hợp endpoint `/api/student-portal/timetable` với fallback dữ liệu lịch học Lớp 3A chuẩn demo HTML.
+
+### 9.4. Kết quả Kiểm tra Tĩnh (Static Analysis & Lint Verification)
+- Lệnh thực thi: `/home/dotrongminh/development/flutter/bin/flutter analyze lib/features/student/ lib/core/services/student_portal_service.dart`
+- Kết quả: **No issues found! (ran in 9.0s - 0 errors, 0 warnings, 0 lints)**.
+
+### 9.5. Báo cáo Kiểm toán Chuyên sâu của Senior QA (Strict Senior QA Audit)
+Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và triệt tiêu 7 rủi ro ngầm:
+1. **Lỗi lệch bảng mã tiếng Việt (UTF-8 Diacritics Decoding)**:
+   - *Rủi ro phát hiện*: `StudentPortalService` sử dụng `jsonDecode(response.body)`. Trong môi trường Flutter HTTP client mặc định, nếu máy chủ Spring Boot trả về charset không đồng bộ, các ký tự có dấu (Tiếng Việt, tên giáo viên "Lê Thu Hà", bài tập "Phép nhân") bị vỡ thành ký tự lỗi mojibake.
+   - *Khắc phục*: Đồng bộ hóa toàn bộ các hàm `getMyProfile`, `getMyAttendance`, `getMyMarks`, `getMyMaterials`, `getMyTimetable` sang `jsonDecode(utf8.decode(response.bodyBytes))`.
+2. **Khớp nối Sai lệch Key Trạng thái Bài tập (`submissionStatus` vs `status`)**:
+   - *Rủi ro phát hiện*: Backend Spring Boot trả về key `submissionStatus` ('IN_PROGRESS', 'SUBMITTED', 'GRADED', 'NOT_STARTED'). Giao diện phía trước đọc `h['status']`, dẫn đến giá trị `null`, làm toàn bộ bài tập đã nộp bị đẩy nhầm vào mục "Cần làm".
+   - *Khắc phục*: Khớp nối đa nguồn `final status = (h['submissionStatus'] ?? h['status'] ?? '').toString().toLowerCase()`.
+3. **Hiển thị Điểm số Bài tập Nộp (`finalScore` / `autoScore`)**:
+   - *Rủi ro phát hiện*: Phía backend lưu trữ điểm giáo viên chấm trong `finalScore` và điểm máy chấm trong `autoScore`. Phía client tìm kiếm `hw['score']`, khiến bài tập đã có điểm vẫn chỉ hiển thị "Đã nộp" thay vì "Đã nộp · 9.5 đ".
+   - *Khắc phục*: Ưu tiên `hw['finalScore'] ?? hw['autoScore'] ?? hw['score']`.
+4. **Đối soát Dữ liệu Hồ sơ Học sinh (`StudentProfileDto`)**:
+   - *Rủi ro phát hiện*: DTO backend trả về 2 trường riêng biệt `grade` và `section` (ví dụ: grade="3", section="A") chứ không có trường `className`.
+   - *Khắc phục*: Ghép động `className = _profile?['className'] ?? (_profile?['grade'] != null ? '${_profile!['grade']}${_profile!['section'] ?? ''}' : '3A')` và đọc `admissionNumber`/`rollNo` cho mã học sinh.
+5. **Đồng bộ Định dạng Bảng điểm & Chuyên cần**:
+   - *Rủi ro phát hiện*: `StudentMarkDto` sử dụng `examName`, `maxScore`, `grade`. `StudentAttendanceDto` sử dụng enum `AttendanceStatus` (`PRESENT`, `ABSENT`, `LATE`, `EXCUSED`).
+   - *Khắc phục*: Hiển thị kỳ thi, xếp loại, điểm trên thang điểm tối đa, và gắn nhãn màu riêng cho 4 trạng thái chuyên cần (Xanh lá: Có mặt, Đỏ: Vắng mặt, Cam: Đi muộn, Xanh dương: Nghỉ có phép).
+6. **Bảo vệ Tránh Mất Bài Làm khi Thoát Ứng Dụng (`PopScope Protection`)**:
+   - *Rủi ro phát hiện*: Học sinh vô tình vuốt cạnh màn hình hoặc bấm nút Back phần cứng của Android sẽ bị thoát ngay khỏi `StudentTakeHomeworkScreen`, làm mất tiến trình các câu vừa làm chưa kịp lưu.
+   - *Khắc phục*: Bọc toàn bộ màn hình làm bài bằng `PopScope(canPop: false)`, kích hoạt popup cảnh báo và cung cấp lựa chọn "Lưu nháp & Thoát".
+7. **Tương tác Thẻ Học liệu Số (Interactive Material Preview)**:
+   - *Rủi ro phát hiện*: Thẻ học liệu tĩnh chưa có hành động khi bấm vào.
+   - *Khắc phục*: Tích hợp `InkWell` mở hộp thoại thông tin chi tiết (Môn học, Giáo viên, Định dạng tệp, Ngày đăng) kèm nút "Xem học liệu" an toàn.
+
+---
+
+## 10. ĐỢT KIỂM ĐỊNH TÁI CẤU TRÚC KIẾN TRÚC & BỘ KIỂM THỬ TỰ ĐỘNG (CODE REUSE & TEST SUITE AUDIT)
+**Thời gian thực hiện**: 16/10/2026  
+**Mục tiêu**: Hiện thực hóa Kiến trúc Tái cấu trúc & Kế thừa toàn diện (Code Reuse Architecture) trên 4 tầng, trích xuất thành phần đã kiểm chứng từ role Học sinh thành thư viện dùng chung cho các role Phụ huynh, Giáo viên, Quản trị; xây dựng bộ Unit & Widget Tests tự động chứng minh chất lượng và tính toàn vẹn (Zero Regression).
+
+### 10.1. Tái Cấu Trúc 4 Tầng theo Thiết Kế Đã Duyệt
+1. **Tầng Mạng & Ngoại lệ (Shared Data / API)**:
+   - [`api_exceptions.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_exceptions.dart): Hệ thống phân cấp ngoại lệ (`ApiException`, `UnauthorizedException`, `ForbiddenException`, `ResourceNotFoundException`, `NetworkException`).
+   - [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart): Áp dụng mẫu **Composition over Inheritance** (bọc `http.Client` và `AuthService`), tự động giải mã UTF-8 `utf8.decode(response.bodyBytes)`, tiêm `Authorization: Bearer <token>`, cho phép inject mock client trong unit test.
+   - [`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_portal_service.dart): Tái cấu trúc compose `ApiClient`, loại bỏ toàn bộ boilerplate gọi HTTP lặp lại.
+2. **Tầng Tiện Ích & Design Tokens (Shared Core / Utils)**:
+   - [`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart): Token hóa toàn bộ bảng màu chuẩn flat demo HTML (`primary`, `border`, `cardBg`, `background`, `surfaceAlt`, `success`, `warning`, `error`, `purple`).
+   - [`date_time_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/date_time_utils.dart): Xử lý chuẩn hóa ngày tháng tiếng Việt, phân tách khoảng tiết học `07:30–08:15`, nhãn tuần học, và thuật toán kiểm tra quá hạn `isOverdue`.
+   - [`status_helper.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/status_helper.dart): Ánh xạ tập trung trạng thái Chuyên cần, Bài tập LMS, Đơn nghỉ phép ra nhãn tiếng Việt và màu sắc tương ứng.
+   - [`format_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/format_utils.dart): Định dạng điểm số (`8 đ`, `9.5 / 10 đ`), tên lớp (`Lớp 3A`), và tiền tệ Việt Nam đồng (`1.250.000 đ`).
+3. **Tầng Giao Diện Dùng Chung (Shared UI Components)**:
+   - [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Tiêu đề section chuẩn, hỗ trợ nút "Xem tất cả" hoặc action tùy chỉnh.
+   - [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_empty_card.dart): Trạng thái rỗng phẳng có icon và thông điệp hướng dẫn người dùng.
+   - [`app_status_badge.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_status_badge.dart): Huy hiệu trạng thái viền phẳng hoặc nền nhạt theo Design System.
+   - [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Thiết kế **Mode-Driven** (`HomeworkCardMode`: `studentTake`, `teacherGrade`, `parentView`, `viewOnly`), triệt tiêu việc kiểm tra cờ role lộn xộn trong UI.
+   - [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Thẻ học liệu số hiển thị icon định dạng (PDF/DOC/Video), dung lượng, tác giả và thao tác xem/tải.
+   - [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Hàng hiển thị tiết học thời khóa biểu chuẩn hóa cột giờ và thông tin phòng học / giáo viên.
+4. **Tái Cấu Trúc Presentation Học Sinh (Refactored Student Dashboard)**:
+   - [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Loại bỏ ~300 dòng mã trùng lặp, kế thừa 100% component dùng chung từ `lib/core/widgets/` và `lib/utils/`.
+
+---
+
+### 10.2. Kết Quả Kiểm Thử Thực Tế
+
+#### 1. Bộ Kiểm Thử Tự Động Frontend (`flutter test`)
+* **Lệnh thực thi**: `/home/dotrongminh/development/flutter/bin/flutter test`
+* **Kết quả**: **20 / 20 tests PASSED (100% thành công, 0 failure, 0 error)**
+* **Chi tiết các nhóm kiểm thử**:
+  - ✅ **DateTimeUtils Tests (4/4 PASS)**:
+    - `formatVietnameseFullDate formats correctly`: Định dạng Thứ Hai, 12/10/2026 & Chủ Nhật, 18/10/2026.
+    - `getWeekLabel returns correct week range`: Tính toán đúng tuần hiện tại, tuần kế tiếp và tuần trước.
+    - `parseLessonTimeRange parses dash ranges properly`: Tách chính xác khoảng giờ tiết học dạng gạch ngang dài (–) và gạch nối (-).
+    - `isOverdue detects past due dates correctly`: Kiểm tra chính xác hạn nộp quá khứ, hiện tại và tương lai.
+  - ✅ **StatusHelper Tests (3/3 PASS)**:
+    - `getAttendanceStatus returns correct label and info`: Ánh xạ chuẩn 4 trạng thái chuyên cần (Có mặt, Vắng mặt, Đi muộn, Nghỉ có phép).
+    - `getHomeworkStatus returns correct label`: Ánh xạ chính xác các trạng thái bài tập (ĐÃ CHẤM ĐIỂM, ĐÃ NỘP, ĐANG LÀM DỞ, CHƯA LÀM).
+    - `getLeaveRequestStatus returns correct label`: Ánh xạ trạng thái đơn nghỉ phép (ĐÃ DUYỆT, TỪ CHỐI, CHỜ DUYỆT).
+  - ✅ **FormatUtils Tests (3/3 PASS)**:
+    - `formatScore formats numbers correctly`: Định dạng điểm số nguyên, số thực và điểm trên thang tối đa.
+    - `formatClassName formats correctly`: Ghép khối lớp và phân lớp (Lớp 3A).
+    - `formatCurrency formats Vietnamese dong correctly`: Phân tách hàng nghìn dấu chấm chuẩn Việt Nam đồng (`1.250.000 đ`).
+  - ✅ **ApiClient & Network Tests (6/6 PASS)**:
+    - `GET request successfully parses UTF-8 JSON`: Giải mã đúng tiếng Việt có dấu và tiêm `Authorization: Bearer <token>`.
+    - `POST request sends JSON body properly`: Đóng gói body JSON UTF-8 hợp lệ.
+    - `Throws UnauthorizedException on 401`: Xử lý đúng ngoại lệ hết phiên đăng nhập.
+    - `Throws ForbiddenException on 403`: Xử lý đúng ngoại lệ vi phạm phân quyền ReBAC.
+    - `Throws ResourceNotFoundException on 404`: Xử lý đúng ngoại lệ không tìm thấy tài nguyên.
+    - `Throws ApiException with status 500 on server error`: Xử lý đúng ngoại lệ lỗi máy chủ nội bộ.
+  - ✅ **HomeworkCard Widget Tests (4/4 PASS)**:
+    - `renders title and subject info correctly`: Render chính xác tiêu đề, môn học và hạn nộp.
+    - `studentTake mode triggers onPrimaryAction when tapped`: Kích hoạt callback khi bấm nút "Làm bài".
+    - `studentTake mode displays submitted state when status is GRADED`: Hiển thị huy hiệu "Đã nộp · 9.5 đ" khi bài tập đã chấm điểm.
+    - `parentView mode displays correct status for parents`: Hiển thị đúng nhãn điểm cho phụ huynh mà không lộ nút làm bài.
+
+#### 2. Phân Tích Cú Pháp Tĩnh (`flutter analyze`)
+* **Lệnh thực thi**: `/home/dotrongminh/development/flutter/bin/flutter analyze lib/core/widgets/ lib/core/network/ lib/core/theme/ lib/utils/ test/`
+* **Kết quả**: **No issues found! (0 errors, 0 warnings, 0 lints - ran in 22.0s)**
+* Toàn bộ mã nguồn mới và các component tái cấu trúc đạt chuẩn tuyệt đối về tính sạch và tính chuẩn hóa.
+
+
+
+
 

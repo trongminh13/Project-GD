@@ -91,7 +91,11 @@ class ApiConstants {
       return 'http://localhost:8081/api';
     }
     // Fallback to local .env configuration only during active development
-    return dotenv.env['API_BASE_URL'] ?? 'http://localhost:8081/api';
+    try {
+      return dotenv.env['API_BASE_URL'] ?? 'http://localhost:8081/api';
+    } catch (_) {
+      return 'http://localhost:8081/api';
+    }
   }
 }
 
