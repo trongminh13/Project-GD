@@ -292,3 +292,9 @@ Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đ�
    - **Gia cố viền Focus**: Khi focus, viền chuyển sang màu xanh `_kPrimaryBlue` dày 2.0px sắc nét.
    - **Kiểm chứng Lint**: `flutter analyze lib/screens/login_screen.dart` đạt: **No issues found! (0 errors, 0 warnings)**.
 
+5. **Tái sắp xếp Thứ tự Thanh Vai trò (Role Selector Order)**:
+   - **Thứ tự mới (từ trái sang phải)**: `Học sinh` (`UserRole.student`) → `Phụ huynh` (`UserRole.parent`) → `Giáo viên` (`UserRole.teacher`) → `Quản trị` (`UserRole.admin`).
+   - **Vai trò mặc định**: Đặt `_selectedRole = UserRole.student` để ô đầu tiên bên trái được kích hoạt mặc định ngay khi mở ứng dụng.
+   - **Kiểm chứng Lint**: `flutter analyze lib/screens/login_screen.dart` đạt: **No issues found! (0 errors, 0 warnings)**.
+
+

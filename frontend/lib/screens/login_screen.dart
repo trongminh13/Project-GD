@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  UserRole _selectedRole = UserRole.admin; // Default
+  UserRole _selectedRole = UserRole.student; // Default: Học sinh (vai trò đầu tiên từ trái sang)
 
   @override
   void dispose() {
@@ -407,10 +407,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          _buildRoleButton('Quản trị', UserRole.admin, isLast: false),
-                          _buildRoleButton('Giáo viên', UserRole.teacher, isLast: false),
+                          _buildRoleButton('Học sinh', UserRole.student, isLast: false),
                           _buildRoleButton('Phụ huynh', UserRole.parent, isLast: false),
-                          _buildRoleButton('Học sinh', UserRole.student, isLast: true),
+                          _buildRoleButton('Giáo viên', UserRole.teacher, isLast: false),
+                          _buildRoleButton('Quản trị', UserRole.admin, isLast: true),
                         ],
                       ),
                     ),
