@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 
 class StudentHomeworkResultScreen extends StatefulWidget {
   final int assignmentId;
@@ -39,8 +40,10 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
       res = await _service.getAssignmentForTaking(widget.assignmentId);
     } catch (_) {}
 
-    // Fallback mock result nếu offline hoặc chưa có submission từ server
-    res ??= _buildFallbackMockResult(widget.assignmentId);
+    // Fallback mock result nếu bật Demo mode và offline hoặc chưa có submission từ server
+    if (res == null && FeatureFlags.useDemoFallback) {
+      res = _buildFallbackMockResult(widget.assignmentId);
+    }
 
     if (!mounted) return;
     setState(() {

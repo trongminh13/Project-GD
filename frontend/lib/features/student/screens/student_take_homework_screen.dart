@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 
 import 'package:ashadeep/core/theme/app_colors.dart';
 
@@ -61,10 +62,20 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
       res = await _service.getAssignmentForTaking(widget.assignmentId);
     } catch (_) {}
 
-    // Fallback Mock nếu backend chưa có bài tập hoặc chạy offline
-    res ??= _buildFallbackMockAssignment(widget.assignmentId);
+    // Fallback Mock nếu bật Demo mode và backend chưa có bài tập hoặc chạy offline
+    if (res == null && FeatureFlags.useDemoFallback) {
+      res = _buildFallbackMockAssignment(widget.assignmentId);
+    }
 
     if (!mounted) return;
+
+    if (res == null) {
+      setState(() {
+        _data = null;
+        _isLoading = false;
+      });
+      return;
+    }
 
     _data = res;
     // Khôi phục các câu đã lưu

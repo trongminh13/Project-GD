@@ -427,9 +427,22 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     - `parentView mode displays correct status for parents`: Hiển thị đúng nhãn điểm cho phụ huynh mà không lộ nút làm bài.
 
 #### 2. Phân Tích Cú Pháp Tĩnh (`flutter analyze`)
-* **Lệnh thực thi**: `/home/dotrongminh/development/flutter/bin/flutter analyze lib/core/widgets/ lib/core/network/ lib/core/theme/ lib/utils/ test/`
-* **Kết quả**: **No issues found! (0 errors, 0 warnings, 0 lints - ran in 22.0s)**
+* **Lệnh thực thi**: `/home/dotrongminh/development/flutter/bin/flutter analyze lib/core/widgets/ lib/core/network/ lib/core/theme/ lib/core/config/ lib/features/student/ lib/utils/ test/`
+* **Kết quả**: **No issues found! (0 errors, 0 warnings, 0 lints - ran in 31.1s)**
 * Toàn bộ mã nguồn mới và các component tái cấu trúc đạt chuẩn tuyệt đối về tính sạch và tính chuẩn hóa.
+
+---
+
+### 10.3. Triệt Tiêu Xáo Trộn Dữ Liệu qua Feature Flags & Quản Lý Demo Mode
+**Vấn đề phát hiện**: Trước đó, khi API trả về danh sách rỗng `[]`, dashboard dùng toán tử 3 ngôi gán mock data, khiến học sinh thấy bài tập/điểm số/học liệu không thuộc về mình.  
+**Giải pháp kiến trúc**:
+1. Khởi tạo [`feature_flags.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/config/feature_flags.dart) với cờ `FeatureFlags.useDemoFallback` (mặc định đọc từ `.env ['ENABLE_DEMO_DATA']` hoặc `kDebugMode`).
+2. Tách bạch hoàn toàn:
+   - **Khi tắt Demo Mode (`useDemoFallback = false`)**: Ứng dụng tuân thủ 100% dữ liệu thực từ API; khi danh sách bài tập/học liệu/tiết học rỗng $\rightarrow$ hiển thị thẻ rỗng phẳng `AppEmptyCard` chuẩn mực, đạt chuẩn **Zero Regression**.
+   - **Khi bật Demo Mode (`useDemoFallback = true`)**: Bổ sung dữ liệu mẫu minh họa, hiển thị banner cảnh báo `[Chế độ Demo]` ở trang chủ, cho phép Sếp/Ban lãnh đạo trải nghiệm đầy đủ luồng làm bài, tự động lưu nháp và so sánh kết quả.
+3. Tích hợp nút chuyển đổi `SwitchListTile` trong Tab "Thêm" của Dashboard giúp chuyển đổi chế độ Demo trực tiếp khi trình chiếu.
+4. Bổ sung bộ unit test [`feature_flags_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/config/feature_flags_test.dart) (nâng tổng số test lên **23 / 23 tests PASSED**).
+
 
 
 

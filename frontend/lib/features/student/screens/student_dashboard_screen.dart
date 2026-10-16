@@ -13,6 +13,7 @@ import 'package:ashadeep/utils/format_utils.dart';
 import 'package:ashadeep/utils/status_helper.dart';
 import 'package:ashadeep/features/student/screens/student_take_homework_screen.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/screens/login_screen.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
@@ -73,10 +74,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           _marks = results[2] as List<Map<String, dynamic>>;
 
           final hwList = results[3] as List<dynamic>;
-          _homework = hwList.isNotEmpty ? hwList : _getMockHomework();
+          if (hwList.isNotEmpty) {
+            _homework = hwList;
+          } else if (FeatureFlags.useDemoFallback) {
+            _homework = _getMockHomework();
+          } else {
+            _homework = [];
+          }
 
           final matList = results[4] as List<dynamic>;
-          _materials = matList.isNotEmpty ? matList : _getMockMaterials();
+          if (matList.isNotEmpty) {
+            _materials = matList;
+          } else if (FeatureFlags.useDemoFallback) {
+            _materials = _getMockMaterials();
+          } else {
+            _materials = [];
+          }
 
           _isLoading = false;
         });
@@ -84,8 +97,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _homework = _getMockHomework();
-          _materials = _getMockMaterials();
+          if (FeatureFlags.useDemoFallback) {
+            _homework = _getMockHomework();
+            _materials = _getMockMaterials();
+          } else {
+            _homework = [];
+            _materials = [];
+          }
           _isLoading = false;
         });
       }
@@ -406,7 +424,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       fallback: _profile?['className']?.toString(),
     );
     final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
-    final todayLessons = _getLessonsForDay(_selectedDay);
+    final now = DateTime.now();
+    final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 4: Thứ 6
+    final todayLessons = FeatureFlags.useDemoFallback
+        ? _getLessonsForDay(todayWeekday >= 0 && todayWeekday < 5 ? todayWeekday : 0)
+        : <Map<String, String>>[];
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -414,6 +436,29 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         children: [
+          // Banner chỉ dẫn Chế độ Demo (nếu đang bật)
+          if (FeatureFlags.useDemoFallback)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.warning),
+                color: AppColors.warning.withValues(alpha: 0.08),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.slideshow_outlined, size: 16, color: AppColors.warning),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Chế độ Demo: Đang hiển thị dữ liệu mẫu phục vụ trình chiếu.',
+                      style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Header cá nhân học sinh
           Container(
             padding: const EdgeInsets.all(16),
@@ -435,7 +480,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(DateTime(2026, 10, 12))}',
+                  'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(now)}',
                   style: const TextStyle(fontSize: 13, color: AppColors.textSub),
                 ),
               ],
@@ -474,24 +519,31 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             onLink: () => setState(() => _currentIndex = 1),
           ),
           const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
-            child: Column(
-              children: todayLessons.asMap().entries.map((entry) {
-                final i = entry.key;
-                final l = entry.value;
-                return LessonRow(
-                  lessonIndex: i + 1,
-                  subject: l['subj']!,
-                  time: l['time']!,
-                  teacher: l['teacher']!,
-                  room: l['room']!,
-                  isCompact: true,
-                  hasDivider: i < todayLessons.length - 1,
-                );
-              }).toList(),
+          if (todayLessons.isEmpty)
+            const AppEmptyCard(
+              title: 'Hôm nay không có tiết',
+              message: 'Không có tiết học nào được xếp lịch cho hôm nay.',
+              icon: Icons.event_available_outlined,
+            )
+          else
+            Container(
+              decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+              child: Column(
+                children: todayLessons.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final l = entry.value;
+                  return LessonRow(
+                    lessonIndex: i + 1,
+                    subject: l['subj']!,
+                    time: l['time']!,
+                    teacher: l['teacher']!,
+                    room: l['room']!,
+                    isCompact: true,
+                    hasDivider: i < todayLessons.length - 1,
+                  );
+                }).toList(),
+              ),
             ),
-          ),
           const SizedBox(height: 20),
 
           // Section 3: Học liệu mới
@@ -517,7 +569,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   // ===================== TAB 1: LỊCH HỌC =====================
   Widget _buildTimeTab() {
     final weekLabel = DateTimeUtils.getWeekLabel(_weekOffset);
-    final lessons = _getLessonsForDay(_selectedDay);
+    final lessons = FeatureFlags.useDemoFallback ? _getLessonsForDay(_selectedDay) : <Map<String, String>>[];
 
     return Column(
       children: [
@@ -591,24 +643,31 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Container(
-                decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
-                child: Column(
-                  children: lessons.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final l = entry.value;
-                    return LessonRow(
-                      lessonIndex: i + 1,
-                      subject: l['subj']!,
-                      time: l['time']!,
-                      teacher: l['teacher']!,
-                      room: l['room']!,
-                      isCompact: false,
-                      hasDivider: i < lessons.length - 1,
-                    );
-                  }).toList(),
+              if (lessons.isEmpty)
+                const AppEmptyCard(
+                  title: 'Chưa có lịch học',
+                  message: 'Thời khóa biểu cho ngày này chưa được cập nhật.',
+                  icon: Icons.calendar_today_outlined,
+                )
+              else
+                Container(
+                  decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+                  child: Column(
+                    children: lessons.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final l = entry.value;
+                      return LessonRow(
+                        lessonIndex: i + 1,
+                        subject: l['subj']!,
+                        time: l['time']!,
+                        teacher: l['teacher']!,
+                        room: l['room']!,
+                        isCompact: false,
+                        hasDivider: i < lessons.length - 1,
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -816,6 +875,28 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 sub: teacher,
                 icon: Icons.school_outlined,
                 onTap: () {},
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+              SwitchListTile(
+                value: FeatureFlags.useDemoFallback,
+                onChanged: (val) {
+                  setState(() {
+                    FeatureFlags.useDemoFallback = val;
+                  });
+                  _loadAllData();
+                },
+                title: const Text(
+                  'Chế độ Dữ liệu Demo (Demo Mode)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                ),
+                subtitle: Text(
+                  FeatureFlags.useDemoFallback
+                      ? 'Đang bật dữ liệu mẫu phục vụ trình chiếu với ban lãnh đạo'
+                      : 'Đang dùng 100% dữ liệu thực từ máy chủ API',
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                ),
+                secondary: const Icon(Icons.slideshow_outlined, color: AppColors.primary),
+                activeThumbColor: AppColors.primary,
               ),
               const Divider(height: 1, thickness: 1, color: AppColors.border),
               _buildMoreRow(
