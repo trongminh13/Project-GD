@@ -120,12 +120,18 @@ public class MaterialService {
                 List<Map<String, Object>> fileList = new ArrayList<>();
                 for (MaterialFile f : files) {
                     Map<String, Object> fMap = new LinkedHashMap<>();
+                    fMap.put("id", f.getId());
                     fMap.put("fileName", f.getFileName());
                     fMap.put("fileUrl", f.getFileUrl());
+                    fMap.put("pageCount", f.getPageCount());
                     fMap.put("version", f.getVersion());
                     fileList.add(fMap);
                 }
                 map.put("files", fileList);
+                if (!fileList.isEmpty()) {
+                    map.put("fileId", fileList.get(0).get("id"));
+                    map.put("pageCount", fileList.get(0).get("pageCount"));
+                }
                 result.add(map);
             }
         }

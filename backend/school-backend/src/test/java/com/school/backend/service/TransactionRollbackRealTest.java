@@ -102,6 +102,7 @@ public class TransactionRollbackRealTest {
                 .filter(p -> p.getTransactionId() != null && p.getTransactionId().startsWith("TEST_RB_"))
                 .toList();
         feePaymentRepository.deleteAll(testPayments);
+        feePaymentRepository.flush();
 
         List<Student> testStudents = studentRepository.findAll().stream()
                 .filter(s -> s.getAdmissionNumber() != null && s.getAdmissionNumber().startsWith("TEST_RB_"))
@@ -258,24 +259,32 @@ public class TransactionRollbackRealTest {
     @Test
     @DisplayName("TC-RB-04: FeeService Idempotency - Không cập nhật lại khi mã thanh toán đã được xử lý PAID")
     public void testFeeService_Idempotency_AlreadyPaid() throws Exception {
+        String paymentId = "TEST_RB_PAY_ID_" + System.currentTimeMillis();
         // Tạo trước một bản ghi FeePayment với trạng thái PAID
         FeePayment existing = new FeePayment();
         existing.setAmountPaid(BigDecimal.valueOf(500.00));
         existing.setStatus("PAID");
-        existing.setTransactionId("TEST_RB_PAY_ID_888");
-        existing.setPaymentDate(LocalDate.of(2026, 1, 15));
-        existing = feePaymentRepository.save(existing);
+        existing.setTransactionId(paymentId);
+        Student student = studentRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Student s = new Student();
+            s.setName("Test Student");
+            s.setAdmissionNumber("TEST_RB_STU_888");
+            return studentRepository.save(s);
+        });
+        existing.setStudent(student);
+        existing = feePaymentRepository.saveAndFlush(existing);
 
         RazorpayVerifyRequest req = new RazorpayVerifyRequest();
         req.setRazorpayOrderId("TEST_RB_ORDER_888");
-        req.setRazorpayPaymentId("TEST_RB_PAY_ID_888");
+        req.setRazorpayPaymentId(paymentId);
         req.setRazorpaySignature("any_signature");
 
         FeePayment result = feeService.verifyRazorpayPayment(req);
 
         assertNotNull(result);
         assertEquals("PAID", result.getStatus());
-        assertEquals("TEST_RB_PAY_ID_888", result.getTransactionId());
+        assertEquals(paymentId, result.getTransactionId());
+        assertEquals(existing.getId(), result.getId(), "Phải trả về đúng bản ghi đã tồn tại");
         assertEquals(existing.getPaymentDate(), result.getPaymentDate(),
                 "Ngày thanh toán gốc phải được giữ nguyên, không bị ghi đè");
     }

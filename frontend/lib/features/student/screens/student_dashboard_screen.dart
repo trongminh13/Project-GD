@@ -148,28 +148,57 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   List<dynamic> _getMockMaterials() {
     return [
       {
+        'id': 101,
+        'fileId': 1,
+        'title': 'Sách giáo khoa Toán 1 - Tập 1',
+        'subjectName': 'Toán',
+        'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
+        'fileType': 'PDF',
+        'fileSize': '75.0 MB',
+        'pageCount': 118,
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Toan_1_Tap_1.pdf',
+        'createdAt': '2026-10-16',
+        'isDownloaded': true,
+      },
+      {
         'id': 1,
-        'title': 'Phiếu ôn tập Toán tuần 5',
+        'title': 'Sách giáo khoa Toán 3 - Tập 1',
         'subjectName': 'Toán',
         'teacherName': 'Cô Lê Thu Hà',
         'fileType': 'PDF',
+        'fileSize': '4.8 MB',
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Toan_3_Tap_1.pdf',
         'createdAt': '2026-10-12',
       },
       {
         'id': 2,
-        'title': 'Luyện từ và câu: Từ chỉ đặc điểm',
+        'title': 'Vở bài tập Tiếng Việt 3',
         'subjectName': 'Tiếng Việt',
         'teacherName': 'Cô Lê Thu Hà',
         'fileType': 'PDF',
+        'fileSize': '3.5 MB',
+        'filePath': 'file:///storage/emulated/0/Download/VBT_Tieng_Viet_3.pdf',
         'createdAt': '2026-10-11',
       },
       {
         'id': 3,
-        'title': 'Audio Nghe Tiếng Anh - Unit 3: My Family',
+        'title': 'Sách Tiếng Anh 3 - Global Success',
         'subjectName': 'Tiếng Anh',
         'teacherName': 'Thầy Phạm Quốc Bảo',
-        'fileType': 'AUDIO',
+        'fileType': 'PDF',
+        'fileSize': '6.2 MB',
+        'filePath': 'file:///storage/emulated/0/Download/Tieng_Anh_3_Global_Success.pdf',
         'createdAt': '2026-10-10',
+      },
+      {
+        'id': 4,
+        'title': 'Phiếu ôn tập Toán tuần 5',
+        'subjectName': 'Toán',
+        'teacherName': 'Cô Lê Thu Hà',
+        'fileType': 'PDF',
+        'fileSize': '1.2 MB',
+        'filePath': 'file:///storage/emulated/0/Download/Phieu_On_Tap_Toan_T5.pdf',
+        'createdAt': '2026-10-09',
       },
     ];
   }
@@ -293,7 +322,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -320,60 +349,80 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-              : _buildCurrentTab(),
-        ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : _buildCurrentTab(),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              selectedItemColor: AppColors.primary,
-              unselectedItemColor: AppColors.textSub,
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-              elevation: 0,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: 'Trang chủ',
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.textSub,
+          selectedFontSize: 12,
+          unselectedFontSize: 12,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Trang chủ',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_outlined),
+              activeIcon: Icon(Icons.calendar_today),
+              label: 'Lịch học',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book_outlined),
+              activeIcon: Icon(Icons.menu_book),
+              label: 'Sách học',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment_outlined),
+              activeIcon: Icon(Icons.assignment),
+              label: 'Bài tập',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.more_horiz),
+              activeIcon: Icon(Icons.more_horiz),
+              label: 'Thêm',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return Container(
+      color: const Color(0xFFF5F6F7),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.symmetric(
+                vertical: BorderSide(
+                  color: AppColors.border.withValues(alpha: 0.8),
+                  width: 1.0,
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_today_outlined),
-                  activeIcon: Icon(Icons.calendar_today),
-                  label: 'Lịch học',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu_book_outlined),
-                  activeIcon: Icon(Icons.menu_book),
-                  label: 'Học liệu',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.assignment_outlined),
-                  activeIcon: Icon(Icons.assignment),
-                  label: 'Bài tập',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.more_horiz),
-                  activeIcon: Icon(Icons.more_horiz),
-                  label: 'Thêm',
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: ClipRect(
+              child: scaffold,
             ),
           ),
         ),
@@ -388,7 +437,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       case 1:
         return 'Lịch học';
       case 2:
-        return 'Học liệu';
+        return 'Sách học';
       case 3:
         return 'Bài tập';
       case 4:
@@ -540,23 +589,30 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     room: l['room']!,
                     isCompact: true,
                     hasDivider: i < todayLessons.length - 1,
+                    onTap: () => _showLessonDetailModal(
+                      lessonIndex: i + 1,
+                      subject: l['subj']!,
+                      time: l['time']!,
+                      teacher: l['teacher']!,
+                      room: l['room']!,
+                    ),
                   );
                 }).toList(),
               ),
             ),
           const SizedBox(height: 20),
 
-          // Section 3: Học liệu mới
+          // Section 3: Sách đọc mới
           AppSectionHeader(
-            title: 'Học liệu mới',
+            title: 'Sách đọc mới',
             linkLabel: 'Xem tất cả',
             onLink: () => setState(() => _currentIndex = 2),
           ),
           const SizedBox(height: 8),
           if (_materials.isEmpty)
             const AppEmptyCard(
-              title: 'Chưa có học liệu mới',
-              message: 'Giáo viên chưa đăng tài liệu mới cho lớp.',
+              title: 'Chưa có sách đọc mới',
+              message: 'Thầy cô chưa chia sẻ sách đọc mới cho lớp.',
               icon: Icons.menu_book_outlined,
             )
           else
@@ -664,6 +720,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         room: l['room']!,
                         isCompact: false,
                         hasDivider: i < lessons.length - 1,
+                        onTap: () => _showLessonDetailModal(
+                          lessonIndex: i + 1,
+                          subject: l['subj']!,
+                          time: l['time']!,
+                          teacher: l['teacher']!,
+                          room: l['room']!,
+                        ),
                       );
                     }).toList(),
                   ),
@@ -675,7 +738,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // ===================== TAB 2: HỌC LIỆU =====================
+  // ===================== TAB 2: SÁCH HỌC =====================
   Widget _buildMatTab() {
     final subjects = ['Tất cả', 'Toán', 'Tiếng Việt', 'Tiếng Anh'];
     final filtered = _selectedSubjectFilter == 'Tất cả'
@@ -693,7 +756,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             color: AppColors.surfaceAlt,
           ),
           child: Text(
-            'Chỉ hiện tài liệu đã được giáo viên xuất bản cho lớp ${_profile?['className'] ?? '3A'}.',
+            'Sách giáo khoa và tài liệu học tập được chia sẻ cho lớp ${_profile?['className'] ?? '3A'}.',
             style: const TextStyle(fontSize: 13, color: AppColors.textSub),
           ),
         ),
@@ -732,8 +795,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         // Danh sách tài liệu
         if (filtered.isEmpty)
           const AppEmptyCard(
-            title: 'Chưa có tài liệu',
-            message: 'Giáo viên chưa đăng tài liệu cho môn này.',
+            title: 'Chưa có sách học',
+            message: 'Thầy cô chưa chia sẻ sách học cho môn này.',
             icon: Icons.menu_book_outlined,
           )
         else
@@ -1060,6 +1123,224 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // Modal xem Chi tiết Tiết học
+  void _showLessonDetailModal({
+    required int lessonIndex,
+    required String subject,
+    required String time,
+    required String teacher,
+    required String room,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header với nút đóng
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                'Tiết $lessonIndex',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Thông tin tiết học',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textMain,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textSub, size: 22),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          tooltip: 'Đóng',
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, thickness: 1, color: AppColors.border),
+                    const SizedBox(height: 12),
+
+                    // Thẻ thông tin Môn học nổi bật
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceAlt,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.12),
+                                ),
+                                child: const Icon(Icons.menu_book, color: AppColors.primary, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      subject,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textMain,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.access_time, size: 14, color: AppColors.textSub),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          time,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textSub,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24, thickness: 1, color: AppColors.border),
+                          // Chi tiết Giáo viên & Phòng học
+                          _buildDetailInfoRow(
+                            icon: Icons.person_outline,
+                            label: 'Giáo viên giảng dạy',
+                            value: teacher,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildDetailInfoRow(
+                            icon: Icons.meeting_room_outlined,
+                            label: 'Phòng học / Địa điểm',
+                            value: room,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Nhắc nhở học sinh
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Em vui lòng chuẩn bị sách giáo khoa, vở bài tập và tài liệu học tập của môn $subject trước khi vào lớp.',
+                              style: const TextStyle(fontSize: 13, height: 1.4, color: AppColors.textSub),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Nút Đóng
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        ),
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.textSub),
+        const SizedBox(width: 10),
+        Text(
+          '$label:',
+          style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textMain,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

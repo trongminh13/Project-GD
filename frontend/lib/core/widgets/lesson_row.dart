@@ -9,6 +9,7 @@ class LessonRow extends StatelessWidget {
   final String room;
   final bool isCompact;
   final bool hasDivider;
+  final VoidCallback? onTap;
 
   const LessonRow({
     super.key,
@@ -19,16 +20,18 @@ class LessonRow extends StatelessWidget {
     required this.room,
     this.isCompact = false,
     this.hasDivider = true,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       padding: EdgeInsets.symmetric(
         horizontal: 14,
         vertical: isCompact ? 12 : 14,
       ),
       decoration: BoxDecoration(
+        color: Colors.white,
         border: hasDivider
             ? const Border(bottom: BorderSide(color: AppColors.border))
             : null,
@@ -108,8 +111,20 @@ class LessonRow extends StatelessWidget {
               ),
             ),
           ],
+          if (onTap != null) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.textSub),
+          ],
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        child: content,
+      );
+    }
+    return content;
   }
 }

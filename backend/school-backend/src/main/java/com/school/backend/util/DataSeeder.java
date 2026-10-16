@@ -48,6 +48,15 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     com.school.backend.repository.TeachingAssignmentRepository teachingAssignmentRepository;
 
+    @Autowired
+    com.school.backend.repository.MaterialRepository materialRepository;
+
+    @Autowired
+    com.school.backend.repository.MaterialFileRepository materialFileRepository;
+
+    @Autowired
+    com.school.backend.repository.MaterialClassRepository materialClassRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
@@ -223,6 +232,43 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("Developer test parent created: Phone " + developerPhone);
         } else {
             System.out.println("Developer test parent already exists: Phone " + developerPhone);
+        }
+
+        // 4. Seed textbook SGK Toán 1 - Tập 1 (118 pages) if not already exists
+        if (materialRepository.findAll().stream().noneMatch(m -> "Sách giáo khoa Toán 1 - Tập 1".equals(m.getTitle()))) {
+            com.school.backend.entity.Subject mathSubject = subjectRepository.findByName("Toán").orElseGet(() -> {
+                com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
+                s.setName("Toán");
+                return subjectRepository.save(s);
+            });
+
+            Teacher author = teacherRepository.findAll().stream().findFirst().orElse(null);
+
+            if (author != null) {
+                com.school.backend.entity.Material book = new com.school.backend.entity.Material();
+                book.setTitle("Sách giáo khoa Toán 1 - Tập 1");
+                book.setDescription("Sách giáo khoa Toán 1 Bộ Kết nối tri thức với cuộc sống. Bản số hóa tương tác có lật trang trực tiếp.");
+                book.setSubject(mathSubject);
+                book.setCreatedByTeacher(author);
+                book.setStatus("PUBLISHED");
+                book = materialRepository.save(book);
+
+                com.school.backend.entity.MaterialFile mf = new com.school.backend.entity.MaterialFile();
+                mf.setMaterial(book);
+                mf.setFileName("SGK_Toan_1_Tap_1.pdf");
+                mf.setFileUrl("uploads/materials/SGK_Toan_1_Tap_1.pdf");
+                mf.setPageCount(118);
+                mf.setVersion(1);
+                materialFileRepository.save(mf);
+
+                for (SchoolClass sc : schoolClassRepository.findAll()) {
+                    com.school.backend.entity.MaterialClass mc = new com.school.backend.entity.MaterialClass();
+                    mc.setMaterial(book);
+                    mc.setSchoolClass(sc);
+                    materialClassRepository.save(mc);
+                }
+                System.out.println("Seeded textbook: Sách giáo khoa Toán 1 - Tập 1 (118 pages)");
+            }
         }
     }
 }

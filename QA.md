@@ -443,8 +443,170 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 3. Tích hợp nút chuyển đổi `SwitchListTile` trong Tab "Thêm" của Dashboard giúp chuyển đổi chế độ Demo trực tiếp khi trình chiếu.
 4. Bổ sung bộ unit test [`feature_flags_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/config/feature_flags_test.dart) (nâng tổng số test lên **23 / 23 tests PASSED**).
 
+---
 
+### 10.4. Khắc Phục Lỗi Bố Cục Lơ Lửng & Bọc Khung Điện Thoại Giả Lập (Mobile Viewport Shell)
+**Vấn đề phát hiện**: Khi xem Student Dashboard trên trình duyệt Web/màn hình rộng (Desktop), `Scaffold` mở rộng 100% chiều ngang (1920px). Bên trong `bottomNavigationBar`, widget lại bị bọc trong `Center(child: ConstrainedBox(maxWidth: 480))`. Điều này khiến thanh điều hướng 5 tab (*Trang chủ, Lịch học, Học liệu, Bài tập, Thêm*) bị co cụm trong một khối 480px nằm **lơ lửng ở chính giữa chiều ngang**, hai bên thừa khoảng trắng lớn, gây nhầm lẫn là lỗi CSS `position`.  
+**Giải pháp kiến trúc**:
+1. Bọc toàn bộ `Scaffold` của [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) vào một khung giả lập điện thoại di động (Mobile Phone Shell):
+   - Nền ngoài trình duyệt là màu xám dịu chuẩn mẫu thiết kế: `#F5F6F7`.
+   - Khung app ở giữa có `maxWidth: 480px`, viền cạnh nhẹ nhàng và đổ bóng `BoxShadow(blurRadius: 16, color: Colors.black.withValues(alpha: 0.06))`.
+   - Loại bỏ các `ConstrainedBox(maxWidth: 480)` lồng cục bộ bên trong `body` và `bottomNavigationBar`.
+2. Đồng bộ hóa 100% cấu trúc: Cả `AppBar`, nội dung `Body`, và thanh `BottomNavigationBar` đều nằm trọn vẹn, khít mép và dàn đều bên trong khung điện thoại di động 480px, chuẩn mực cho trải nghiệm ứng dụng di động của học sinh và tối ưu cho demo trên trình duyệt máy tính.
+3. **Kiểm chứng chất lượng**:
+   - `flutter analyze`: **0 Errors, 0 Warnings** trong phân hệ student dashboard.
+   - `flutter test`: **23 / 23 tests PASSED (100% thành công)**.
 
+---
 
+### 10.5. Tương Tác Chi Tiết Tiết Học Khi Nhấn Vào Lịch Học (Interactive Lesson Details)
+**Yêu cầu nghiệp vụ**: Khi học sinh nhấn vào bất kỳ tiết học nào (ở Tab Trang chủ hoặc Tab Lịch học), hệ thống phải mở giao diện xem chi tiết bao gồm: Tên môn học, Tiết, Khung thời gian, Giáo viên giảng dạy, Phòng học / Địa điểm và Nhắc nhở chuẩn bị bài.  
+**Giải pháp kiến trúc**:
+1. Cải tiến widget [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart):
+   - Bổ sung thuộc tính callback `onTap: VoidCallback?`.
+   - Bọc toàn bộ phần tử trong `InkWell` hỗ trợ hiệu ứng phản hồi xúc giác/gợn sóng (ripple effect), bổ sung icon điều hướng `Icons.chevron_right` tinh tế khi có thể tương tác.
+2. Xây dựng BottomSheet Modal `_showLessonDetailModal` trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+   - Đóng gói trong khung tối đa 480px chuẩn Mobile Shell.
+   - Header trực quan: Badge số thứ tự tiết (Tiết 1, Tiết 2...), nút đóng nhanh.
+   - Thẻ thông tin trọng tâm: Biểu tượng môn học, Tên môn học, Khung giờ, Giáo viên giảng dạy kèm icon, Phòng học/Địa điểm kèm icon.
+   - Khung chỉ dẫn nhắc nhở học sinh chuẩn bị đầy đủ sách giáo khoa, vở ghi và đồ dùng học tập trước khi vào lớp.
+3. **Kiểm chứng chất lượng & Tự động hóa**:
+   - Tạo mới bộ kiểm thử widget [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/lesson_row_test.dart): Kiểm tra render đầy đủ thông tin và kích hoạt callback `onTap` chính xác.
+   - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên các file chỉnh sửa.
+   - `flutter test`: Toàn bộ **25 / 25 tests PASSED (100% thành công)**.
 
+---
+
+### 10.6. Chuẩn Hóa Nhãn "Sách Học", "Sách Đọc Mới" & Mô Phỏng Đường Dẫn Tệp PDF (Local Storage Path)
+**Yêu cầu nghiệp vụ**:
+- Chuyển đổi toàn bộ thuật ngữ hàn lâm *"Học liệu"* $\rightarrow$ *"Sách học"* và *"Học liệu mới"* $\rightarrow$ *"Sách đọc mới"* cho phù hợp với tâm lý lứa tuổi học sinh.
+- Khi bấm vào từng cuốn sách, hiển thị bảng thông tin chi tiết kèm đường dẫn tệp PDF cục bộ trên thiết bị (Local Storage Mock Path), cho phép sao chép đường dẫn và mô phỏng đọc sách offline.  
+**Giải pháp kiến trúc**:
+1. Nâng cấp widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart):
+   - Trích xuất hoặc tự động sinh đường dẫn tệp an toàn chuẩn hóa: `file:///storage/emulated/0/Download/<ten_sach>.pdf`.
+   - Hiển thị hộp đường dẫn tệp PDF nổi bật kèm nút sao chép `Clipboard.setData` và huy hiệu `Đã tải về máy · Sẵn sàng đọc offline`.
+   - Nút hành động: "Đọc sách ngay" (`Icons.chrome_reader_mode_outlined`) mô phỏng mở sách và nút "Đóng".
+2. Đồng bộ hóa giao diện trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+   - Đổi nhãn Tab 2 trong `BottomNavigationBar` và `_getAppBarTitle()` thành **"Sách học"**.
+   - Section 3 tại Tab Trang chủ đổi thành **"Sách đọc mới"**.
+   - Cập nhật danh mục sách mẫu phong phú: *SGK Toán 3 - Tập 1*, *Vở bài tập Tiếng Việt 3*, *Tiếng Anh 3 - Global Success* kèm dung lượng MB và `filePath` thực tế.
+3. **Kiểm chứng chất lượng**:
+   - Tạo mới bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart).
+   - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues**.
+   - `flutter test`: Toàn bộ **27 / 27 tests PASSED (100% thành công)**.
+
+---
+
+### 10.7. Chuyển Đổi Chi Tiết Sách Đọc Thành Tuyến Màn Hình Mobile Riêng (StudentBookDetailScreen)
+**Yêu cầu nghiệp vụ**: Chuyển giao diện xem chi tiết sách học/sách đọc từ dạng hộp thoại popup (dialog) thành một tuyến màn hình di động riêng biệt (dedicated mobile screen route), có AppBar, nút quay lại, nội dung cuộn chi tiết và thanh công cụ đọc sách ghim ở chân trang, được bọc đồng bộ trong khung Mobile Viewport Shell (`maxWidth: 480px`, nền ngoài `#F5F6F7`, viền và bóng đổ) tương tự như Trang chủ và Lịch học.  
+**Giải pháp kiến trúc**:
+1. Xây dựng màn hình chuyên biệt [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
+   - **Header chuẩn mực**: `AppBar` phẳng có nút quay lại (`arrow_back`), tiêu đề "Chi tiết sách đọc" và đường phân cách 1px.
+   - **Thẻ bìa sách trực quan**: Badge môn học, icon PDF nhận diện, tiêu đề sách, giáo viên giảng dạy, định dạng tệp, dung lượng và ngày cập nhật.
+   - **Khung đường dẫn tệp PDF cục bộ (Local Storage Mock Path)**: Hiển thị đường dẫn tệp dạng `file:///storage/emulated/0/Download/<ten_sach>.pdf` cho phép bôi đen sao chép, tích hợp nút sao chép nhanh vào bộ nhớ tạm bằng `Clipboard.setData` và huy hiệu `Đã lưu trong bộ nhớ máy · Sẵn sàng đọc offline`. Áp dụng `Expanded` bọc văn bản chống lỗi tràn viền (overflow) trên mọi kích thước màn hình hẹp.
+   - **Khối giới thiệu nội dung**: Tóm tắt nội dung cuốn sách phục vụ năm học.
+   - **Mục lục sách số hóa**: Hiển thị danh sách các chương học kèm số trang và biểu tượng bookmark trực quan.
+   - **Bottom Bar ghim cố định**: Nút hành động nổi bật "Đọc sách ngay" (`Icons.chrome_reader_mode_outlined`) kích hoạt SnackBar mở trình đọc.
+   - **Mobile Viewport Shell**: Đóng gói toàn bộ `Scaffold` trong khung giả lập điện thoại di động `maxWidth: 480px`, nền ngoài `#F5F6F7` và bóng đổ mượt mà, đồng bộ tuyệt đối với Trang chủ và Lịch học.
+2. Cải tiến widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart):
+   - Cập nhật sự kiện `onTap`: Điều hướng trực tiếp sang route màn hình `StudentBookDetailScreen(data: data)` bằng `Navigator.push`.
+   - Dọn dẹp mã nguồn cũ: Loại bỏ dialog `_showDefaultDetailDialog` và các biến khai báo thừa, đảm bảo mã nguồn tinh gọn và sạch sẽ.
+3. **Kiểm chứng chất lượng & Tự động hóa**:
+   - Cập nhật bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart) để xác thực việc điều hướng và hiển thị đầy đủ giao diện màn hình chi tiết sách.
+   - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên các file thay đổi.
+   - `flutter test`: Toàn bộ **27 / 27 tests PASSED (100% thành công)**.
+
+---
+
+### 10.8. Hệ Thống Quản Lý Học Liệu Số: Tải Theo Nhu Cầu (On-Demand), Đọc Trong App & Kiểm Soát Bộ Nhớ
+**Nguyên tắc kiến trúc cốt lõi**:
+- **Chống phình kích thước ứng dụng (Zero Asset Bloating)**: Tuyệt đối không nhúng các tệp PDF sách giáo khoa nặng vào mã nguồn hoặc assets của Flutter, giữ kích thước file cài đặt (APK/IPA) nhỏ gọn.
+- **Chống cạn kiệt tài nguyên mạng & bộ nhớ khi đăng nhập (No Eager Pre-download)**: Không tự động tải hàng loạt tài liệu về máy khi người dùng đăng nhập; chỉ tải khi học sinh thực sự có nhu cầu mở sách.
+
+**Giải pháp kiến trúc & Tính năng hoàn thiện**:
+1. **Quản lý vòng đời tải theo nhu cầu (On-Demand Download State Machine)** trong [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
+   - **Trạng thái Chưa tải (Cloud)**: Hiển thị thẻ lưu trữ đám mây, thông báo tài liệu lưu an toàn trên máy chủ và nút tải nhanh "Tải về máy ngay ($fileSize)".
+   - **Trạng thái Đang tải (Downloading Progress)**: Hiển thị thanh tiến trình hoạt ảnh thực tế (`LinearProgressIndicator`), thông số phần trăm hoàn thành và nút hủy tải an toàn.
+   - **Trạng thái Đã tải (Offline Ready)**: Kích hoạt hiển thị đường dẫn tệp trong bộ nhớ máy, badge sẵn sàng đọc ngoại tuyến và nút mở trình đọc.
+2. **Kiểm soát & Giải phóng bộ nhớ (Storage & Cache Management)**:
+   - Cung cấp nút thao tác "Giải phóng bộ nhớ" / "Xóa bản tải" trực tiếp trên màn hình chi tiết sách.
+   - Hộp thoại cảnh báo xác nhận giải phóng dung lượng giúp học sinh dễ dàng dọn dẹp các cuốn sách đã học xong, đưa trạng thái về `NOT_DOWNLOADED` và trả lại bộ nhớ máy tức thì.
+3. **Trình đọc sách tích hợp trong app (In-App Reader View - [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart))**:
+   - Đóng gói toàn bộ trong Mobile Viewport Shell (`maxWidth: 480px`).
+   - Mở và đọc sách trực tiếp bên trong ứng dụng mượt mà, không phụ thuộc vào ứng dụng thứ ba.
+   - Chuyển đổi linh hoạt chế độ đọc ban ngày (giấy kem dịu mắt) và ban đêm (Dark Mode bảo vệ mắt).
+   - Ngăn kéo mục lục (Table of Contents BottomSheet) cho phép nhảy nhanh đến từng chương học.
+   - Thanh điều hướng trang: Nút trang trước/sau, thanh trượt tìm trang (Page Seeker Slider) và cơ chế tự động ghi nhớ trang đọc dở (`_lastReadPage`).
+4. **Kiểm chứng chất lượng**:
+   - Mở rộng bộ kiểm thử tự động [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart) bao phủ toàn bộ luồng mở trình đọc sách in-app và thao tác giải phóng bộ nhớ.
+   - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên tất cả 4 tệp liên quan.
+   - `flutter test`: Toàn bộ **29 / 29 tests PASSED (100% thành công)**.
+
+---
+
+### 10.9. Tích Hợp Sách Giáo Khoa Toán 1 (75MB, 118 Trang): Truyền Tải Từng Trang Phía Máy Chủ Với Apache PDFBox & Trình Đọc Lật Trang Mượt Mà Phía Mobile
+
+**Bối cảnh & Thách thức nghiệp vụ**:
+- Khách hàng/Ban Giám hiệu cung cấp tệp PDF gốc `SGK Toán 1, tập một-mau.pdf` với dung lượng lớn (~75.0 MB, 118 trang sách đầy đủ màu sắc).
+- Nếu tải toàn bộ 75MB về thiết bị di động mỗi lần mở sách, thiết bị của học sinh sẽ bị nghẽn mạng, tiêu hao dung lượng 4G/Wifi và có nguy cơ văng ứng dụng do tràn bộ nhớ (Out-Of-Memory).
+- **Yêu cầu giải pháp**:
+  1. Máy chủ backend giải mã và kết xuất (render) từng trang theo nhu cầu sang định dạng ảnh JPEG với độ nét tiêu chuẩn (DPI <= 150).
+  2. Tích hợp bộ nhớ đệm Caffeine in-memory cache tránh render lại các trang sách được lật qua lật lại nhiều lần.
+  3. Kiểm soát quyền ReBAC: Chỉ học sinh/giáo viên thuộc lớp được phân phối sách mới được phép tải/truyền phát trang sách.
+  4. Ứng dụng mobile Flutter cung cấp giao diện đọc lật trang (flip-reader) dạng `PageView`, hỗ trợ phóng to/thu nhỏ (pinch-to-zoom), mục lục 5 Chủ đề, chế độ đọc ban đêm và tự động chuyển đổi dự phòng mượt mà.
+
+**Chi tiết giải pháp kiến trúc & Triển khai**:
+
+1. **Phía Máy chủ (Spring Boot Backend)**:
+   - **Thư viện**: Bổ sung `org.apache.pdfbox:pdfbox:3.0.3` và `com.github.ben-manes.caffeine:caffeine` trong [`pom.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/pom.xml).
+   - **Dịch vụ kết xuất [`MaterialPageService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/MaterialPageService.java)**:
+     - Dùng API PDFBox 3.x (`Loader.loadPDF(File)`).
+     - Kết xuất trang chỉ định: `new PDFRenderer(doc).renderImageWithDPI(pageIndex, clampedDpi, ImageType.RGB)` sang luồng byte JPEG.
+     - Khống chế DPI trần: `clampedDpi = Math.min(dpi, 150)`.
+     - Tích hợp bộ đệm Caffeine: Giới hạn tối đa 300 trang trong RAM, thời gian sống (TTL) 2 giờ sau lần truy cập gần nhất, tự động giải phóng khi đầy.
+     - Hàm lấy tổng số trang: `pageCount(Path pdf)`.
+   - **Bộ điều khiển [`MaterialPageController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/MaterialPageController.java)**:
+     - `GET /api/materials/files/{fileId}/pages`: Trả về `{"totalPages": 118, "fileName": "SGK_Toan_1_Tap_1.pdf"}`.
+     - `GET /api/materials/files/{fileId}/pages/{pageNumber}?dpi=115`: Trả về ảnh trang JPEG kèm header `ETag` và `Cache-Control: max-age=3600`.
+     - **Bảo mật ReBAC**: Gọi `accessPolicy.verifyCanDownloadMaterialFile(auth, fileId)` đảm bảo chỉ học sinh cùng khối/lớp hoặc giáo viên liên quan mới có quyền đọc.
+     - **Bảo mật chống Path Traversal**: Tên tệp được truy vấn 100% từ CSDL (thực thể `MaterialFile`), chuẩn hóa `Path.normalize()` và kiểm tra tiền tố bắt buộc thuộc `uploads/materials`.
+   - **Khắc phục xử lý ngoại lệ [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java)**:
+     - Bổ sung `@ExceptionHandler(ResponseStatusException.class)` để bảo toàn đúng mã trạng thái HTTP (404 Not Found, 403 Forbidden) do Spring Web ném ra, tránh việc bị bắt nhầm thành HTTP 500.
+   - **Khởi tạo dữ liệu mẫu [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java)**:
+     - Tự động nạp bản ghi `Material`: *"Sách giáo khoa Toán 1 - Tập 1"*, môn Toán, trạng thái `PUBLISHED`, liên kết `MaterialFile` tệp `SGK_Toan_1_Tap_1.pdf` (118 trang) và phân phối đến tất cả các lớp học.
+     - Tệp vật lý được lưu trữ tại `uploads/materials/SGK_Toan_1_Tap_1.pdf` (75.0 MB).
+
+2. **Phía Ứng dụng Di động (Flutter Mobile Frontend)**:
+   - **Trình đọc sách lật trang [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart)**:
+     - **Cơ chế lật trang (Page Flip Animation)**: Sử dụng `PageView.builder` kết hợp `PageController` và `BouncingScrollPhysics`, cho phép vuốt tay lật trang cực kỳ mượt mà.
+     - **Phóng to / Thu nhỏ đa điểm (Pinch-to-Zoom)**: Tích hợp `InteractiveViewer` (`minScale: 1.0, maxScale: 3.5`) trên từng trang giúp học sinh soi rõ từng chi tiết hình vẽ, chữ số nhỏ.
+     - **Truyền tải ảnh trang trực tiếp (Live Page Streaming)**: Tải ảnh trang từ endpoint máy chủ backend kèm header xác thực `Authorization: Bearer <jwt_token>` và vòng xoay tiến độ sinh động.
+     - **Cơ chế dự phòng chất lượng cao (Resilient Canvas Fallback)**: Khi offline hoặc chưa kết nối máy chủ, tự động kết xuất trang số hóa sinh động với màu sắc bắt mắt, phù hợp với từng chủ đề bài học của SGK Toán 1.
+     - **Mục lục 5 Chủ đề**:
+       + Chủ đề 1: Làm quen với một số hình (Trang 4 - 23)
+       + Chủ đề 2: Làm quen với chữ số & phép so sánh (Trang 24 - 49)
+       + Chủ đề 3: Phép cộng & phép trừ trong phạm vi 10 (Trang 50 - 81)
+       + Chủ đề 4: Làm quen với hình khối và thời gian (Trang 82 - 99)
+       + Chủ đề 5: Ôn tập học kì 1 & ứng dụng thực hành (Trang 100 - 118)
+     - **Bảng điều khiển ghim chân trang**: Nút lật trang trước (`chevron_left`), lật trang sau (`chevron_right`), thanh trượt tìm trang nhanh (`Slider`), hiển thị % tiến độ đọc và trạng thái tự động lưu vị trí đọc dở.
+     - **Chế độ đọc ban đêm**: Nút chuyển đổi Light Mode (nền giấy kem) / Dark Mode (bảo vệ mắt khi đọc đêm).
+     - **Khung hiển thị Mobile Viewport Shell**: Bọc toàn bộ trong khung mô phỏng di động chuẩn (`maxWidth: 480px`, nền ngoài `#F5F6F7`, viền và bóng đổ mềm mại).
+   - **Màn hình Chi tiết Sách [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart)**:
+     - Cập nhật mục lục động: Nếu mở SGK Toán 1 sẽ hiển thị đầy đủ 5 Chủ đề kèm số trang tương ứng.
+     - Nút "Đọc sách ngay" dẫn thẳng vào trình đọc lật trang với trang bắt đầu tương ứng.
+   - **Trang chủ Học sinh [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+     - Đưa *"Sách giáo khoa Toán 1 - Tập 1"* (75.0 MB, 118 trang) lên vị trí đầu tiên trong danh mục Sách học để sẵn sàng phục vụ trình chiếu/demo cho ban lãnh đạo.
+
+3. **Kết quả Kiểm chứng Chất lượng & Tự động hóa**:
+   - **Backend Test Suite (`com.school.backend.controller.MaterialPageStreamingTest` & `TransactionRollbackRealTest`)**:
+     - `testGetPageInfo`: Kiểm tra endpoint lấy tổng số trang -> **PASSED**.
+     - `testGetPage`: Kiểm tra kết xuất ảnh JPEG trang 1 với DPI 100 -> **PASSED**.
+     - `testGetPage_PageOutOfRange_Returns404`: Trang 999 ngoài phạm vi trả về HTTP 404 -> **PASSED**.
+     - `testGetPage_StudentOtherClass_Returns403`: Học sinh lớp khác không có quyền truy cập trả về HTTP 403 -> **PASSED**.
+     - Bộ kiểm thử giao dịch & chống trùng lặp `TransactionRollbackRealTest`: Toàn bộ 4/4 tests -> **PASSED**.
+     - Kết quả backend: **8 / 8 tests PASSED (100% BUILD SUCCESS)**.
+   - **Frontend Test Suite & Static Analysis**:
+     - `flutter analyze lib/features/student/ lib/core/widgets/material_card.dart test/widgets/material_card_test.dart`: **No issues found! (0 errors, 0 warnings)**.
+     - `flutter test test/widgets/material_card_test.dart`: **5 / 5 tests PASSED (100%)**, bao phủ toàn bộ luồng mở sách SGK Toán 1, kiểm tra số trang 118, mở mục lục và nhảy trang.
+     - `flutter test`: Toàn bộ **30 / 30 tests PASSED (100% thành công)**.
 
