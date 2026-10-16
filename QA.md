@@ -244,3 +244,51 @@ Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đ�
 6. **Biên bản Nghiệm thu & Phát hành**:
    - [uat-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/08-signoff/uat-checklist.md): Kịch bản nghiệm thu thực tế cho Admin, Giáo viên, Phụ huynh, Học sinh.
    - [release-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/08-signoff/release-checklist.md): Danh mục kiểm soát chất lượng (Quality Gates) trước khi đưa lên Production.
+
+---
+
+## 8. ĐỢT KIỂM ĐỊNH GIAO DIỆN ĐĂNG NHẬP (LOGIN SCREEN REDESIGN & BACKEND AUTH SYNC)
+**Thời gian thực hiện**: 16/10/2026  
+**Mục tiêu**: Tái thiết kế màn hình Login Flutter theo bản mẫu Demo HTML giáo dục, chuyển đổi xác thực Phụ huynh sang Mật khẩu/SĐT và gia cố đối soát tài khoản tại Backend.
+
+1. **Phía Frontend Flutter (`login_screen.dart`)**:
+   - **Đồng bộ giao diện theo bản mẫu HTML**: Bổ sung phụ đề hệ thống, tiêu đề "Đăng nhập", chuyển toàn bộ nhãn form, placeholder và thông báo sang Tiếng Việt.
+   - **Căn lề trái tinh tế (Header Alignment)**: Icon trường học dạng Badge 52x52 bo góc 14px mềm mại, phụ đề `HỆ THỐNG GIÁO DỤC` và tiêu đề lớn `Đăng nhập` được căn lề trái chuẩn xác, tạo bố cục thoáng đãng và thanh lịch.
+   - **Bố cục Form chuẩn mẫu HTML Demo**: Thanh chọn vai trò và tiêu đề *"Vui lòng chọn vai trò và đăng nhập vào hệ thống"* được đặt ngay dưới trường **Mật khẩu**; nút *"Quên mật khẩu?"* đặt ngay dưới nút *"Đăng nhập"* căn lề trái.
+   - **Chuẩn hóa góc viền phẳng (Flat Edge Styling)**: Bỏ bo góc toàn bộ khung Form, trường nhập liệu (Input TextField) và thanh chọn vai trò; duy trì bo góc chọn lọc duy nhất cho Logo ứng dụng (Badge 14px) và Nút Đăng nhập (12px) theo đúng thiết kế phẳng tinh gọn.
+   - **Styling Thanh vai trò chuẩn HTML Demo**: Thanh chọn vai trò được bao quanh bởi viền xanh `AppColors.primaryOf(context)` và các đường phân cách sắc nét; khi được chọn, toàn bộ ô chuyển sang nền xanh với chữ trắng đậm (`color: Colors.white`), các ô chưa chọn mang nền trắng với chữ xanh đồng bộ.
+   - **4 vai trò người dùng**: Việt hóa đầy đủ: `Quản trị` (`UserRole.admin`), `Giáo viên` (`UserRole.teacher`), `Phụ huynh` (`UserRole.parent`), `Học sinh` (`UserRole.student`).
+   - **Hợp nhất luồng đăng nhập**: Phụ huynh và tất cả các vai trò sử dụng chung form `Tên đăng nhập hoặc số điện thoại` + `Mật khẩu`, loại bỏ form OTP phức tạp ở màn hình login.
+   - **Hộp thoại Quên mật khẩu**: Hiển thị popup hướng dẫn người dùng liên hệ nhà trường hoặc GVCN để cấp lại mật khẩu.
+   - **Kiểm tra cú pháp & Lint**: Chạy `flutter analyze` đạt 0 lỗi biên dịch/lint trong `login_screen.dart`.
+
+2. **Phía Backend Spring Boot (`UserDetailsServiceImpl.java`, `AuthController.java`)**:
+   - **Hỗ trợ định danh linh hoạt**: Bổ sung cơ chế tra cứu người dùng qua `ParentRepository.findByPhone(username)` song song với `userRepository.findByUsername(username)`.
+   - **Bảo toàn cơ chế bảo mật**: Tiếp tục áp dụng đầy đủ tính năng chống brute-force khóa tài khoản 15 phút sau 5 lần nhập sai, miễn trừ khóa cứng cho tài khoản `ADMIN`.
+   - **Kiểm thử tự động**:
+     - Biên dịch `./mvnw clean test-compile` hoàn tất 146 source files thành công (`BUILD SUCCESS`).
+     - Bộ kiểm thử bảo mật `SecurityReBACTest` và `StudentSecurityMatrixTest` đạt **21 / 21 tests PASS (0 failures, 0 errors, 0 skipped)**.
+
+3. **Đồng bộ Kích thước, Bảng màu HTML Demo & Xử lý Phản ánh QA (16/10/2026)**:
+   - **Kích thước chuẩn bản HTML Demo (`mobile_template.html`)**:
+     + *Boxtext Tên & Mật khẩu*: `min-height: 48px`, `width: 100%` (nằm trong container `maxWidth: 480px`, `padding: 24px`), `contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14)` với viền phẳng không bo góc.
+     + *Nút toggle Mật khẩu*: Tích hợp nút dạng chữ `"Hiện"` / `"Ẩn"` với viền ngăn cách trái 1px và màu xanh `#2457C5` khớp 100% với thuộc tính `passToggleLabel` của bản demo HTML.
+     + *Thanh Vai trò*: Chiều cao chuẩn `height: 44px`, `width: 100%`, viền xanh `#2457C5`, chia đều 4 vai trò, không bo góc; ô đang chọn mang nền xanh `#2457C5` chữ trắng, ô chưa chọn mang nền trắng chữ xanh.
+     + *Nút Đăng nhập*: Chiều cao chuẩn `height: 48px`, `width: 100%`, nền xanh `#2457C5`, chữ trắng font 16 w600, bo góc nhẹ 8px theo yêu cầu.
+   - **Đồng bộ mã màu xanh chuẩn HTML Demo**:
+     + Sử dụng chuẩn xác mã màu xanh `_kPrimaryBlue = Color(0xFF2457C5)` (trích xuất từ biến `C.primary = '#2457C5'` trong `mobile_template.html`), thay thế màu xanh navy tím cũ `0xFF1A237E`.
+   - **Khắc phục triệt để lỗi QA phản ánh (Text trong ô tên đăng nhập bị chuyển sang màu xám khi đăng nhập thất bại)**:
+     + *Nguyên nhân phát hiện*: Phiên bản cũ thiếu `style: TextStyle` chỉ định rõ màu text và sử dụng `fillColor: AppColors.surfaceAltOf(context)` (màu xám `#F5F5F5` kế thừa từ `inputDecorationTheme` trong `main.dart`). Khi đăng nhập thất bại, bàn phím hạ xuống khiến ô nhập bị mất focus (unfocused); Flutter tự động fallback màu text sang màu chữ phụ mờ xám của Theme và nền xám đục, tạo cảm giác chữ bị chuyển thành màu xám.
+     + *Biện pháp xử lý dứt điểm*: 
+       1. Cố định tường minh `style: const TextStyle(color: Color(0xFF202124), fontSize: 15, fontWeight: FontWeight.w400)` (đen đậm `#202124` tuyệt đối, không đổi trong mọi trạng thái focus hay unfocus).
+       2. Cố định nền `fillColor: Colors.white, filled: true, focusColor: Colors.white, hoverColor: Colors.white`, triệt tiêu hoàn toàn nền xám mờ.
+       3. Không đặt `enabled: false` cho trường nhập liệu khi đang thực thi đăng nhập, ngăn chặn triệt để việc Flutter áp dụng trạng thái `disabledColor` xám mờ.
+   - **Kiểm chứng Lint & Build**:
+     + `flutter analyze lib/screens/login_screen.dart` hoàn thành: **No issues found! (0 errors, 0 warnings)**.
+
+4. **Khôi phục Hiệu ứng Tương tác Boxtext (Floating Label & Focus Border)**:
+   - **Phục hồi hiệu ứng khi ấn vào ô nhập (Focus)**: Đưa nhãn form vào `labelText` kết hợp `floatingLabelBehavior: FloatingLabelBehavior.auto` và `floatingLabelStyle: TextStyle(color: #2457C5, fontWeight: FontWeight.w600)`. Khi người dùng ấn vào ô nhập, nhãn sẽ tự động kích hoạt animation thu nhỏ và bay mượt mà lên trên viền, đồng thời chuyển sang màu xanh thương hiệu.
+   - **Khôi phục Prefix Icon**: Bổ sung icon tương tác `Icons.person_outline` (tên đăng nhập) và `Icons.lock_outline` (mật khẩu) để tăng tính sinh động khi focus.
+   - **Gia cố viền Focus**: Khi focus, viền chuyển sang màu xanh `_kPrimaryBlue` dày 2.0px sắc nét.
+   - **Kiểm chứng Lint**: `flutter analyze lib/screens/login_screen.dart` đạt: **No issues found! (0 errors, 0 warnings)**.
+

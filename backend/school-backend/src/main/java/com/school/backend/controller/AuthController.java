@@ -63,7 +63,8 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         String username = loginRequest.getUsername();
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsername(username)
+                .or(() -> parentRepository.findByPhone(username).map(Parent::getUser));
 
         // 1. Kiểm tra trạng thái khóa tài khoản (Miễn trừ khóa cứng cho ADMIN chống DoS)
         if (userOpt.isPresent()) {
@@ -83,8 +84,9 @@ public class AuthController {
         }
 
         try {
+            String authUsername = userOpt.map(User::getUsername).orElse(loginRequest.getUsername());
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(authUsername, loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtils.generateJwtToken(authentication);
