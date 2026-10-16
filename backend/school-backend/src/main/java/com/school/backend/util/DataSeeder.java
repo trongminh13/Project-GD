@@ -57,6 +57,18 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     com.school.backend.repository.MaterialClassRepository materialClassRepository;
 
+    @Autowired
+    com.school.backend.repository.HomeworkRepository homeworkRepository;
+
+    @Autowired
+    com.school.backend.repository.HomeworkAssignmentRepository homeworkAssignmentRepository;
+
+    @Autowired
+    com.school.backend.repository.QuestionRepository questionRepository;
+
+    @Autowired
+    com.school.backend.repository.QuestionOptionRepository questionOptionRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
@@ -268,6 +280,133 @@ public class DataSeeder implements CommandLineRunner {
                     materialClassRepository.save(mc);
                 }
                 System.out.println("Seeded textbook: Sách giáo khoa Toán 1 - Tập 1 (118 pages)");
+            }
+        }
+
+        // 9. Seed Bài tập tự động (Homework & HomeworkAssignment) phục vụ tính năng nộp bài
+        if (homeworkRepository.count() == 0) {
+            Teacher teacher = teacherRepository.findAll().stream().findFirst().orElse(null);
+            com.school.backend.entity.Subject hwSubject = subjectRepository.findByName("Toán").orElse(null);
+
+            if (teacher != null && hwSubject != null) {
+                com.school.backend.entity.Homework hw = new com.school.backend.entity.Homework();
+                hw.setTitle("Bài tập tuần 5 - Phép nhân");
+                hw.setDescription("Bài tập trắc nghiệm và tự luận ôn tập bảng nhân trong phạm vi 100.");
+                hw.setSubject(hwSubject);
+                hw.setCreatedByTeacher(teacher);
+                hw.setTotalPoints(10.0);
+                hw = homeworkRepository.save(hw);
+
+                // Câu 1: SINGLE_CHOICE (2.5 điểm)
+                com.school.backend.entity.Question q1 = new com.school.backend.entity.Question();
+                q1.setHomework(hw);
+                q1.setQuestionOrder(1);
+                q1.setQuestionType("SINGLE_CHOICE");
+                q1.setContent("Kết quả của phép tính 7 x 8 là bao nhiêu?");
+                q1.setPoints(2.5);
+                q1 = questionRepository.save(q1);
+
+                com.school.backend.entity.QuestionOption opt1 = new com.school.backend.entity.QuestionOption();
+                opt1.setQuestion(q1);
+                opt1.setOptionOrder(1);
+                opt1.setContent("54");
+                opt1.setIsCorrect(false);
+                questionOptionRepository.save(opt1);
+
+                com.school.backend.entity.QuestionOption opt2 = new com.school.backend.entity.QuestionOption();
+                opt2.setQuestion(q1);
+                opt2.setOptionOrder(2);
+                opt2.setContent("56");
+                opt2.setIsCorrect(true);
+                questionOptionRepository.save(opt2);
+
+                com.school.backend.entity.QuestionOption opt3 = new com.school.backend.entity.QuestionOption();
+                opt3.setQuestion(q1);
+                opt3.setOptionOrder(3);
+                opt3.setContent("64");
+                opt3.setIsCorrect(false);
+                questionOptionRepository.save(opt3);
+
+                com.school.backend.entity.QuestionOption opt4 = new com.school.backend.entity.QuestionOption();
+                opt4.setQuestion(q1);
+                opt4.setOptionOrder(4);
+                opt4.setContent("48");
+                opt4.setIsCorrect(false);
+                questionOptionRepository.save(opt4);
+
+                // Câu 2: MULTIPLE_CHOICE (2.5 điểm)
+                com.school.backend.entity.Question q2 = new com.school.backend.entity.Question();
+                q2.setHomework(hw);
+                q2.setQuestionOrder(2);
+                q2.setQuestionType("MULTIPLE_CHOICE");
+                q2.setContent("Chọn các phép tính có kết quả bằng 36:");
+                q2.setPoints(2.5);
+                q2 = questionRepository.save(q2);
+
+                com.school.backend.entity.QuestionOption opt2_1 = new com.school.backend.entity.QuestionOption();
+                opt2_1.setQuestion(q2);
+                opt2_1.setOptionOrder(1);
+                opt2_1.setContent("6 x 6");
+                opt2_1.setIsCorrect(true);
+                questionOptionRepository.save(opt2_1);
+
+                com.school.backend.entity.QuestionOption opt2_2 = new com.school.backend.entity.QuestionOption();
+                opt2_2.setQuestion(q2);
+                opt2_2.setOptionOrder(2);
+                opt2_2.setContent("4 x 9");
+                opt2_2.setIsCorrect(true);
+                questionOptionRepository.save(opt2_2);
+
+                com.school.backend.entity.QuestionOption opt2_3 = new com.school.backend.entity.QuestionOption();
+                opt2_3.setQuestion(q2);
+                opt2_3.setOptionOrder(3);
+                opt2_3.setContent("5 x 7");
+                opt2_3.setIsCorrect(false);
+                questionOptionRepository.save(opt2_3);
+
+                // Câu 3: TRUE_FALSE (2.0 điểm)
+                com.school.backend.entity.Question q3 = new com.school.backend.entity.Question();
+                q3.setHomework(hw);
+                q3.setQuestionOrder(3);
+                q3.setQuestionType("TRUE_FALSE");
+                q3.setContent("Phép tính 9 x 0 có kết quả bằng 9 đúng hay sai?");
+                q3.setPoints(2.0);
+                q3 = questionRepository.save(q3);
+
+                com.school.backend.entity.QuestionOption opt3_1 = new com.school.backend.entity.QuestionOption();
+                opt3_1.setQuestion(q3);
+                opt3_1.setOptionOrder(1);
+                opt3_1.setContent("Đúng");
+                opt3_1.setIsCorrect(false);
+                questionOptionRepository.save(opt3_1);
+
+                com.school.backend.entity.QuestionOption opt3_2 = new com.school.backend.entity.QuestionOption();
+                opt3_2.setQuestion(q3);
+                opt3_2.setOptionOrder(2);
+                opt3_2.setContent("Sai");
+                opt3_2.setIsCorrect(true);
+                questionOptionRepository.save(opt3_2);
+
+                // Câu 4: ESSAY (3.0 điểm)
+                com.school.backend.entity.Question q4 = new com.school.backend.entity.Question();
+                q4.setHomework(hw);
+                q4.setQuestionOrder(4);
+                q4.setQuestionType("ESSAY");
+                q4.setContent("Một cửa hàng có 5 bao gạo, mỗi bao cân nặng 12kg. Hỏi cửa hàng có tất cả bao nhiêu ki-lô-gam gạo? Hãy trình bày lời giải của em.");
+                q4.setPoints(3.0);
+                questionRepository.save(q4);
+
+                // Giao bài tập cho tất cả các lớp học
+                for (SchoolClass sc : schoolClassRepository.findAll()) {
+                    com.school.backend.entity.HomeworkAssignment ha = new com.school.backend.entity.HomeworkAssignment();
+                    ha.setHomework(hw);
+                    ha.setSchoolClass(sc);
+                    ha.setAssignedByTeacher(teacher);
+                    ha.setDueDate(java.time.LocalDateTime.now().plusDays(7));
+                    ha.setAllowLateSubmission(true);
+                    homeworkAssignmentRepository.save(ha);
+                }
+                System.out.println("Seeded homework: Bài tập tuần 5 - Phép nhân");
             }
         }
     }

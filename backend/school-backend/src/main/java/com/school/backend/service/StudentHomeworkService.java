@@ -250,7 +250,7 @@ public class StudentHomeworkService {
 
             if ("SINGLE_CHOICE".equals(q.getQuestionType()) || "TRUE_FALSE".equals(q.getQuestionType())) {
                 Optional<QuestionOption> correctOpt = q.getOptions().stream()
-                        .filter(QuestionOption::getIsCorrect)
+                        .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                         .findFirst();
 
                 boolean isCorrect = false;
@@ -266,7 +266,7 @@ public class StudentHomeworkService {
 
             } else if ("MULTIPLE_CHOICE".equals(q.getQuestionType())) {
                 Set<Long> correctIds = q.getOptions().stream()
-                        .filter(QuestionOption::getIsCorrect)
+                        .filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))
                         .map(QuestionOption::getId)
                         .collect(Collectors.toSet());
 
