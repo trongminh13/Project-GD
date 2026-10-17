@@ -684,3 +684,21 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 **Kiểm chứng Cục bộ**:
 - Lệnh biên dịch: `flutter build web --base-href "/Project-GD/" --release` -> **Thành công (✓ Built build/web)**.
+
+---
+
+### 10.12. Thiết lập Luồng Tích hợp Liên tục Backend CI và Khắc phục Thiếu Asset `.env` trong Frontend CI
+
+**1. Khởi tạo Backend CI ([`.github/workflows/backend-ci.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/backend-ci.yml))**:
+- **Mục tiêu**: Tự động hóa kiểm thử hồi quy cho toàn bộ 32 test backend (ReBAC, chống gian lận điểm số, bảo mật phân quyền, quản lý bài tập) mỗi khi có push hoặc pull request vào nhánh `main`.
+- **Cấu hình Dịch vụ (Service Container)**:
+  - Khởi chạy container PostgreSQL 15 (`postgres:15`) tự động kiểm tra trạng thái hoạt động (`pg_isready`).
+  - Tự động cấu hình biến môi trường kết nối: `DB_URL: jdbc:postgresql://localhost:5432/ashadeep_school_db`.
+- **Quy trình Thực thi**:
+  - Tải mã nguồn (`actions/checkout@v4`).
+  - Thiết lập Java 17 Temurin (`actions/setup-java@v4`) với cơ chế bộ đệm Maven dependency cache.
+  - Cấp quyền thực thi và chạy `./mvnw clean test`.
+
+**2. Khắc phục Lỗi Build Flutter Web trên GitHub Pages do thiếu `.env` ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
+- **Hiện tượng**: Lần chạy đầu tiên trên GitHub Actions báo lỗi `No file or variants found for asset: .env` vì `.env` nằm trong danh sách `.gitignore` nên máy ảo GitHub không có file này.
+- **Xử lý**: Bổ sung bước `touch .env` trước khi chạy lệnh biên dịch `flutter build web`, đảm bảo ứng dụng Flutter Web luôn đóng gói thành công 100%.
