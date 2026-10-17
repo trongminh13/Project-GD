@@ -8,6 +8,8 @@ import 'package:ashadeep/core/widgets/app_loading_button.dart';
 import 'package:ashadeep/features/admin/screens/dashboard_screen.dart';
 import 'package:ashadeep/features/teacher/screens/teacher_dashboard_screen.dart';
 import 'package:ashadeep/features/parent/screens/parent_dashboard_screen.dart';
+import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 
 // Bộ màu chuẩn định nghĩa từ bản mẫu HTML demo
 const Color _kPrimaryBlue = Color(0xFF2457C5); // Mã màu xanh chuẩn HTML demo
@@ -290,6 +292,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         errorStyle: TextStyle(color: _kErrColor, fontSize: 12),
                       ),
                       keyboardType: TextInputType.text,
+                      autocorrect: false,
+                      enableSuggestions: false,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Vui lòng nhập tên đăng nhập hoặc số điện thoại';
@@ -303,6 +307,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
+                      autocorrect: false,
+                      enableSuggestions: false,
                       style: const TextStyle(
                         color: _kTextMain,
                         fontSize: 15,
@@ -415,7 +421,52 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+
+                    // Thanh chạm điền nhanh tài khoản Demo khi ở môi trường Demo/Web
+                    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F4FF),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _kPrimaryBlue.withValues(alpha: 0.25)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.touch_app_outlined, size: 14, color: _kPrimaryBlue),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Chạm để điền nhanh tài khoản Demo:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _kPrimaryBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                _buildDemoChip('Học sinh', 'student01', 'student123', UserRole.student),
+                                _buildDemoChip('Giáo viên', 'T001', 'teacher123', UserRole.teacher),
+                                _buildDemoChip('Admin', 'admin', 'admin123', UserRole.admin),
+                                _buildDemoChip('Phụ huynh', '9910157611', '123456', UserRole.parent),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ] else ...[
+                      const SizedBox(height: 4),
+                    ],
 
                     // Nút Đăng nhập: cao đúng 48px, nền xanh #2457C5, chữ trắng font 16 w600
                     AppLoadingButton(
@@ -527,5 +578,48 @@ class _LoginScreenState extends State<LoginScreen> {
       case UserRole.student:
         return 'Học sinh';
     }
+  }
+
+  Widget _buildDemoChip(String roleLabel, String username, String password, UserRole role) {
+    final isMatching = _idController.text.trim() == username;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _idController.text = username;
+          _passwordController.text = password;
+          _selectedRole = role;
+        });
+      },
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: isMatching ? _kPrimaryBlue : Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: _kPrimaryBlue.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              roleLabel,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isMatching ? Colors.white : _kPrimaryBlue,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '($username)',
+              style: TextStyle(
+                fontSize: 11,
+                color: isMatching ? Colors.white.withValues(alpha: 0.9) : _kTextSub,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

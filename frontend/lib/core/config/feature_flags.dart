@@ -17,7 +17,11 @@ class FeatureFlags {
         return envVal.toLowerCase() == 'true' || envVal == '1';
       }
     } catch (_) {}
-    // Mặc định bật trong Debug mode để hỗ trợ demo nội bộ, tắt trong Release mode
+    // Mặc định bật trong Debug mode, hoặc trên Web khi chưa cấu hình backend URL riêng
+    const envBase = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (kIsWeb && envBase.isEmpty) {
+      return true;
+    }
     return kDebugMode;
   }
 

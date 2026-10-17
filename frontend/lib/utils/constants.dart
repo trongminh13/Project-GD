@@ -76,49 +76,81 @@ class AppColors {
 }
 
 class ApiConstants {
-  // URLs are now loaded dynamically based on the build environment:
-  // - Release Mode (Play Store): Uses the secure production HTTPS domain
-  // - Debug Mode (Local Dev): Uses the local IPv4 address from your `.env` file
-  // ⚠️ IMPORTANT: Replace this URL with your actual backend domain before releasing to production!
-  static const String _productionUrl =
-      'https://api.yourdomain.com/api'; // TODO: Set this to your deployed backend URL
+  /// URL được truyền động qua biến môi trường khi build:
+  /// ví dụ: flutter build web --dart-define=API_BASE_URL=https://my-backend.com/api
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+
+  static const String _productionUrl = 'https://api.yourdomain.com/api';
+
+  static bool get isDemoMode {
+    final url = baseUrl;
+    return url.contains('yourdomain.com') || url.contains('demo-api.local');
+  }
 
   static String get baseUrl {
-    if (kReleaseMode) {
-      return _productionUrl;
+    // 1. Ưu tiên biến môi trường --dart-define=API_BASE_URL
+    if (_envBaseUrl.isNotEmpty) {
+      return _envBaseUrl;
     }
+
+    // 2. Nếu có trong .env cục bộ
+    try {
+      final envVal = dotenv.env['API_BASE_URL'];
+      if (envVal != null && envVal.isNotEmpty) {
+        return envVal;
+      }
+    } catch (_) {}
+
+    // 3. Nếu là Web Release trên GitHub Pages mà chưa cấu hình URL Cloud
+    if (kIsWeb && kReleaseMode) {
+      return 'https://demo-api.local/api';
+    }
+
+    // 4. Môi trường Web debug
     if (kIsWeb) {
       return 'http://localhost:8081/api';
     }
-    // Fallback to local .env configuration only during active development
-    try {
-      return dotenv.env['API_BASE_URL'] ?? 'http://localhost:8081/api';
-    } catch (_) {
-      return 'http://localhost:8081/api';
+
+    if (kReleaseMode) {
+      return _productionUrl;
     }
+
+    return 'http://localhost:8081/api';
   }
 }
 
 class AppTextStyles {
+  static const List<String> _fontFallback = [
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'Segoe UI',
+    'Roboto',
+    'sans-serif',
+  ];
+
   // Theme-aware (use these when you have context)
   static TextStyle heading1(BuildContext context) => GoogleFonts.outfit(
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimaryOf(context),
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle heading2(BuildContext context) => GoogleFonts.outfit(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryOf(context),
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle body(BuildContext context) => GoogleFonts.outfit(
     fontSize: 16,
     color: AppColors.textSecondaryOf(context),
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle button(BuildContext context) => GoogleFonts.outfit(
     fontSize: 16,
     fontWeight: FontWeight.bold,
     color: Colors.white,
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
 
   // Backward-compatible statics (light mode defaults)
@@ -126,19 +158,23 @@ class AppTextStyles {
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: AppColors.lightTextPrimary,
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle get heading2Static => GoogleFonts.outfit(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.lightTextPrimary,
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle get bodyStatic => GoogleFonts.outfit(
     fontSize: 16,
     color: AppColors.lightTextSecondary,
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
   static TextStyle get buttonStatic => GoogleFonts.outfit(
     fontSize: 16,
     fontWeight: FontWeight.bold,
     color: Colors.white,
+    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
 }

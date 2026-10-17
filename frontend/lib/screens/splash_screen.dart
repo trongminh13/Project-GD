@@ -1,6 +1,7 @@
 import "package:ashadeep/features/student/screens/student_dashboard_screen.dart";
 import "package:ashadeep/features/auth/screens/force_change_password_screen.dart";
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -30,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: Duration(milliseconds: kIsWeb ? 100 : 400),
       vsync: this,
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
@@ -57,7 +58,6 @@ class _SplashScreenState extends State<SplashScreen>
           return;
         }
 
-        // Validate token is still valid by checking with backend
         final token = await AuthService().getToken();
         if (token == null) {
           await prefs.remove('user_data');
@@ -65,7 +65,15 @@ class _SplashScreenState extends State<SplashScreen>
           return;
         }
 
-        // Quick token validation - try to fetch profile
+        // Nếu là phiên demo hoặc môi trường Web demo, không gọi ping API chết
+        if (token.startsWith('mock_jwt_') || ApiConstants.isDemoMode) {
+          final user = User.fromJson(userData);
+          if (!mounted) return;
+          _navigateByRole(user);
+          return;
+        }
+
+        // Quick token validation với timeout ngắn 1.5s
         final isValid = await _validateToken(token);
         if (!isValid) {
           await AuthService().logout();
@@ -76,46 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
 
         final user = User.fromJson(userData);
         if (!mounted) return;
-
-        if (user.mustChangePassword) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => ForceChangePasswordScreen(user: user),
-            ),
-          );
-          return;
-        }
-
-        if (user.role == UserRole.student) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const StudentDashboardScreen(),
-            ),
-          );
-          return;
-        } else if (user.role == UserRole.admin) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          );
-          return;
-        } else if (user.role == UserRole.teacher) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => TeacherDashboardScreen(
-                teacherId: user.id,
-                teacherName: user.name,
-              ),
-            ),
-          );
-          return;
-        } else if (user.role == UserRole.parent) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const ParentDashboardScreen(),
-            ),
-          );
-          return;
-        }
+        _navigateByRole(user);
       } catch (e) {
         await prefs.remove('user_data');
       }
@@ -125,16 +94,56 @@ class _SplashScreenState extends State<SplashScreen>
     _navigateToLogin();
   }
 
+  void _navigateByRole(User user) {
+    if (user.mustChangePassword) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => ForceChangePasswordScreen(user: user),
+        ),
+      );
+      return;
+    }
+
+    if (user.role == UserRole.student) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const StudentDashboardScreen(),
+        ),
+      );
+    } else if (user.role == UserRole.admin) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    } else if (user.role == UserRole.teacher) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => TeacherDashboardScreen(
+            teacherId: user.id,
+            teacherName: user.name,
+          ),
+        ),
+      );
+    } else if (user.role == UserRole.parent) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const ParentDashboardScreen(),
+        ),
+      );
+    }
+  }
+
   Future<bool> _validateToken(String token) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/profile');
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(const Duration(milliseconds: 1500));
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -171,19 +180,28 @@ class _SplashScreenState extends State<SplashScreen>
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.school,
+                    Icons.school_rounded,
                     size: 80,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'AshaDeep',
+                  'Giáo Dục Đại Việt',
                   style: GoogleFonts.outfit(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
                     color: AppColors.splashText,
                     letterSpacing: 1.2,
+                    textStyle: const TextStyle(
+                      fontFamilyFallback: [
+                        '-apple-system',
+                        'BlinkMacSystemFont',
+                        'Segoe UI',
+                        'Roboto',
+                        'sans-serif',
+                      ],
+                    ),
                   ),
                 ),
               ],

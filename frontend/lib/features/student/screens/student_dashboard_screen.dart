@@ -70,8 +70,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       if (mounted) {
         setState(() {
           _profile = results[0] as Map<String, dynamic>?;
-          _attendance = results[1] as List<Map<String, dynamic>>;
-          _marks = results[2] as List<Map<String, dynamic>>;
+
+          final attList = results[1] as List<Map<String, dynamic>>;
+          if (attList.isNotEmpty) {
+            _attendance = attList;
+          } else if (FeatureFlags.useDemoFallback) {
+            _attendance = _getMockAttendance();
+          } else {
+            _attendance = [];
+          }
+
+          final marksList = results[2] as List<Map<String, dynamic>>;
+          if (marksList.isNotEmpty) {
+            _marks = marksList;
+          } else if (FeatureFlags.useDemoFallback) {
+            _marks = _getMockMarks();
+          } else {
+            _marks = [];
+          }
 
           final hwList = results[3] as List<dynamic>;
           if (hwList.isNotEmpty) {
@@ -100,14 +116,68 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           if (FeatureFlags.useDemoFallback) {
             _homework = _getMockHomework();
             _materials = _getMockMaterials();
+            _attendance = _getMockAttendance();
+            _marks = _getMockMarks();
           } else {
             _homework = [];
             _materials = [];
+            _attendance = [];
+            _marks = [];
           }
           _isLoading = false;
         });
       }
     }
+  }
+
+  List<Map<String, dynamic>> _getMockMarks() {
+    return [
+      {
+        'subjectName': 'Toán học',
+        'score': 9.5,
+        'maxScore': 10.0,
+        'examName': 'Kiểm tra Giữa kỳ 1',
+        'grade': 'Xuất sắc',
+      },
+      {
+        'subjectName': 'Tiếng Việt',
+        'score': 9.0,
+        'maxScore': 10.0,
+        'examName': 'Kiểm tra Giữa kỳ 1',
+        'grade': 'Giỏi',
+      },
+      {
+        'subjectName': 'Tiếng Anh',
+        'score': 9.8,
+        'maxScore': 10.0,
+        'examName': 'Kiểm tra Giữa kỳ 1',
+        'grade': 'Xuất sắc',
+      },
+      {
+        'subjectName': 'Tự nhiên & Xã hội',
+        'score': 10.0,
+        'maxScore': 10.0,
+        'examName': 'Kiểm tra Giữa kỳ 1',
+        'grade': 'Xuất sắc',
+      },
+      {
+        'subjectName': 'Tin học & Công nghệ',
+        'score': 9.5,
+        'maxScore': 10.0,
+        'examName': 'Đánh giá định kỳ',
+        'grade': 'Xuất sắc',
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _getMockAttendance() {
+    return [
+      {'date': '17/10/2026', 'status': 'PRESENT', 'remarks': 'Đi học đúng giờ'},
+      {'date': '16/10/2026', 'status': 'PRESENT', 'remarks': 'Đi học đúng giờ'},
+      {'date': '15/10/2026', 'status': 'PRESENT', 'remarks': 'Đi học đúng giờ'},
+      {'date': '14/10/2026', 'status': 'PRESENT', 'remarks': 'Đi học đúng giờ'},
+      {'date': '13/10/2026', 'status': 'PRESENT', 'remarks': 'Đi học đúng giờ'},
+    ];
   }
 
   List<dynamic> _getMockHomework() {
