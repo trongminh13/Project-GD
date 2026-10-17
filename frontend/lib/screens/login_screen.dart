@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/core/models/user.dart';
+import 'package:ashadeep/core/widgets/app_loading_button.dart';
 import 'package:ashadeep/features/admin/screens/dashboard_screen.dart';
 import 'package:ashadeep/features/teacher/screens/teacher_dashboard_screen.dart';
 import 'package:ashadeep/features/parent/screens/parent_dashboard_screen.dart';
@@ -417,34 +418,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
 
                     // Nút Đăng nhập: cao đúng 48px, nền xanh #2457C5, chữ trắng font 16 w600
-                    SizedBox(
+                    AppLoadingButton(
+                      text: 'Đăng nhập',
+                      loadingText: 'Đang xác thực...',
+                      isLoading: _isLoading,
+                      onPressed: _handleLogin,
+                      backgroundColor: _kPrimaryBlue,
+                      borderRadius: BorderRadius.circular(8),
                       height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _kPrimaryBlue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.2,
-                                ),
-                              )
-                            : const Text(
-                                'Đăng nhập',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),

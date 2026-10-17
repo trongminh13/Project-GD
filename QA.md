@@ -706,3 +706,66 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - **Khắc phục Kiểm thử Giao dịch TransactionRollbackRealTest trong môi trường PostgreSQL CI ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java))**:
   + Bổ sung `s.setRollNo("888")` khi khởi tạo học sinh mẫu trong trường hợp cơ sở dữ liệu kiểm thử trống, thỏa mãn ràng buộc `NOT NULL` của cột `roll_no` trên PostgreSQL chuẩn.
   + Kiểm thử cục bộ: **4 / 4 tests PASSED (100% BUILD SUCCESS)**.
+
+---
+
+### 10.13. Cập nhật Tên Thương hiệu và Tiêu đề Ứng dụng "Cổng Thông Tin Giáo Dục Đại Việt"
+
+**Mục tiêu**:
+- Thay thế toàn bộ tên mặc định khởi tạo ban đầu (`admin_app` / `AshaDeep`) bằng tên thương hiệu chính thức: **"Cổng Thông Tin Giáo Dục Đại Việt"** phục vụ trình chiếu chuyên nghiệp cho ban giám đốc.
+
+**Chi tiết Các Tệp Cập nhật**:
+1. **Giao diện Web & Tiêu đề Tab ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+   - `<title>`: Cập nhật thành `Cổng Thông Tin Giáo Dục Đại Việt`.
+   - `<meta name="description">`: Cập nhật mô tả hệ thống quản lý trường học và học liệu số thông minh.
+   - `<meta name="apple-mobile-web-app-title">`: Cập nhật thành `Giáo Dục Đại Việt`.
+2. **Cấu hình Ứng dụng Web PWA ([`frontend/web/manifest.json`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/manifest.json))**:
+   - `name`: `Cổng Thông Tin Giáo Dục Đại Việt`.
+   - `short_name`: `Giáo Dục Đại Việt`.
+3. **Mã nguồn Ứng dụng Flutter ([`frontend/lib/main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart))**:
+   - `MaterialApp(title: "Cổng Thông Tin Giáo Dục Đại Việt")`.
+4. **Cấu hình Ứng dụng Android ([`frontend/android/app/src/main/AndroidManifest.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/android/app/src/main/AndroidManifest.xml))**:
+   - `android:label="Giáo Dục Đại Việt"`.
+
+**Kiểm chứng Chất lượng**:
+- `flutter analyze lib/main.dart`: **No issues found!**
+- `flutter test`: **30 / 30 tests PASSED (100% thành công)**.
+
+---
+
+### 10.14. Tích hợp Web Startup Splash Loader và Chuẩn hoá Component Nút Loading (AppLoadingButton)
+
+**1. Khắc phục Trắng Màn Hình khi Khởi Động Web ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+- **Hiện tượng**: Khi truy cập trên GitHub Pages, trình duyệt tải `main.dart.js` (~3.6MB) mất 2–4 giây khiến người dùng thấy màn hình trắng trơn, tạo cảm giác hệ thống bị đứng.
+- **Giải pháp**:
+  - Nhúng trực tiếp Splash Loader bằng CSS thuần + HTML nhẹ (0KB phụ thuộc ngoài).
+  - Thiết kế thẻ thương hiệu với biểu tượng học thuật SVG, màu nhận diện xanh `#2457C5`, vòng xoay spinner gradient mượt mà và thanh trạng thái *"Đang tải ứng dụng..."*.
+  - Tích hợp listener `window.addEventListener('flutter-first-frame', ...)` giúp màn hình loading mờ dần (fade out 400ms) và tự hủy ngay khi Flutter Web render xong khung hình đầu tiên.
+
+**2. Xây dựng Component Tái Sử Dụng Chuẩn Hoá ([`AppLoadingButton.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_loading_button.dart))**:
+- Cung cấp widget nút bấm thống nhất toàn hệ thống với đầy đủ các biến thể:
+  - `AppLoadingButton.primary`: Nền xanh `#2457C5`, chữ trắng.
+  - `AppLoadingButton.outlined`: Nền trắng viền xám `#DADCE0`, chữ đen `#202124`.
+  - `AppLoadingButton.danger`: Nền đỏ `#C62828`, chữ trắng (dùng cho huỷ bài, xoá, từ chối).
+  - `AppLoadingButton.success`: Nền xanh lá `#237A45`, chữ trắng (dùng cho phê duyệt, hoàn thành).
+- Tính năng cao cấp:
+  - Tự động khoá nút (`onPressed: null`) khi `isLoading: true` chống double-click / spam gửi request lặp.
+  - Tích hợp `AnimatedSwitcher` chuyển đổi mềm mại giữa nhãn/icon và spinner xoay kích thước 20x20.
+  - Hỗ trợ hiển thị nhãn trạng thái khi đang tải (ví dụ: *"Đang xác thực..."*, *"Đang nộp..."*).
+
+**3. Áp Dụng Thực Tế vào Các Màn Hình Chính**:
+- **Màn hình Đăng nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart))**: Thay thế nút Đăng nhập thủ công bằng `AppLoadingButton`, hiển thị spinner kèm text *"Đang xác thực..."* khi gọi API.
+- **Màn hình Làm & Nộp bài tập ([`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart))**: Thay thế nút Nộp bài bằng `AppLoadingButton` với nhãn tải *"Đang nộp..."*.
+
+**4. Kiểm thử Tự động & Chất lượng Code**:
+- **Bộ Widget Test Mới ([`app_loading_button_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_loading_button_test.dart))**:
+  - Test 1: Hiển thị nhãn text và icon chuẩn khi ở trạng thái nghỉ (`isLoading: false`).
+  - Test 2: Kích hoạt callback `onPressed` khi người dùng chạm nút.
+  - Test 3: Hiển thị `CircularProgressIndicator`, chữ trạng thái tải và vô hiệu hóa tương tác tap khi `isLoading: true`.
+  - Test 4: Đảm bảo các factory constructor (`primary`, `outlined`, `danger`, `success`) khởi tạo và kết xuất giao diện chuẩn xác.
+  - Kết quả: **4 / 4 tests PASSED**.
+- **Toàn bộ Test Suite Frontend**:
+  - `flutter test`: **34 / 34 tests PASSED (100% thành công)**.
+- **Phân tích Tĩnh (Static Analysis)**:
+  - `flutter analyze`: **0 issues trên toàn bộ các tệp mã nguồn mới và sửa đổi**.
+

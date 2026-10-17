@@ -35,7 +35,7 @@ class AdminApp extends StatelessWidget {
       child: Consumer<ThemeManager>(
         builder: (context, themeManager, _) {
           return MaterialApp(
-            title: 'AshaDeep',
+            title: 'Cổng Thông Tin Giáo Dục Đại Việt',
             debugShowCheckedModeBanner: false,
             themeMode: themeManager.mode,
             theme: ThemeData(

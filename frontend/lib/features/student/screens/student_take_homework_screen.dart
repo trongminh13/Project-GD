@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/core/widgets/app_loading_button.dart';
 
 import 'package:ashadeep/core/theme/app_colors.dart';
 
@@ -623,22 +624,15 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _onSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _kPrimaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Nộp bài', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: AppLoadingButton(
+                      text: 'Nộp bài',
+                      loadingText: 'Đang nộp...',
+                      isLoading: _isSubmitting,
+                      onPressed: _onSubmit,
+                      backgroundColor: _kPrimaryBlue,
+                      borderRadius: BorderRadius.zero,
+                      height: 44,
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ],
