@@ -269,6 +269,7 @@ public class TransactionRollbackRealTest {
             Student s = new Student();
             s.setName("Test Student");
             s.setAdmissionNumber("TEST_RB_STU_888");
+            s.setRollNo("888");
             return studentRepository.save(s);
         });
         existing.setStudent(student);

@@ -702,3 +702,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 **2. Khắc phục Lỗi Build Flutter Web trên GitHub Pages do thiếu `.env` ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
 - **Hiện tượng**: Lần chạy đầu tiên trên GitHub Actions báo lỗi `No file or variants found for asset: .env` vì `.env` nằm trong danh sách `.gitignore` nên máy ảo GitHub không có file này.
 - **Xử lý**: Bổ sung bước `touch .env` trước khi chạy lệnh biên dịch `flutter build web`, đảm bảo ứng dụng Flutter Web luôn đóng gói thành công 100%.
+
+- **Khắc phục Kiểm thử Giao dịch TransactionRollbackRealTest trong môi trường PostgreSQL CI ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java))**:
+  + Bổ sung `s.setRollNo("888")` khi khởi tạo học sinh mẫu trong trường hợp cơ sở dữ liệu kiểm thử trống, thỏa mãn ràng buộc `NOT NULL` của cột `roll_no` trên PostgreSQL chuẩn.
+  + Kiểm thử cục bộ: **4 / 4 tests PASSED (100% BUILD SUCCESS)**.
