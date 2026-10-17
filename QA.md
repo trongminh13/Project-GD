@@ -668,3 +668,19 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
    - **Frontend Analyzer & Tests**:
      - `flutter analyze lib/features/student/screens/student_take_homework_screen.dart`: **No issues found!**
      - `flutter test`: **30 / 30 tests PASSED (100% thành công)**.
+
+---
+
+### 10.11. Tự động hóa Triển khai Bản Demo Flutter Web lên GitHub Pages qua GitHub Actions
+
+**Mục tiêu**:
+- Cung cấp link truy cập trực tiếp trên web (`https://trongminh13.github.io/Project-GD/`) phục vụ ban giám đốc/sếp mở trên điện thoại hoặc trình duyệt mà không cần cài đặt môi trường lập trình hay ứng dụng thủ công.
+- Tự động hóa quy trình CI/CD: Mỗi khi commit mới được đẩy lên nhánh `main`, hệ thống tự động biên dịch Flutter Web và xuất bản lên GitHub Pages.
+
+**Chi tiết Cấu hình Workflow ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
+1. **Thiết lập Môi trường**: Sử dụng action chuẩn `subosito/flutter-action@v2` (channel: `stable`, hỗ trợ lưu cache dependency giúp tăng tốc độ build).
+2. **Cấu hình Đường dẫn Cơ sở (Base Href)**: Thiết lập tham số bắt buộc `--base-href "/Project-GD/"` để các tệp tài nguyên tĩnh (assets, icon, CanvasKit, WASM/JS) không bị lỗi 404 khi GitHub Pages phục vụ dưới tên repo con.
+3. **Phát hành Tự động**: Đóng gói thư mục `frontend/build/web` thông qua `actions/upload-pages-artifact@v3` và phát hành an toàn với `actions/deploy-pages@v4`.
+
+**Kiểm chứng Cục bộ**:
+- Lệnh biên dịch: `flutter build web --base-href "/Project-GD/" --release` -> **Thành công (✓ Built build/web)**.

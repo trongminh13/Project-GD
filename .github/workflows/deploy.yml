@@ -1,4 +1,4 @@
-name: Deploy Flowchart to GitHub Pages
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
@@ -18,31 +18,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: flowchart/package-lock.json
+          channel: 'stable'
+          cache: true
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: flowchart
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: frontend
 
-      - name: Build
-        run: npm run build
-        working-directory: flowchart
+      - name: Build Flutter Web
+        run: flutter build web --base-href "/Project-GD/" --release
+        working-directory: frontend
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload artifact
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: flowchart/dist
+          path: frontend/build/web
 
   deploy:
     environment:
