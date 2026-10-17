@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 
 class HomeworkService {
@@ -22,7 +23,9 @@ class HomeworkService {
   Future<List<dynamic>> getTeacherHomework() async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -34,7 +37,9 @@ class HomeworkService {
   Future<Map<String, dynamic>> createHomework(Map<String, dynamic> body) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework');
-      final res = await http.post(url, headers: await _headers(), body: jsonEncode(body));
+      final res = await http
+          .post(url, headers: await _headers(), body: jsonEncode(body))
+          .timeout(ApiTimeoutPolicy.mutation.duration);
       final data = jsonDecode(utf8.decode(res.bodyBytes));
       if (res.statusCode == 200 || res.statusCode == 201) {
         return {'success': true, 'data': data};
@@ -55,15 +60,17 @@ class HomeworkService {
   }) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework/$homeworkId/assign');
-      final res = await http.post(
-        url,
-        headers: await _headers(),
-        body: jsonEncode({
-          'classId': classId,
-          'dueDate': dueDate,
-          'allowLateSubmission': allowLate,
-        }),
-      );
+      final res = await http
+          .post(
+            url,
+            headers: await _headers(),
+            body: jsonEncode({
+              'classId': classId,
+              'dueDate': dueDate,
+              'allowLateSubmission': allowLate,
+            }),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
       final data = jsonDecode(utf8.decode(res.bodyBytes));
       if (res.statusCode == 200 || res.statusCode == 201) {
         return {'success': true, 'data': data};
@@ -79,7 +86,9 @@ class HomeworkService {
   Future<List<dynamic>> getTeacherAssignments() async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework/assignments');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -91,7 +100,9 @@ class HomeworkService {
   Future<List<dynamic>> getAssignmentSubmissions(int assignmentId) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework/assignments/$assignmentId/submissions');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -103,7 +114,9 @@ class HomeworkService {
   Future<Map<String, dynamic>?> getSubmissionDetails(int submissionId) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework/submissions/$submissionId');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -119,14 +132,16 @@ class HomeworkService {
   }) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/teacher/homework/submissions/$submissionId/grade');
-      final res = await http.put(
-        url,
-        headers: await _headers(),
-        body: jsonEncode({
-          'teacherFeedback': teacherFeedback,
-          'answerGrades': answerGrades,
-        }),
-      );
+      final res = await http
+          .put(
+            url,
+            headers: await _headers(),
+            body: jsonEncode({
+              'teacherFeedback': teacherFeedback,
+              'answerGrades': answerGrades,
+            }),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
       final data = jsonDecode(utf8.decode(res.bodyBytes));
       if (res.statusCode == 200) {
         return {'success': true, 'data': data};
@@ -144,7 +159,9 @@ class HomeworkService {
   Future<List<dynamic>> getStudentAssignments() async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/homework');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -156,7 +173,9 @@ class HomeworkService {
   Future<Map<String, dynamic>?> getAssignmentForTaking(int assignmentId) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/homework/$assignmentId/take');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -168,11 +187,13 @@ class HomeworkService {
   Future<bool> saveDraft(int submissionId, List<Map<String, dynamic>> answers) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/homework/submissions/$submissionId/draft');
-      final res = await http.post(
-        url,
-        headers: await _headers(),
-        body: jsonEncode({'answers': answers}),
-      );
+      final res = await http
+          .post(
+            url,
+            headers: await _headers(),
+            body: jsonEncode({'answers': answers}),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
       return res.statusCode == 200;
     } catch (_) {
       return false;
@@ -183,11 +204,13 @@ class HomeworkService {
   Future<Map<String, dynamic>> submitHomework(int submissionId, List<Map<String, dynamic>> answers) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/homework/submissions/$submissionId/submit');
-      final res = await http.post(
-        url,
-        headers: await _headers(),
-        body: jsonEncode({'answers': answers}),
-      );
+      final res = await http
+          .post(
+            url,
+            headers: await _headers(),
+            body: jsonEncode({'answers': answers}),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
       final data = jsonDecode(utf8.decode(res.bodyBytes));
       if (res.statusCode == 200) {
         return {'success': true, 'data': data};
@@ -205,7 +228,9 @@ class HomeworkService {
   Future<List<dynamic>> getWardHomework(int studentId) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/parent/wards/$studentId/homework');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }
@@ -219,7 +244,9 @@ class HomeworkService {
   Future<List<dynamic>> getStudentMaterials() async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/student-portal/materials');
-      final res = await http.get(url, headers: await _headers());
+      final res = await http
+          .get(url, headers: await _headers())
+          .timeout(ApiTimeoutPolicy.fastRead.duration);
       if (res.statusCode == 200) {
         return jsonDecode(utf8.decode(res.bodyBytes));
       }

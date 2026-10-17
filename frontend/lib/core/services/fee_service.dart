@@ -1,12 +1,24 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 
 class FeeService {
   static final FeeService _instance = FeeService._internal();
   factory FeeService() => _instance;
   FeeService._internal();
+
+  /// Sinh mã Idempotency-Key chuẩn UUIDv4 chống trừ tiền 2 lần khi mạng chập chờn
+  static String generateIdempotencyKey() {
+    final random = math.Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant RFC4122
+    final hexChars = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList();
+    return '${hexChars.sublist(0, 4).join()}-${hexChars.sublist(4, 6).join()}-${hexChars.sublist(6, 8).join()}-${hexChars.sublist(8, 10).join()}-${hexChars.sublist(10, 16).join()}';
+  }
 
   /// Fetches raw fee statement map containing pendingFees, paidFees, totalPending
   Future<Map<String, dynamic>> getFeeStatementRaw(String studentId) async {
@@ -19,7 +31,7 @@ class FeeService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      );
+      ).timeout(ApiTimeoutPolicy.fastRead.duration);
       if (response.statusCode == 200) {
         final dynamic decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic>) {
@@ -72,22 +84,25 @@ class FeeService {
     String studentId,
     double amount, {
     int? feeStructureId,
+    String? idempotencyKey,
   }) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/fees/create-order');
+    final key = idempotencyKey ?? generateIdempotencyKey();
     try {
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          'Idempotency-Key': key,
         },
         body: jsonEncode({
           'studentId': int.tryParse(studentId) ?? studentId,
           'feeStructureId': feeStructureId,
           'amount': amount,
         }),
-      );
+      ).timeout(ApiTimeoutPolicy.transactional.duration);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['orderId'];
@@ -103,15 +118,18 @@ class FeeService {
     String signature, {
     String? studentId,
     int? feeStructureId,
+    String? idempotencyKey,
   }) async {
     final token = await AuthService().getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/fees/verify-payment');
+    final key = idempotencyKey ?? generateIdempotencyKey();
     try {
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          'Idempotency-Key': key,
         },
         body: jsonEncode(() {
           final map = <String, dynamic>{
@@ -126,9 +144,28 @@ class FeeService {
           if (feeStructureId != null) map['feeStructureId'] = feeStructureId;
           return map;
         }()),
-      );
+      ).timeout(ApiTimeoutPolicy.transactional.duration);
       return response.statusCode == 200;
     } catch (_) {}
     return false;
+  }
+
+  /// Đối soát trạng thái giao dịch thanh toán khi gặp sự cố mạng/timeout
+  Future<Map<String, dynamic>?> checkPaymentStatus(String orderId) async {
+    final token = await AuthService().getToken();
+    final url = Uri.parse('${ApiConstants.baseUrl}/fees/order-status/$orderId');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(ApiTimeoutPolicy.fastRead.duration);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>?;
+      }
+    } catch (_) {}
+    return null;
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/core/widgets/fade_in_list_item.dart';
 import 'package:ashadeep/features/admin/screens/student_list_screen.dart';
 import 'package:ashadeep/features/admin/screens/teacher_attendance_screen.dart';
@@ -14,6 +15,8 @@ import 'package:ashadeep/features/admin/screens/reports_dashboard_screen.dart';
 import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/screens/profile_screen.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
+import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
 import 'package:ashadeep/features/admin/screens/bulk_import_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -38,10 +41,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadAllData() async {
     setState(() => _isLoadingStats = true);
-    await Future.wait([
-      _fetchDashboardStats(),
-      _fetchAdminProfile(),
-    ]);
+
+    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
+      if (mounted) {
+        setState(() {
+          _studentCount = 1250;
+          _teacherCount = 68;
+          _adminName = 'Ban Quản Trị Hệ Thống';
+          _isLoadingStats = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      await Future.wait([
+        _fetchDashboardStats(),
+        _fetchAdminProfile(),
+      ]).timeout(ApiTimeoutPolicy.fastRead.duration);
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingStats = false);
+    }
   }
 
   Future<void> _fetchAdminProfile() async {
@@ -246,15 +266,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        body: RefreshIndicator(
-          onRefresh: _loadAllData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Overview', style: AppTextStyles.heading2(context)),
+        body: Column(
+          children: [
+            const DemoModeBanner(),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadAllData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Overview', style: AppTextStyles.heading2(context)),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -456,7 +480,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-    );
+    ],
+  ),
+),
+);
   }
 
   Widget _buildClickableStatCard(

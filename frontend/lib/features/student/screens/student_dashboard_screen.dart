@@ -14,6 +14,9 @@ import 'package:ashadeep/utils/status_helper.dart';
 import 'package:ashadeep/features/student/screens/student_take_homework_screen.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/core/widgets/app_card_error_with_retry.dart';
+import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
+import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:ashadeep/screens/login_screen.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
@@ -29,6 +32,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   int _currentIndex = 0; // 0: Trang chủ, 1: Lịch học, 2: Học liệu, 3: Bài tập, 4: Thêm
   bool _isLoading = true;
+  bool _hasHomeworkError = false;
+  bool _hasMaterialsError = false;
 
   // Dữ liệu từ Backend
   Map<String, dynamic>? _profile;
@@ -50,64 +55,100 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     _loadAllData();
   }
 
+  /// Tải dữ liệu toàn diện theo mô hình Progressive Rendering:
+  /// Khởi chạy song song nhưng độc lập, phần nào có dữ liệu kết xuất ngay phần đó.
   Future<void> _loadAllData() async {
-    setState(() => _isLoading = true);
-    try {
-      final profileFuture = _portalService.getMyProfile();
-      final attendanceFuture = _portalService.getMyAttendance();
-      final marksFuture = _portalService.getMyMarks();
-      final homeworkFuture = _homeworkService.getStudentAssignments();
-      final materialsFuture = _portalService.getMyMaterials();
+    setState(() {
+      _isLoading = true;
+      _hasHomeworkError = false;
+      _hasMaterialsError = false;
+    });
 
-      final results = await Future.wait([
-        profileFuture,
-        attendanceFuture,
-        marksFuture,
-        homeworkFuture,
-        materialsFuture,
-      ]);
-
+    // Fast-path cho môi trường Demo / Web GitHub Pages (0ms network delay)
+    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
       if (mounted) {
         setState(() {
-          _profile = results[0] as Map<String, dynamic>?;
+          _profile = _getMockProfile();
+          _attendance = _getMockAttendance();
+          _marks = _getMockMarks();
+          _homework = _getMockHomework();
+          _materials = _getMockMaterials();
+          _isLoading = false;
+        });
+      }
+      return;
+    }
 
-          final attList = results[1] as List<Map<String, dynamic>>;
-          if (attList.isNotEmpty) {
-            _attendance = attList;
-          } else if (FeatureFlags.useDemoFallback) {
-            _attendance = _getMockAttendance();
-          } else {
-            _attendance = [];
-          }
+    // Chạy song song độc lập, không dùng Future.wait đơn khối làm tắc nghẽn cả màn hình
+    await Future.wait([
+      _loadProfile(),
+      _loadAttendance(),
+      _loadMarks(),
+      _loadHomework(),
+      _loadMaterials(),
+    ]);
 
-          final marksList = results[2] as List<Map<String, dynamic>>;
-          if (marksList.isNotEmpty) {
-            _marks = marksList;
-          } else if (FeatureFlags.useDemoFallback) {
-            _marks = _getMockMarks();
-          } else {
-            _marks = [];
-          }
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
 
-          final hwList = results[3] as List<dynamic>;
-          if (hwList.isNotEmpty) {
-            _homework = hwList;
+  Future<void> _loadProfile() async {
+    try {
+      final p = await _portalService.getMyProfile();
+      if (mounted) {
+        setState(() {
+          _profile = p;
+          _isLoading = false; // Có profile là hiển thị khung trang chủ ngay
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadAttendance() async {
+    try {
+      final att = await _portalService.getMyAttendance();
+      if (mounted) {
+        setState(() {
+          _attendance = att.isNotEmpty ? att : (FeatureFlags.useDemoFallback ? _getMockAttendance() : []);
+        });
+      }
+    } catch (_) {
+      if (mounted && FeatureFlags.useDemoFallback) {
+        setState(() => _attendance = _getMockAttendance());
+      }
+    }
+  }
+
+  Future<void> _loadMarks() async {
+    try {
+      final m = await _portalService.getMyMarks();
+      if (mounted) {
+        setState(() {
+          _marks = m.isNotEmpty ? m : (FeatureFlags.useDemoFallback ? _getMockMarks() : []);
+        });
+      }
+    } catch (_) {
+      if (mounted && FeatureFlags.useDemoFallback) {
+        setState(() => _marks = _getMockMarks());
+      }
+    }
+  }
+
+  Future<void> _loadHomework() async {
+    setState(() => _hasHomeworkError = false);
+    try {
+      final hw = await _homeworkService.getStudentAssignments();
+      if (mounted) {
+        setState(() {
+          if (hw.isNotEmpty) {
+            _homework = hw;
           } else if (FeatureFlags.useDemoFallback) {
             _homework = _getMockHomework();
           } else {
             _homework = [];
           }
-
-          final matList = results[4] as List<dynamic>;
-          if (matList.isNotEmpty) {
-            _materials = matList;
-          } else if (FeatureFlags.useDemoFallback) {
-            _materials = _getMockMaterials();
-          } else {
-            _materials = [];
-          }
-
-          _isLoading = false;
+          _hasHomeworkError = false;
         });
       }
     } catch (_) {
@@ -115,19 +156,62 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         setState(() {
           if (FeatureFlags.useDemoFallback) {
             _homework = _getMockHomework();
-            _materials = _getMockMaterials();
-            _attendance = _getMockAttendance();
-            _marks = _getMockMarks();
+            _hasHomeworkError = false;
           } else {
             _homework = [];
-            _materials = [];
-            _attendance = [];
-            _marks = [];
+            _hasHomeworkError = true;
           }
-          _isLoading = false;
         });
       }
     }
+  }
+
+  Future<void> _loadMaterials() async {
+    setState(() => _hasMaterialsError = false);
+    try {
+      final mat = await _portalService.getMyMaterials();
+      if (mounted) {
+        setState(() {
+          if (mat.isNotEmpty) {
+            _materials = mat;
+          } else if (FeatureFlags.useDemoFallback) {
+            _materials = _getMockMaterials();
+          } else {
+            _materials = [];
+          }
+          _hasMaterialsError = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          if (FeatureFlags.useDemoFallback) {
+            _materials = _getMockMaterials();
+            _hasMaterialsError = false;
+          } else {
+            _materials = [];
+            _hasMaterialsError = true;
+          }
+        });
+      }
+    }
+  }
+
+  Map<String, dynamic> _getMockProfile() {
+    return {
+      'id': 1,
+      'name': 'Nguyễn Minh Anh',
+      'grade': '10',
+      'section': 'A1',
+      'className': 'Lớp 10A1',
+      'rollNo': 'HS001',
+      'admissionNumber': 'HS-2026-001',
+      'classTeacher': 'Cô Lê Thu Hà',
+      'dateOfBirth': '15/08/2010',
+      'gender': 'Nữ',
+      'parentName': 'Nguyễn Văn Hùng',
+      'parentPhone': '0910157611',
+    };
   }
 
   List<Map<String, dynamic>> _getMockMarks() {
@@ -419,9 +503,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _buildCurrentTab(),
+      body: Column(
+        children: [
+          const DemoModeBanner(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _buildCurrentTab(),
+          ),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -614,7 +705,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             onLink: () => setState(() => _currentIndex = 3),
           ),
           const SizedBox(height: 8),
-          if (_todoHomework.isEmpty)
+          if (_hasHomeworkError)
+            AppCardErrorWithRetry(
+              title: 'Không thể tải bài tập về nhà',
+              onRetry: _loadHomework,
+            )
+          else if (_todoHomework.isEmpty)
             const AppEmptyCard(
               title: 'Không còn bài cần làm',
               message: 'Em đã nộp tất cả bài tập được giao.',
@@ -679,7 +775,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             onLink: () => setState(() => _currentIndex = 2),
           ),
           const SizedBox(height: 8),
-          if (_materials.isEmpty)
+          if (_hasMaterialsError)
+            AppCardErrorWithRetry(
+              title: 'Không thể tải sách đọc mới',
+              onRetry: _loadMaterials,
+            )
+          else if (_materials.isEmpty)
             const AppEmptyCard(
               title: 'Chưa có sách đọc mới',
               message: 'Thầy cô chưa chia sẻ sách đọc mới cho lớp.',
@@ -863,7 +964,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         const SizedBox(height: 16),
 
         // Danh sách tài liệu
-        if (filtered.isEmpty)
+        if (_hasMaterialsError)
+          AppCardErrorWithRetry(
+            title: 'Không thể tải sách học liệu',
+            onRetry: _loadMaterials,
+          )
+        else if (filtered.isEmpty)
           const AppEmptyCard(
             title: 'Chưa có sách học',
             message: 'Thầy cô chưa chia sẻ sách học cho môn này.',
@@ -894,44 +1000,51 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Cần làm
-        AppSectionHeader(title: 'Cần làm (${_todoHomework.length})'),
-        const SizedBox(height: 8),
-        if (_todoHomework.isEmpty)
-          const AppEmptyCard(
-            title: 'Không còn bài cần làm',
-            message: 'Em đã nộp tất cả bài tập được giao.',
-            icon: Icons.check_circle_outline,
+        if (_hasHomeworkError)
+          AppCardErrorWithRetry(
+            title: 'Không thể tải danh sách bài tập',
+            onRetry: _loadHomework,
           )
-        else
-          ..._todoHomework.map(
-                (hw) => HomeworkCard(
-                  data: Map<String, dynamic>.from(hw as Map),
-                  mode: HomeworkCardMode.studentTake,
-                  onPrimaryAction: () => _onOpenTakeHomework(hw),
-                  onCardTap: () => _onOpenTakeHomework(hw),
+        else ...[
+          // Cần làm
+          AppSectionHeader(title: 'Cần làm (${_todoHomework.length})'),
+          const SizedBox(height: 8),
+          if (_todoHomework.isEmpty)
+            const AppEmptyCard(
+              title: 'Không còn bài cần làm',
+              message: 'Em đã nộp tất cả bài tập được giao.',
+              icon: Icons.check_circle_outline,
+            )
+          else
+            ..._todoHomework.map(
+                  (hw) => HomeworkCard(
+                    data: Map<String, dynamic>.from(hw as Map),
+                    mode: HomeworkCardMode.studentTake,
+                    onPrimaryAction: () => _onOpenTakeHomework(hw),
+                    onCardTap: () => _onOpenTakeHomework(hw),
+                  ),
                 ),
-              ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
-        // Đã nộp
-        AppSectionHeader(title: 'Đã nộp (${_submittedHomework.length})'),
-        const SizedBox(height: 8),
-        if (_submittedHomework.isEmpty)
-          const AppEmptyCard(
-            title: 'Chưa nộp bài nào',
-            message: 'Bài đã nộp sẽ hiện ở đây cùng điểm số.',
-            icon: Icons.history_edu_outlined,
-          )
-        else
-          ..._submittedHomework.map(
-                (hw) => HomeworkCard(
-                  data: Map<String, dynamic>.from(hw as Map),
-                  mode: HomeworkCardMode.studentTake,
-                  onPrimaryAction: () => _onOpenHomeworkResult(hw),
-                  onCardTap: () => _onOpenHomeworkResult(hw),
+          // Đã nộp
+          AppSectionHeader(title: 'Đã nộp (${_submittedHomework.length})'),
+          const SizedBox(height: 8),
+          if (_submittedHomework.isEmpty)
+            const AppEmptyCard(
+              title: 'Chưa nộp bài nào',
+              message: 'Bài đã nộp sẽ hiện ở đây cùng điểm số.',
+              icon: Icons.history_edu_outlined,
+            )
+          else
+            ..._submittedHomework.map(
+                  (hw) => HomeworkCard(
+                    data: Map<String, dynamic>.from(hw as Map),
+                    mode: HomeworkCardMode.studentTake,
+                    onPrimaryAction: () => _onOpenHomeworkResult(hw),
+                    onCardTap: () => _onOpenHomeworkResult(hw),
+                  ),
                 ),
-              ),
+        ],
       ],
     );
   }

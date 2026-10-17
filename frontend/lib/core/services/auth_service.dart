@@ -4,11 +4,21 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:ashadeep/core/models/user.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/utils/constants.dart';
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
+  final http.Client? _httpClient;
+  final bool? _isDemoModeOverride;
   String? _verificationId;
+
+  AuthService({http.Client? client, bool? isDemoMode})
+      : _httpClient = client,
+        _isDemoModeOverride = isDemoMode;
+
+  bool get isDemoMode => _isDemoModeOverride ?? ApiConstants.isDemoMode;
+  http.Client get _client => _httpClient ?? http.Client();
 
   firebase_auth.FirebaseAuth? get _firebaseAuth {
     try {
@@ -21,19 +31,19 @@ class AuthService {
   // --- Backend Login (Admin/Teacher/Student) ---
   Future<Map<String, dynamic>> login(String username, String password) async {
     // Nếu môi trường demo (chưa cấu hình domain backend thật)
-    if (ApiConstants.isDemoMode) {
+    if (isDemoMode) {
       return _tryDemoLogin(username, password);
     }
 
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/signin');
     try {
-      final response = await http
+      final response = await _client
           .post(
             url,
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'username': username, 'password': password}),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiTimeoutPolicy.mutation.duration);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -64,12 +74,19 @@ class AuthService {
         final data = jsonDecode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Thông tin đăng nhập không hợp lệ.',
+          'message': data['message'] ?? 'Tài khoản hoặc mật khẩu không chính xác.',
         };
       }
     } catch (e) {
-      // Khi mất mạng, timeout hoặc backend không phản hồi: Kích hoạt Demo Fallback
-      return _tryDemoLogin(username, password);
+      // TUYỆT ĐỐI KHÔNG SILENT FALLBACK TRÊN BẢN PRODUCTION:
+      // Chỉ kích hoạt demo login khi có cờ DEMO_MODE rõ ràng
+      if (isDemoMode) {
+        return _tryDemoLogin(username, password);
+      }
+      return {
+        'success': false,
+        'message': 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.',
+      };
     }
   }
 
@@ -147,14 +164,14 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Mật khẩu không chính xác cho tài khoản $username. Mật khẩu chuẩn là: $expectedPass',
+          'message': 'Tài khoản hoặc mật khẩu không chính xác.',
         };
       }
     }
 
     return {
       'success': false,
-      'message': 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc đăng nhập với tài khoản mẫu (student01 / student123).',
+      'message': 'Tài khoản không tồn tại trong hệ thống demo.',
     };
   }
 
@@ -165,7 +182,7 @@ class AuthService {
     final token = await getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/change-password');
     try {
-      final response = await http.post(
+      final response = await _client.post(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +192,7 @@ class AuthService {
           'oldPassword': oldPassword,
           'newPassword': newPassword,
         }),
-      );
+      ).timeout(ApiTimeoutPolicy.mutation.duration);
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -228,24 +245,25 @@ class AuthService {
 
   // --- Backend OTP Methods (Legacy/Fast2SMS) ---
   Future<Map<String, dynamic>> sendOtpBackend(String phone) async {
-    if (ApiConstants.isDemoMode) {
+    if (isDemoMode) {
       return {'success': true, 'message': 'Mã OTP demo là: 123456'};
     }
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/send-otp');
     try {
-      final response = await http.post(
+      final response = await _client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': phone}),
-      );
+      ).timeout(ApiTimeoutPolicy.mutation.duration);
 
       if (response.statusCode == 200) {
         return {'success': true, 'message': 'Mã OTP đã được gửi.'};
       } else {
-        return {'success': true, 'message': 'Mã OTP demo là: 123456'};
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Không thể gửi mã OTP.'};
       }
     } catch (_) {
-      return {'success': true, 'message': 'Mã OTP demo là: 123456'};
+      return {'success': false, 'message': 'Không thể kết nối đến máy chủ gửi OTP.'};
     }
   }
 
@@ -253,17 +271,17 @@ class AuthService {
     String phone,
     String otp,
   ) async {
-    if (ApiConstants.isDemoMode || otp == '123456') {
+    if (isDemoMode) {
       return _tryDemoLogin(phone.isNotEmpty ? phone : '9910157611', '123456');
     }
 
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/verify-otp');
     try {
-      final response = await http.post(
+      final response = await _client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': phone, 'otp': otp}),
-      );
+      ).timeout(ApiTimeoutPolicy.mutation.duration);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -283,9 +301,6 @@ class AuthService {
         return {'success': false, 'message': data['message'] ?? 'Mã OTP không hợp lệ'};
       }
     } catch (e) {
-      if (otp == '123456') {
-        return _tryDemoLogin(phone.isNotEmpty ? phone : '9910157611', '123456');
-      }
       return {'success': false, 'message': 'Lỗi kết nối máy chủ: $e'};
     }
   }

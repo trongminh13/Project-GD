@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/core/widgets/fade_in_list_item.dart';
 import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/screens/profile_screen.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/features/parent/screens/parent_ward_details_screen.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
+import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -54,6 +57,26 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
   }
 
   Future<void> _fetchMyWards() async {
+    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
+      if (mounted) {
+        setState(() {
+          _wards = [
+            {
+              'id': 1,
+              'name': 'Nguyễn Minh Anh',
+              'grade': '10',
+              'section': 'A1',
+              'className': 'Lớp 10A1',
+              'rollNo': 'HS001',
+              'classTeacher': 'Cô Lê Thu Hà',
+            }
+          ];
+          _isLoadingWards = false;
+        });
+      }
+      return;
+    }
+
     try {
       final token = await AuthService().getToken();
       if (token == null) {
@@ -66,7 +89,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
       final response = await http.get(
         url,
         headers: {'Authorization': 'Bearer $token'},
-      );
+      ).timeout(ApiTimeoutPolicy.fastRead.duration);
 
       debugPrint('[WARD DEBUG] Status: ${response.statusCode}');
       debugPrint('[WARD DEBUG] Body: ${response.body}');
@@ -182,6 +205,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
                   },
                 ),
               ],
+            ),
+
+            const SliverToBoxAdapter(
+              child: DemoModeBanner(),
             ),
 
             SliverToBoxAdapter(

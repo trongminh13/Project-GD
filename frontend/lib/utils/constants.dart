@@ -76,16 +76,13 @@ class AppColors {
 }
 
 class ApiConstants {
+  /// Cờ xác định phiên bản biên dịch chạy chế độ Demo trình chiếu (tách biệt hoàn toàn bản thường)
+  /// Ví dụ: flutter build web --dart-define=DEMO_MODE=true
+  static const bool isDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+
   /// URL được truyền động qua biến môi trường khi build:
-  /// ví dụ: flutter build web --dart-define=API_BASE_URL=https://my-backend.com/api
+  /// ví dụ: flutter build web --dart-define=API_BASE_URL=https://api.truongdaiviet.edu.vn/api
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-
-  static const String _productionUrl = 'https://api.yourdomain.com/api';
-
-  static bool get isDemoMode {
-    final url = baseUrl;
-    return url.contains('yourdomain.com') || url.contains('demo-api.local');
-  }
 
   static String get baseUrl {
     // 1. Ưu tiên biến môi trường --dart-define=API_BASE_URL
@@ -93,7 +90,7 @@ class ApiConstants {
       return _envBaseUrl;
     }
 
-    // 2. Nếu có trong .env cục bộ
+    // 2. Nếu có trong .env cục bộ (khi dev chạy local)
     try {
       final envVal = dotenv.env['API_BASE_URL'];
       if (envVal != null && envVal.isNotEmpty) {
@@ -101,21 +98,22 @@ class ApiConstants {
       }
     } catch (_) {}
 
-    // 3. Nếu là Web Release trên GitHub Pages mà chưa cấu hình URL Cloud
-    if (kIsWeb && kReleaseMode) {
-      return 'https://demo-api.local/api';
+    // 3. Nếu đang chạy với cờ DEMO_MODE thì không bắt buộc URL thật
+    if (isDemoMode) {
+      return '';
     }
 
-    // 4. Môi trường Web debug
-    if (kIsWeb) {
+    // 4. Môi trường Debug / Development nội bộ máy dev
+    if (!kReleaseMode) {
       return 'http://localhost:8081/api';
     }
 
-    if (kReleaseMode) {
-      return _productionUrl;
-    }
-
-    return 'http://localhost:8081/api';
+    // 5. FAIL-FAST TRÊN RELEASE PRODUCTION:
+    // Tuyệt đối không trỏ về domain rác hay tên miền ảo. Ném ngoại lệ cấu hình rõ ràng!
+    throw StateError(
+      'LỖI CẤU HÌNH PRODUCTION: Bản Release bắt buộc phải được biên dịch với --dart-define=API_BASE_URL=https://... '
+      'hoặc cờ --dart-define=DEMO_MODE=true đối với bản trình chiếu.',
+    );
   }
 }
 

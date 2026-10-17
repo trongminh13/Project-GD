@@ -35,8 +35,8 @@ jobs:
         run: touch .env
         working-directory: frontend
 
-      - name: Build Flutter Web
-        run: flutter build web --base-href "/Project-GD/" --release -O4
+      - name: Build Flutter Web (Demo Mode)
+        run: flutter build web --base-href "/Project-GD/" --release -O4 --dart-define=DEMO_MODE=true
         working-directory: frontend
 
       - name: Setup Pages

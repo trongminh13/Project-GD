@@ -11,17 +11,18 @@ class FeatureFlags {
   static bool useDemoFallback = _initDemoFallback();
 
   static bool _initDemoFallback() {
+    // 1. Ưu tiên cờ biên dịch chính thức --dart-define=DEMO_MODE=true
+    const isDemo = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+    if (isDemo) return true;
+
+    // 2. Cấu hình cục bộ trong .env
     try {
       final envVal = dotenv.env['ENABLE_DEMO_DATA'];
       if (envVal != null) {
         return envVal.toLowerCase() == 'true' || envVal == '1';
       }
     } catch (_) {}
-    // Mặc định bật trong Debug mode, hoặc trên Web khi chưa cấu hình backend URL riêng
-    const envBase = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-    if (kIsWeb && envBase.isEmpty) {
-      return true;
-    }
+
     return kDebugMode;
   }
 

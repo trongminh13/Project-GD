@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ashadeep/core/network/api_exceptions.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/utils/constants.dart';
 
@@ -86,11 +87,16 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> get(String path, {Map<String, dynamic>? queryParams, Map<String, String>? headers}) async {
+  Future<dynamic> get(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Map<String, String>? headers,
+    ApiTimeoutPolicy policy = ApiTimeoutPolicy.fastRead,
+  }) async {
     try {
       final uri = _buildUri(path, queryParams);
       final requestHeaders = await _defaultHeaders(extraHeaders: headers);
-      final response = await _client.get(uri, headers: requestHeaders);
+      final response = await _client.get(uri, headers: requestHeaders).timeout(policy.duration);
       return _processResponse(response);
     } on ApiException {
       rethrow;
@@ -99,12 +105,18 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> post(String path, {dynamic body, Map<String, dynamic>? queryParams, Map<String, String>? headers}) async {
+  Future<dynamic> post(
+    String path, {
+    dynamic body,
+    Map<String, dynamic>? queryParams,
+    Map<String, String>? headers,
+    ApiTimeoutPolicy policy = ApiTimeoutPolicy.mutation,
+  }) async {
     try {
       final uri = _buildUri(path, queryParams);
       final requestHeaders = await _defaultHeaders(extraHeaders: headers);
       final encodedBody = body != null ? (body is String ? body : jsonEncode(body)) : null;
-      final response = await _client.post(uri, headers: requestHeaders, body: encodedBody);
+      final response = await _client.post(uri, headers: requestHeaders, body: encodedBody).timeout(policy.duration);
       return _processResponse(response);
     } on ApiException {
       rethrow;
@@ -113,12 +125,18 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> put(String path, {dynamic body, Map<String, dynamic>? queryParams, Map<String, String>? headers}) async {
+  Future<dynamic> put(
+    String path, {
+    dynamic body,
+    Map<String, dynamic>? queryParams,
+    Map<String, String>? headers,
+    ApiTimeoutPolicy policy = ApiTimeoutPolicy.mutation,
+  }) async {
     try {
       final uri = _buildUri(path, queryParams);
       final requestHeaders = await _defaultHeaders(extraHeaders: headers);
       final encodedBody = body != null ? (body is String ? body : jsonEncode(body)) : null;
-      final response = await _client.put(uri, headers: requestHeaders, body: encodedBody);
+      final response = await _client.put(uri, headers: requestHeaders, body: encodedBody).timeout(policy.duration);
       return _processResponse(response);
     } on ApiException {
       rethrow;
@@ -127,11 +145,16 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> delete(String path, {Map<String, dynamic>? queryParams, Map<String, String>? headers}) async {
+  Future<dynamic> delete(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Map<String, String>? headers,
+    ApiTimeoutPolicy policy = ApiTimeoutPolicy.mutation,
+  }) async {
     try {
       final uri = _buildUri(path, queryParams);
       final requestHeaders = await _defaultHeaders(extraHeaders: headers);
-      final response = await _client.delete(uri, headers: requestHeaders);
+      final response = await _client.delete(uri, headers: requestHeaders).timeout(policy.duration);
       return _processResponse(response);
     } on ApiException {
       rethrow;
