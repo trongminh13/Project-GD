@@ -739,7 +739,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - **Hiện tượng**: Khi truy cập trên GitHub Pages, trình duyệt tải `main.dart.js` (~3.6MB) mất 2–4 giây khiến người dùng thấy màn hình trắng trơn, tạo cảm giác hệ thống bị đứng.
 - **Giải pháp**:
   - Nhúng trực tiếp Splash Loader bằng CSS thuần + HTML nhẹ (0KB phụ thuộc ngoài).
-  - Thiết kế thẻ thương hiệu với biểu tượng học thuật SVG, màu nhận diện xanh `#2457C5`, vòng xoay spinner gradient mượt mà và thanh trạng thái *"Đang tải ứng dụng..."*.
+  - Thiết kế thẻ thương hiệu với biểu tượng `Icons.school_rounded` màu xanh `#2457C5` trên nền hộp bo góc 14px xanh nhạt `rgba(36, 87, 197, 0.12)` chuẩn xác 100% giống trang Đăng nhập (`login_screen.dart`), vòng xoay spinner gradient mượt mà và thanh trạng thái *"Đang tải ứng dụng..."*.
   - Tích hợp listener `window.addEventListener('flutter-first-frame', ...)` giúp màn hình loading mờ dần (fade out 400ms) và tự hủy ngay khi Flutter Web render xong khung hình đầu tiên.
 
 **2. Xây dựng Component Tái Sử Dụng Chuẩn Hoá ([`AppLoadingButton.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_loading_button.dart))**:
