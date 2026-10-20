@@ -222,5 +222,97 @@ void main() {
       expect(find.text('ĐIỂM TRUNG BÌNH HỌC KỲ'), findsOneWidget);
       expect(find.text('Học lực Xuất sắc'), findsOneWidget);
     });
+
+    testWidgets('TC-NAV-10: Timetable defaults to Daily view and shows weekday tabs', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on Lịch học tab (BottomNavigationBar item at index 1)
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+
+      // Verify View Mode Switcher buttons exist
+      expect(find.text('Theo ngày'), findsOneWidget);
+      expect(find.text('Theo tuần (Toàn bộ)'), findsOneWidget);
+
+      // Verify Weekday tabs (Thứ 2 đến Thứ 6) are displayed
+      expect(find.text('Thứ 2'), findsOneWidget);
+      expect(find.text('Thứ 3'), findsOneWidget);
+      expect(find.text('Thứ 4'), findsOneWidget);
+      expect(find.text('Thứ 5'), findsOneWidget);
+      expect(find.text('Thứ 6'), findsOneWidget);
+
+      // Verify lessons of selected day (Thứ 2) are displayed
+      expect(find.text('Toán'), findsWidgets);
+      expect(find.text('Tiếng Việt'), findsWidgets);
+    });
+
+    testWidgets('TC-NAV-11: Tapping Theo tuần switches to Weekly full view and displays all 5 days', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on Lịch học tab
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+
+      // Switch to Weekly view
+      await tester.tap(find.text('Theo tuần (Toàn bộ)'));
+      await tester.pumpAndSettle();
+
+      // Verify weekdays headers are rendered (scroll down for later days)
+      expect(find.textContaining('THỨ HAI'), findsOneWidget);
+      expect(find.textContaining('THỨ BA'), findsOneWidget);
+
+      // Scroll to verify remaining days till Friday
+      await tester.scrollUntilVisible(find.textContaining('THỨ TƯ'), 150);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('THỨ TƯ'), findsOneWidget);
+
+      await tester.scrollUntilVisible(find.textContaining('THỨ NĂM'), 150);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('THỨ NĂM'), findsOneWidget);
+
+      await tester.scrollUntilVisible(find.textContaining('THỨ SÁU'), 150);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('THỨ SÁU'), findsOneWidget);
+
+      // Verify lessons count badge
+      expect(find.text('4 tiết'), findsWidgets);
+    });
+
+    testWidgets('TC-NAV-12: Tapping Theo ngày switches back to daily view', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on Lịch học tab
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+
+      // Switch to Weekly view
+      await tester.tap(find.text('Theo tuần (Toàn bộ)'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('THỨ HAI'), findsOneWidget);
+
+      // Switch back to Daily view
+      await tester.tap(find.text('Theo ngày'));
+      await tester.pumpAndSettle();
+
+      // Weekday tab selector is back
+      expect(find.text('Thứ 2'), findsOneWidget);
+      expect(find.text('Thứ 3'), findsOneWidget);
+      expect(find.textContaining('THỨ HAI ·'), findsNothing);
+    });
   });
 }

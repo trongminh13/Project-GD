@@ -1504,5 +1504,39 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `flutter test test/widgets/student_dashboard_nav_test.dart`: **9 / 9 tests PASSED (100% passed)**.
 - `flutter test`: **76 / 76 tests PASSED (100% passed - 0 failure, 0 error)**.
 
+---
+
+### GIAI ĐOẠN 27: TÍCH HỢP BỘ CHUYỂN ĐỔI LỊCH HỌC THEO NGÀY VÀ THEO TUẦN TOÀN BỘ (FLAT SQUARE DESIGN)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Thắc mắc/yêu cầu từ người dùng: *"ở phần path lịch học nên có 2 component ấn chuyển cho nhau đó là lịch theo ngày và lịch theo tuần trong đó lịch theo tuần sẽ hiện full cả tuần để học sinh xem full 1 lượt. senior dev thấy thế nào?(đây là câu hỏi)"*.
+- Bổ sung thanh chuyển đổi 2 chế độ xem tại Tab Lịch học:
+  1. **Theo ngày**: Giữ nguyên danh sách các ngày Thứ 2 – Thứ 6 (Day tabs) và chi tiết từng tiết học của ngày đang chọn.
+  2. **Theo tuần (Toàn bộ)**: Hiển thị đầy đủ cả 5 ngày học trong tuần (Thứ Hai đến Thứ Sáu) trên một giao diện cuộn dọc, học sinh có thể lướt xem toàn bộ thời khóa biểu cả tuần, nhận diện ngày "Hôm nay" và vẫn tương tác chạm vào từng tiết học để mở popup chi tiết tiết học.
+- Chuẩn mực thiết kế: Tuân thủ tuyệt đối **Flat Square Design (BorderRadius.zero)**, viền phẳng sắc nét 1.0px (`AppColors.border`), màu thương hiệu xanh dương Đại Việt (`AppColors.primary`).
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Khai báo state `bool _isWeeklyView = false;` để lưu trạng thái chuyển đổi giữa chế độ Ngày và chế độ Tuần toàn bộ.
+  - Xây dựng thanh Segmented Control chuyển đổi `[ Theo ngày | Theo tuần (Toàn bộ) ]` tại `_buildTimeTab()` ngay dưới thanh điều hướng tuần:
+    + Thiết kế phẳng vuông vức `BorderRadius.zero`, viền 1.0px `AppColors.border`.
+    + Tab đang chọn có nền `AppColors.primary`, chữ trắng và icon sáng rõ; Tab không chọn có nền trong suốt, chữ xám `AppColors.textSub`.
+  - Giữ lại bộ chọn ngày Thứ 2 – Thứ 6 khi `!_isWeeklyView`.
+  - Hiện thực hóa `_buildWeeklyTimetable()` khi `_isWeeklyView == true`:
+    + Render 5 thẻ ngày (Thứ 2 đến Thứ 6) với ngày tháng tương ứng theo tuần (`DateTimeUtils.schoolDays`).
+    + Tự động nhận diện và làm nổi bật ngày hiện tại (`isToday`): viền xanh dương 1.5px, nền header pha màu sơ cấp nhạt 8%, huy hiệu "Hôm nay" sắc nét.
+    + Thống kê số tiết học trên header mỗi ngày (ví dụ: `4 tiết`).
+    + Danh sách từng tiết học hiển thị bằng widget chuẩn `LessonRow`, hỗ trợ tương tác chạm mở hộp thoại chi tiết tiết học (`_showLessonDetailModal`).
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+  - Bổ sung 3 test cases tự động mới:
+    + `TC-NAV-10`: Mặc định Lịch học ở chế độ "Theo ngày" và hiển thị các tabs Thứ 2 – Thứ 6.
+    + `TC-NAV-11`: Bấm "Theo tuần (Toàn bộ)" chuyển sang chế độ Weekly full view và hiển thị đủ 5 ngày trong tuần (Thứ Hai $\rightarrow$ Thứ Sáu) kèm badge số tiết học.
+    + `TC-NAV-12`: Bấm "Theo ngày" chuyển ngược lại chế độ xem ngày bình thường.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart test/widgets/student_dashboard_nav_test.dart`: **No issues found! (0 warnings, 0 errors)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **12 / 12 tests PASSED (100% passed)**.
+- `flutter test`: **79 / 79 tests PASSED (100% passed - 0 failure, 0 error)**.
+
 
 

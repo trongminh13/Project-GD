@@ -50,6 +50,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   // Lịch học & thời khóa biểu
   int _selectedDay = 0; // 0: Thứ 2, 1: Thứ 3, ..., 4: Thứ 6
   int _weekOffset = 0;  // 0: tuần này, -1: tuần trước, 1: tuần sau
+  bool _isWeeklyView = false; // false: Lịch theo ngày, true: Lịch theo tuần toàn bộ
 
   // Bộ lọc môn học trong tab Học liệu
   String _selectedSubjectFilter = 'Tất cả';
@@ -1012,7 +1013,85 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
         ),
 
-        // Tabs Thứ 2 – Thứ 6
+        // 2. Bộ chuyển đổi chế độ xem: Theo ngày vs Theo tuần (Flat Square Design)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          color: Colors.white,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt,
+              border: Border.all(color: AppColors.border, width: 1.0),
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isWeeklyView = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      color: !_isWeeklyView ? AppColors.primary : Colors.transparent,
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.view_day_outlined,
+                            size: 16,
+                            color: !_isWeeklyView ? Colors.white : AppColors.textSub,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Theo ngày',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: !_isWeeklyView ? FontWeight.bold : FontWeight.w500,
+                              color: !_isWeeklyView ? Colors.white : AppColors.textMain,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Container(width: 1, height: 28, color: AppColors.border),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isWeeklyView = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      color: _isWeeklyView ? AppColors.primary : Colors.transparent,
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_view_week_outlined,
+                            size: 16,
+                            color: _isWeeklyView ? Colors.white : AppColors.textSub,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Theo tuần (Toàn bộ)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: _isWeeklyView ? FontWeight.bold : FontWeight.w500,
+                              color: _isWeeklyView ? Colors.white : AppColors.textMain,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 3. Nội dung theo chế độ xem
+        if (!_isWeeklyView) ...[
+          // Tabs Thứ 2 – Thứ 6
         Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -1094,7 +1173,143 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ],
           ),
         ),
+      ] else ...[
+        // Chế độ 2: Lịch theo tuần toàn bộ (Weekly Full View)
+        Expanded(
+          child: _buildWeeklyTimetable(),
+        ),
       ],
+    ],
+  );
+}
+
+  /// Giao diện Lịch học toàn bộ tuần (Weekly Full View):
+  /// Hiển thị 5 ngày từ Thứ 2 đến Thứ 6 dạng thẻ phẳng vuông vức,
+  /// nhận diện ngày hôm nay và cho phép chạm vào từng tiết để xem chi tiết.
+  Widget _buildWeeklyTimetable() {
+    final now = DateTime.now();
+    final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 6: Chủ Nhật
+    final base = DateTime(2026, 10, 12);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: List.generate(DateTimeUtils.schoolDays.length, (dayIndex) {
+        final dayDate = base.add(Duration(days: 7 * _weekOffset + dayIndex));
+        final dateStr = '${dayDate.day.toString().padLeft(2, '0')}/${dayDate.month.toString().padLeft(2, '0')}/${dayDate.year}';
+        final isToday = (todayWeekday == dayIndex && _weekOffset == 0);
+        final dayLessons = FeatureFlags.useDemoFallback ? _getLessonsForDay(dayIndex) : <Map<String, String>>[];
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.zero,
+            border: Border.all(
+              color: isToday ? AppColors.primary : AppColors.border,
+              width: isToday ? 1.5 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header ngày
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isToday ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.zero,
+                  border: const Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 15,
+                          color: isToday ? AppColors.primary : AppColors.textSub,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${DateTimeUtils.dayNames[dayIndex].toUpperCase()} · $dateStr',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isToday ? AppColors.primary : AppColors.textMainOf(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        if (isToday) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.zero,
+                            ),
+                            child: const Text(
+                              'Hôm nay',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                        Text(
+                          '${dayLessons.length} tiết',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSub),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Danh sách tiết học của ngày
+              if (dayLessons.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'Không có tiết học nào được xếp lịch cho ngày này.',
+                      style: TextStyle(fontSize: 12.5, color: AppColors.textSub),
+                    ),
+                  ),
+                )
+              else
+                ...dayLessons.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final l = entry.value;
+                  return LessonRow(
+                    lessonIndex: i + 1,
+                    subject: l['subj']!,
+                    time: l['time']!,
+                    teacher: l['teacher']!,
+                    room: l['room']!,
+                    isCompact: true,
+                    hasDivider: i < dayLessons.length - 1,
+                    onTap: () => _showLessonDetailModal(
+                      lessonIndex: i + 1,
+                      subject: l['subj']!,
+                      time: l['time']!,
+                      teacher: l['teacher']!,
+                      room: l['room']!,
+                    ),
+                  );
+                }),
+            ],
+          ),
+        );
+      }),
     );
   }
 
