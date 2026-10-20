@@ -100,7 +100,7 @@ class AuthService {
     Map<String, dynamic>? demoUserData;
     String expectedPass = '';
 
-    if (u == 'student01' || u == 'hocsinh.demo') {
+    if (u == 'student01' || u == 'hocsinh.demo' || u == 'hocsinh1.demo') {
       expectedPass = 'student123';
       demoUserData = {
         'id': '1',
@@ -112,6 +112,32 @@ class AuthService {
         'section': 'A',
         'className': 'Lớp 1A',
         'classTeacher': 'Cô Lê Thu Hà',
+      };
+    } else if (u == 'student02' || u == 'hocsinh2.demo') {
+      expectedPass = 'student123';
+      demoUserData = {
+        'id': '2',
+        'username': 'Em Trần Bảo Nam',
+        'roles': ['ROLE_STUDENT'],
+        'token': 'mock_jwt_token_student02',
+        'mustChangePassword': false,
+        'grade': '6',
+        'section': 'A',
+        'className': 'Lớp 6A',
+        'classTeacher': 'Thầy Nguyễn Văn Nam',
+      };
+    } else if (u == 'student03' || u == 'hocsinh3.demo') {
+      expectedPass = 'student123';
+      demoUserData = {
+        'id': '3',
+        'username': 'Em Lê Hoàng Long',
+        'roles': ['ROLE_STUDENT'],
+        'token': 'mock_jwt_token_student03',
+        'mustChangePassword': false,
+        'grade': '10',
+        'section': 'A',
+        'className': 'Lớp 10A',
+        'classTeacher': 'Thầy Vũ Đình Trọng',
       };
     } else if (u == 't001' || u == 'giaovien.demo') {
       expectedPass = 'teacher123';
@@ -144,7 +170,7 @@ class AuthService {
 
     if (demoUserData != null) {
       if (password == expectedPass ||
-          (u == 'student01' && password == 'student123') ||
+          password == 'student123' ||
           password == '123456') {
         final user = User.fromJson(demoUserData);
         if (user.token != null) {

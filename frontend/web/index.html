@@ -5,7 +5,6 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Cổng Thông Tin Giáo Dục Đại Việt - Hệ thống quản lý trường học và học liệu số thông minh.">
 
   <!-- iOS meta tags & icons -->
@@ -24,7 +23,8 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #F8F9FA;
+      background: #F8F9FA url("images/school_bg.jpg") no-repeat center center fixed;
+      background-size: cover;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     #loading-screen {
@@ -37,7 +37,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #F8F9FA;
+      background: rgba(248, 249, 250, 0.85);
+      backdrop-filter: blur(8px);
       z-index: 99999;
       transition: opacity 0.4s ease-out;
     }

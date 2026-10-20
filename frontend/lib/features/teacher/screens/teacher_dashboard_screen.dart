@@ -285,8 +285,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                       () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const StudentAttendanceScreen(),
+                            builder: (context) => StudentAttendanceScreen(
+                              classId: _assignedClass?.grade ?? '10',
+                              className: _assignedClass?.name ?? 'Lớp của tôi',
+                            ),
                           ),
                         );
                       },

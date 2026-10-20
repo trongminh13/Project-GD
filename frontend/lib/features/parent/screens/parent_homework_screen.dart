@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
+import 'package:ashadeep/core/widgets/homework_card.dart';
+import 'package:ashadeep/core/widgets/app_empty_card.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 
 class ParentHomeworkScreen extends StatefulWidget {
   final int? studentId;
@@ -44,6 +47,15 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
   Future<void> _loadHomework() async {
     if (_resolvedStudentId == null) return;
     setState(() => _isLoading = true);
+    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
+      if (mounted) {
+        setState(() {
+          _assignments = [];
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     final list = await _service.getWardHomework(_resolvedStudentId!);
     if (!mounted) return;
     setState(() {
@@ -116,31 +128,17 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
 
     if (filteredList.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceAltOf(context),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.assignment_turned_in_rounded,
-                size: 60,
-                color: AppColors.textTertiaryOf(context),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              filterCompleted ? "Chưa có bài tập nào đã nộp" : "Không có bài tập nào cần làm",
-              style: TextStyle(
-                color: AppColors.textTertiaryOf(context),
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: AppEmptyCard(
+            icon: Icons.assignment_turned_in_rounded,
+            title: filterCompleted
+                ? 'Chưa có bài tập nào đã nộp'
+                : 'Không có bài tập nào cần làm',
+            message: filterCompleted
+                ? 'Con chưa hoàn thành hoặc chưa nộp bài tập nào.'
+                : 'Hiện tại con không có bài tập nào cần làm.',
+          ),
         ),
       );
     }
@@ -148,124 +146,40 @@ class _ParentHomeworkScreenState extends State<ParentHomeworkScreen>
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       itemCount: filteredList.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final task = filteredList[index] as Map<String, dynamic>;
-        final title = task['title'] ?? 'Bài tập';
-        final subject = task['subjectName'] ?? 'Toán';
-        final desc = task['description'] ?? '';
-        final teacher = task['teacherName'] ?? '';
-        final dueDate = (task['dueDate'] ?? '').toString().split('T').first;
-        final status = (task['submissionStatus'] ?? 'NOT_STARTED').toString();
-        final finalScore = task['finalScore'];
-        final autoScore = task['autoScore'];
         final feedback = task['teacherFeedback'] as String?;
-
-        Color statusColor = Colors.orange;
-        String statusLabel = 'Chưa làm';
-        if (status == 'IN_PROGRESS') {
-          statusColor = Colors.blue;
-          statusLabel = 'Đang làm dở';
-        } else if (status == 'SUBMITTED') {
-          statusColor = Colors.purple;
-          statusLabel = 'Đã nộp (Chờ chấm)';
-        } else if (status == 'GRADED') {
-          statusColor = Colors.green;
-          statusLabel = 'Đạt: ${finalScore ?? autoScore} đ';
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
-            ],
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      subject,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            HomeworkCard(
+              data: task,
+              mode: HomeworkCardMode.parentView,
+            ),
+            if (feedback != null && feedback.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.comment_outlined, size: 16, color: Colors.orange),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Lời phê của thầy/cô: $feedback',
+                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-              ),
-              if (desc.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  desc,
-                  style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 13, height: 1.4),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text('GV: $teacher', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                  const Spacer(),
-                  Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text('Hạn nộp: $dueDate', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                ],
               ),
-              if (feedback != null && feedback.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.comment_outlined, size: 16, color: Colors.orange),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Lời phê của thầy/cô: $feedback',
-                          style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
+          ],
         );
       },
     );

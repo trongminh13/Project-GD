@@ -1,3 +1,4 @@
+import 'dart:ui';
 import "package:ashadeep/features/student/screens/student_dashboard_screen.dart";
 import "package:ashadeep/features/auth/screens/force_change_password_screen.dart";
 import 'package:flutter/material.dart';
@@ -191,18 +192,58 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+        body: Stack(
+          children: [
+            // 1. Ảnh nền học đường với hiệu ứng Mờ nhẹ Soft Focus (2px) trong trẻo, sắc nét
+            Positioned.fill(
+              child: ClipRect(
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                  child: Transform.scale(
+                    scale: 1.02, // Giảm scale tối thiểu, tránh viền mờ màu trắng ở 4 góc cạnh
+                    child: Image.asset(
+                      'images/school_bg.jpg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: const Color(0xFFF0F4F9),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // 2. Lớp phủ làm dịu mỏng nhẹ 8% trắng giúp ảnh trong trẻo rực rỡ và thẻ trắng nổi khối 3D
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            // Form đăng nhập trên nền Kính Mờ (Glassmorphism) trong suốt sang trọng
+            SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // Màu trắng 100% rõ nét, không trong suốt
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            blurRadius: 30,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                     // Header căn lề trái theo phong cách hiện đại và mẫu HTML demo
                     Align(
                       alignment: Alignment.centerLeft,
@@ -428,7 +469,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0F4FF),
+                          color: Colors.white, // Khung màu trắng 100% rõ ràng
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: _kPrimaryBlue.withValues(alpha: 0.25)),
                         ),
@@ -454,7 +495,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               spacing: 6,
                               runSpacing: 6,
                               children: [
-                                _buildDemoChip('Học sinh', 'student01', 'student123', UserRole.student),
+                                _buildDemoChip('HS Cấp 1', 'student01', 'student123', UserRole.student),
+                                _buildDemoChip('HS Cấp 2', 'student02', 'student123', UserRole.student),
+                                _buildDemoChip('HS Cấp 3', 'student03', 'student123', UserRole.student),
                                 _buildDemoChip('Giáo viên', 'T001', 'teacher123', UserRole.teacher),
                                 _buildDemoChip('Admin', 'admin', 'admin123', UserRole.admin),
                                 _buildDemoChip('Phụ huynh', '9910157611', '123456', UserRole.parent),
@@ -522,6 +565,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    ),
+  ],
+),
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:ashadeep/core/theme/theme_manager.dart';
 
 /// Bộ bảng màu chuẩn cho toàn bộ hệ thống (trích xuất từ bản mẫu Demo HTML)
 class AppColors {
@@ -8,12 +10,17 @@ class AppColors {
   static const Color primary = Color(0xFF2457C5);
   static const Color primaryBlue = primary;
 
-  /// Màu chữ chính (Main Text) #202124
+  /// Màu chữ chính mặc định (Main Text) #202124
   static const Color textMain = Color(0xFF202124);
 
-  /// Màu chữ phụ (Sub / Muted Text) #5F6368
+  /// Màu chữ phụ mặc định (Sub / Muted Text) #5F6368
   static const Color textSub = Color(0xFF5F6368);
   static const Color textMuted = textSub;
+
+  /// Các biến thể màu chữ cá nhân hóa
+  static const Color textGreen = Color(0xFF1B5E20);
+  static const Color textEmerald = Color(0xFF004D40);
+  static const Color textPink = Color(0xFFAD1457);
 
   /// Màu viền phân cách phẳng (Border) #DADCE0
   static const Color border = Color(0xFFDADCE0);
@@ -44,7 +51,26 @@ class AppColors {
   /// Màu tím / Điểm nhấn bổ trợ #5C2D91
   static const Color purple = Color(0xFF5C2D91);
 
-  // Helper tương thích ngược với AppColors cũ nếu cần
+  // Helper thích ứng theo tùy chọn ThemeManager
+  static Color textMainOf(BuildContext context) {
+    try {
+      final tm = Provider.of<ThemeManager>(context, listen: true);
+      return tm.textMain;
+    } catch (_) {
+      return textMain;
+    }
+  }
+
+  static Color textSubOf(BuildContext context) {
+    try {
+      final tm = Provider.of<ThemeManager>(context, listen: true);
+      return tm.textSub;
+    } catch (_) {
+      return textSub;
+    }
+  }
+
+  // Helper tương thích ngược với AppColors cũ
   static Color primaryOf(BuildContext context) => primary;
   static Color surfaceAltOf(BuildContext context) => surfaceAlt;
 }

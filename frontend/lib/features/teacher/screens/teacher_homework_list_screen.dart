@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
+import 'package:ashadeep/core/services/school_class_service.dart';
+import 'package:ashadeep/core/widgets/homework_card.dart';
+import 'package:ashadeep/core/widgets/app_empty_card.dart';
+import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/features/teacher/screens/teacher_create_homework_screen.dart';
 import 'package:ashadeep/features/teacher/screens/teacher_grade_submission_screen.dart';
 
@@ -35,6 +39,16 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
+      if (mounted) {
+        setState(() {
+          _homeworkList = [];
+          _assignmentsList = [];
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     final hw = await _service.getTeacherHomework();
     final asg = await _service.getTeacherAssignments();
     if (!mounted) return;
@@ -46,7 +60,17 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
   }
 
   void _showAssignDialog(Map<String, dynamic> hw) {
-    int selectedClassId = 45; // Mặc định Lớp 3A
+    final allClasses = ClassService().getAllClasses();
+    // Fallback: nếu ClassService chưa cache, dùng mock danh sách đại diện
+    final hasCachedClasses = allClasses.isNotEmpty;
+    final mockClasses = [
+      {'id': 45, 'display': 'Lớp 3A'},
+      {'id': 46, 'display': 'Lớp 1B'},
+      {'id': 47, 'display': 'Lớp 5C'},
+    ];
+    int? selectedClassId = hasCachedClasses
+        ? int.tryParse(allClasses.first.id)
+        : (mockClasses.first['id'] as int);
     DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
 
     showDialog(
@@ -57,13 +81,22 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<int>(
+                DropdownButtonFormField<int>(
                 initialValue: selectedClassId,
                 decoration: const InputDecoration(labelText: 'Lớp nhận bài', border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 45, child: Text('Lớp 3A')),
-                  DropdownMenuItem(value: 46, child: Text('Lớp 1B')),
-                ],
+                items: hasCachedClasses
+                    ? allClasses
+                        .map((c) => DropdownMenuItem<int>(
+                              value: int.tryParse(c.id),
+                              child: Text('Lớp ${c.grade} ${c.section}'.trim()),
+                            ))
+                        .toList()
+                    : mockClasses
+                        .map((m) => DropdownMenuItem<int>(
+                              value: m['id'] as int,
+                              child: Text(m['display'] as String),
+                            ))
+                        .toList(),
                 onChanged: (v) {
                   if (v != null) setDialogState(() => selectedClassId = v);
                 },
@@ -99,7 +132,7 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
                 Navigator.pop(ctx);
                 final res = await _service.assignHomework(
                   homeworkId: hw['id'] as int,
-                  classId: selectedClassId,
+                  classId: selectedClassId ?? 45,
                   dueDate: selectedDate.toIso8601String(),
                 );
                 if (mounted) {
@@ -250,14 +283,14 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
 
   Widget _buildHomeworkTab() {
     if (_homeworkList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.menu_book, size: 60, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            const Text('Chưa có bài tập nào được soạn.', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          ],
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: AppEmptyCard(
+            icon: Icons.menu_book,
+            title: 'Chưa có bài tập nào được soạn',
+            message: 'Nhấn "Soạn bài mới" để tạo bài tập đầu tiên cho lớp của bạn.',
+          ),
         ),
       );
     }
@@ -268,55 +301,10 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final hw = _homeworkList[index] as Map<String, dynamic>;
-        final title = hw['title'] ?? 'Bài tập';
-        final subject = hw['subject']?['name'] ?? '';
-        final totalPoints = hw['totalPoints'] ?? 10.0;
-        final questions = hw['questions'] as List<dynamic>? ?? [];
-
-        return Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        subject,
-                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ),
-                    Text('$totalPoints điểm', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text('${questions.length} câu hỏi', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.send_rounded, size: 16),
-                    label: const Text('Giao bài cho Lớp'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onPressed: () => _showAssignDialog(hw),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return HomeworkCard(
+          data: hw,
+          mode: HomeworkCardMode.teacherGrade,
+          onPrimaryAction: () => _showAssignDialog(hw),
         );
       },
     );
@@ -324,14 +312,14 @@ class _TeacherHomeworkListScreenState extends State<TeacherHomeworkListScreen>
 
   Widget _buildAssignmentsTab() {
     if (_assignmentsList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment_outlined, size: 60, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            const Text('Chưa có bài tập nào được giao cho lớp.', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          ],
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: AppEmptyCard(
+            icon: Icons.assignment_outlined,
+            title: 'Chưa có bài tập nào được giao cho lớp',
+            message: 'Chọn một bài tập trong tab "Kho Bài Tập" và nhấn "Giao bài cho Lớp".',
+          ),
         ),
       );
     }

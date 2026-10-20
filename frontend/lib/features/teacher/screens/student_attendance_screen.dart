@@ -6,7 +6,14 @@ import 'package:ashadeep/core/services/student_service.dart';
 import 'package:ashadeep/core/services/attendance_service.dart';
 
 class StudentAttendanceScreen extends StatefulWidget {
-  const StudentAttendanceScreen({super.key});
+  final String classId;
+  final String className;
+
+  const StudentAttendanceScreen({
+    super.key,
+    this.classId = '10',
+    this.className = 'Lớp 10A',
+  });
 
   @override
   State<StudentAttendanceScreen> createState() =>
@@ -27,8 +34,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Future<void> _loadStudents() async {
-    // Mock: Teacher is Class Teacher of 10
-    final fetchedStudents = await StudentService().getStudentsByClass('10');
+    final fetchedStudents = await StudentService().getStudentsByClass(widget.classId);
     if (mounted) {
       setState(() {
         _students = fetchedStudents; // Use fetchedStudents
@@ -49,9 +55,9 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Class 10-A Attendance',
-              style: TextStyle(fontSize: 18),
+            Text(
+              '${widget.className} — Điểm danh',
+              style: const TextStyle(fontSize: 18),
             ),
             Text(
               today,
@@ -162,7 +168,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                   // Save attendance and send SMS notifications via backend
                   bool success = await AttendanceService()
                       .submitClassAttendance(
-                        '10',
+                        widget.classId,
                         DateTime.now().toIso8601String(),
                         _attendance,
                       );

@@ -5,12 +5,9 @@ import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/core/widgets/fade_in_list_item.dart';
 import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/screens/profile_screen.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_client.dart';
 import 'package:ashadeep/features/parent/screens/parent_ward_details_screen.dart';
-import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -78,25 +75,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
     }
 
     try {
-      final token = await AuthService().getToken();
-      if (token == null) {
-        debugPrint('[WARD DEBUG] Token is null!');
-        return;
-      }
-
-      final url = Uri.parse('${ApiConstants.baseUrl}/students/my-wards');
-      debugPrint('[WARD DEBUG] Calling: $url');
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(ApiTimeoutPolicy.fastRead.duration);
-
-      debugPrint('[WARD DEBUG] Status: ${response.statusCode}');
-      debugPrint('[WARD DEBUG] Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        debugPrint('[WARD DEBUG] Parsed ${data.length} wards');
+      final data = await ApiClient().get('/students/my-wards');
+      debugPrint('[WARD DEBUG] Parsed response: $data');
+      if (data is List) {
         if (mounted) {
           setState(() {
             _wards = data;
@@ -104,7 +85,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen>
           });
         }
       } else {
-        debugPrint('[WARD DEBUG] Non-200 status: ${response.statusCode}');
         if (mounted) setState(() => _isLoadingWards = false);
       }
     } catch (e) {

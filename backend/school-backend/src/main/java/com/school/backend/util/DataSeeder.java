@@ -69,6 +69,9 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     com.school.backend.repository.QuestionOptionRepository questionOptionRepository;
 
+    @Autowired
+    com.school.backend.repository.NotificationRepository notificationRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Excel import on startup is disabled. Use the Admin Dashboard > Bulk Import feature instead.
@@ -246,6 +249,7 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("Developer test parent already exists: Phone " + developerPhone);
         }
 
+
         // 4. Seed textbook SGK Toán 1 - Tập 1 (118 pages) if not already exists
         if (materialRepository.findAll().stream().noneMatch(m -> "Sách giáo khoa Toán 1 - Tập 1".equals(m.getTitle()))) {
             com.school.backend.entity.Subject mathSubject = subjectRepository.findByName("Toán").orElseGet(() -> {
@@ -408,6 +412,55 @@ public class DataSeeder implements CommandLineRunner {
                 }
                 System.out.println("Seeded homework: Bài tập tuần 5 - Phép nhân");
             }
+        }
+
+        // Seed Notifications mẫu nếu chưa có
+        if (notificationRepository.count() == 0) {
+            com.school.backend.entity.User adminUser = userRepository.findByUsername("admin").orElse(null);
+
+            com.school.backend.entity.Notification n1 = com.school.backend.entity.Notification.builder()
+                    .title("Họp phụ huynh đầu năm học 2026-2027")
+                    .body("Kính mời quý phụ huynh học sinh tham dự buổi họp phụ huynh đầu năm tại phòng học lớp 3A vào lúc 08:00 sáng Chủ nhật ngày 25/10/2026.")
+                    .audienceType(com.school.backend.enums.AudienceType.ALL)
+                    .notificationType(com.school.backend.enums.NotificationType.ANNOUNCEMENT)
+                    .sender(adminUser)
+                    .senderName("Ban Giám Hiệu")
+                    .build();
+            notificationRepository.save(n1);
+
+            com.school.backend.entity.Notification n2 = com.school.backend.entity.Notification.builder()
+                    .title("Đổi giờ ra về chiều nay do ngoại khóa")
+                    .body("Chiều nay khối 3 tham gia hoạt động kỹ năng sống tại sân trường. Giờ tan học sẽ điều chỉnh về 16:45. Kính mong phụ huynh lưu ý đón con đúng giờ.")
+                    .audienceType(com.school.backend.enums.AudienceType.GRADE)
+                    .targetId("3")
+                    .notificationType(com.school.backend.enums.NotificationType.ANNOUNCEMENT)
+                    .sender(adminUser)
+                    .senderName("Cô Lê Thu Hà (GVCN)")
+                    .build();
+            notificationRepository.save(n2);
+
+            com.school.backend.entity.Notification n3 = com.school.backend.entity.Notification.builder()
+                    .title("Lịch khám sức khỏe định kỳ học sinh")
+                    .body("Trạm y tế học đường sẽ tổ chức khám sức khỏe tổng quát (mắt, răng hàm mặt, chiều cao, cân nặng) cho học sinh lớp 3A vào thứ Tư tuần sau.")
+                    .audienceType(com.school.backend.enums.AudienceType.CLASS)
+                    .targetId("3A")
+                    .notificationType(com.school.backend.enums.NotificationType.ANNOUNCEMENT)
+                    .sender(adminUser)
+                    .senderName("Y tế Học đường")
+                    .build();
+            notificationRepository.save(n3);
+
+            com.school.backend.entity.Notification n4 = com.school.backend.entity.Notification.builder()
+                    .title("Phát động phong trào thi đua chào mừng 20/11")
+                    .body("Đoàn Đội trường Tiểu học & THCS Đại Việt phát động phong trào Hoa điểm 10 và Hội thi văn nghệ chào mừng Ngày Nhà giáo Việt Nam 20/11.")
+                    .audienceType(com.school.backend.enums.AudienceType.ALL)
+                    .notificationType(com.school.backend.enums.NotificationType.ANNOUNCEMENT)
+                    .sender(adminUser)
+                    .senderName("Đoàn Đội Trường")
+                    .build();
+            notificationRepository.save(n4);
+
+            System.out.println("Seeded 4 sample notifications (ALL, GRADE, CLASS).");
         }
     }
 }

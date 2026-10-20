@@ -1,5 +1,6 @@
 package com.school.backend.service;
 
+import com.school.backend.enums.EducationLevel;
 import com.school.backend.entity.Attendance;
 import com.school.backend.entity.Enrollment;
 import com.school.backend.entity.Marks;
@@ -52,16 +53,21 @@ public class StudentPortalService {
                 .map(Enrollment::getSchoolClass)
                 .orElse(student.getSchoolClass());
 
+        String gradeStr = activeClass != null ? activeClass.getGrade() : null;
+        EducationLevel level = EducationLevel.fromGrade(gradeStr);
+
         return StudentProfileDto.builder()
                 .id(student.getId())
                 .admissionNumber(student.getAdmissionNumber())
                 .name(student.getName())
                 .rollNo(student.getRollNo())
-                .grade(activeClass != null ? activeClass.getGrade() : null)
+                .grade(gradeStr)
                 .section(activeClass != null ? activeClass.getSection() : null)
                 .dob(student.getDob())
                 .gender(student.getGender())
                 .photoUrl(student.getPhotoUrl())
+                .educationLevel(level)
+                .educationLevelName(level.getDisplayName())
                 .build();
     }
 
@@ -88,6 +94,11 @@ public class StudentPortalService {
 
     public List<StudentMarkDto> getMarksByUserId(Long userId) {
         Student student = getStudentByUserId(userId);
+        SchoolClass activeClass = enrollmentRepository.findByStudentIdAndAcademicYearIsCurrentTrue(student.getId())
+                .map(Enrollment::getSchoolClass)
+                .orElse(student.getSchoolClass());
+        EducationLevel level = EducationLevel.fromGrade(activeClass != null ? activeClass.getGrade() : null);
+
         List<Marks> marksList = marksRepository.findByStudentId(student.getId());
 
         return marksList.stream()
@@ -96,21 +107,31 @@ public class StudentPortalService {
                         .subjectName(m.getSubject() != null ? m.getSubject().getName() : "N/A")
                         .score(m.getScore())
                         .maxScore(m.getMaxScore())
-                        .grade(calculateGrade(m.getScore(), m.getMaxScore()))
+                        .grade(calculateGrade(m.getScore(), m.getMaxScore(), level))
                         .build())
                 .collect(Collectors.toList());
     }
 
-    private String calculateGrade(java.math.BigDecimal score, java.math.BigDecimal maxScore) {
+    public String calculateGrade(java.math.BigDecimal score, java.math.BigDecimal maxScore) {
+        return calculateGrade(score, maxScore, EducationLevel.PRIMARY);
+    }
+
+    public String calculateGrade(java.math.BigDecimal score, java.math.BigDecimal maxScore, EducationLevel level) {
         if (score == null || maxScore == null || maxScore.compareTo(java.math.BigDecimal.ZERO) <= 0) {
             return "N/A";
         }
         java.math.BigDecimal percentage = score.multiply(java.math.BigDecimal.valueOf(100)).divide(maxScore, 2, RoundingMode.HALF_UP);
-        if (percentage.compareTo(java.math.BigDecimal.valueOf(90)) >= 0) return "A+";
-        if (percentage.compareTo(java.math.BigDecimal.valueOf(80)) >= 0) return "A";
-        if (percentage.compareTo(java.math.BigDecimal.valueOf(70)) >= 0) return "B";
-        if (percentage.compareTo(java.math.BigDecimal.valueOf(60)) >= 0) return "C";
-        if (percentage.compareTo(java.math.BigDecimal.valueOf(50)) >= 0) return "D";
-        return "F";
+        if (level == EducationLevel.PRIMARY) {
+            // Thông tư 27/2020/TT-BGDĐT: Đánh giá định lượng kết hợp nhận xét mức độ hoàn thành
+            if (percentage.compareTo(java.math.BigDecimal.valueOf(80)) >= 0) return "Hoàn thành tốt (HTT)";
+            if (percentage.compareTo(java.math.BigDecimal.valueOf(50)) >= 0) return "Hoàn thành (HT)";
+            return "Chưa hoàn thành (CHT)";
+        } else {
+            // Thông tư 22/2021/TT-BGDĐT: Đánh giá học sinh THCS và THPT
+            if (percentage.compareTo(java.math.BigDecimal.valueOf(80)) >= 0) return "Tốt";
+            if (percentage.compareTo(java.math.BigDecimal.valueOf(65)) >= 0) return "Khá";
+            if (percentage.compareTo(java.math.BigDecimal.valueOf(50)) >= 0) return "Đạt";
+            return "Chưa đạt";
+        }
     }
 }

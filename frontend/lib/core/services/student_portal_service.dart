@@ -68,4 +68,55 @@ class StudentPortalService {
     } catch (_) {}
     return [];
   }
+
+  /// Lấy danh sách thông báo của học sinh từ backend
+  Future<List<Map<String, dynamic>>> getMyNotices({String? audience}) async {
+    final queryParams = <String, dynamic>{};
+    if (audience != null && audience.isNotEmpty && audience != 'Tất cả') {
+      queryParams['audience'] = audience;
+    }
+
+    try {
+      final res = await _apiClient.get(
+        '/notifications/my-notifications',
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
+      if (res is List) {
+        return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /// Đánh dấu một thông báo đã đọc
+  Future<bool> markNoticeAsRead(dynamic notificationId) async {
+    try {
+      final res = await _apiClient.put('/notifications/$notificationId/read');
+      if (res is Map && res['success'] == true) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  /// Đăng ký Device Push Token (FCM) lên máy chủ
+  Future<bool> registerDeviceToken(String token, String platform, {String? deviceName}) async {
+    try {
+      final body = <String, dynamic>{
+        'deviceToken': token,
+        'platform': platform,
+      };
+      if (deviceName != null) {
+        body['deviceName'] = deviceName;
+      }
+      final res = await _apiClient.post(
+        '/notifications/device-token',
+        body: body,
+      );
+      if (res is Map && res['success'] == true) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 }

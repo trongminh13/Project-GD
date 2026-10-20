@@ -60,7 +60,7 @@ public class AuthController {
     private static final java.util.concurrent.ConcurrentHashMap<String, Long> OTP_LAST_SENT = new java.util.concurrent.ConcurrentHashMap<>();
     private static final java.util.concurrent.ConcurrentHashMap<String, Integer> OTP_HOURLY_COUNT = new java.util.concurrent.ConcurrentHashMap<>();
 
-    @PostMapping("/signin")
+    @PostMapping({"/signin", "/login"})
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         String username = loginRequest.getUsername();
         Optional<User> userOpt = userRepository.findByUsername(username)

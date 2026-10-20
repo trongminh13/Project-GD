@@ -1,4 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:ashadeep/core/theme/theme_manager.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/core/services/student_portal_service.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
@@ -18,6 +22,7 @@ import 'package:ashadeep/core/widgets/app_card_error_with_retry.dart';
 import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
 import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:ashadeep/screens/login_screen.dart';
+import 'package:ashadeep/core/enums/education_level.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -49,9 +54,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   // Bộ lọc môn học trong tab Học liệu
   String _selectedSubjectFilter = 'Tất cả';
 
+  // Bộ lọc kỳ thi trong tab Bảng điểm
+  String _selectedExamFilter = 'Tất cả';
+
+  // Thông báo
+  String _selectedNoticeAudience = 'Tất cả';
+  List<Map<String, dynamic>> _notices = [];
+
   @override
   void initState() {
     super.initState();
+    _notices = _getMockNotices();
     _loadAllData();
   }
 
@@ -73,6 +86,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           _marks = _getMockMarks();
           _homework = _getMockHomework();
           _materials = _getMockMaterials();
+          _notices = _getMockNotices();
           _isLoading = false;
         });
       }
@@ -86,6 +100,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       _loadMarks(),
       _loadHomework(),
       _loadMaterials(),
+      _loadNotices(),
     ]);
 
     if (mounted) {
@@ -197,6 +212,27 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
+  Future<void> _loadNotices() async {
+    try {
+      final list = await _portalService.getMyNotices();
+      if (mounted) {
+        setState(() {
+          if (list.isNotEmpty) {
+            _notices = list;
+          } else if (FeatureFlags.useDemoFallback) {
+            _notices = _getMockNotices();
+          } else {
+            _notices = [];
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted && FeatureFlags.useDemoFallback) {
+        setState(() => _notices = _getMockNotices());
+      }
+    }
+  }
+
   Map<String, dynamic> _getMockProfile() {
     return {
       'id': 1,
@@ -267,7 +303,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   List<dynamic> _getMockHomework() {
     return [
       {
-        'assignmentId': 1,
+        'assignmentId': 28,
         'title': 'Bài tập tuần 5 - Phép nhân',
         'subjectName': 'Toán học',
         'dueDate': '18/10/2026',
@@ -353,6 +389,51 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         'fileSize': '1.2 MB',
         'filePath': 'file:///storage/emulated/0/Download/Phieu_On_Tap_Toan_T5.pdf',
         'createdAt': '2026-10-09',
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _getMockNotices() {
+    return [
+      {
+        'id': 1,
+        'title': 'Họp phụ huynh đầu học kỳ 1 năm học 2026–2027',
+        'date': '09/10/2026',
+        'time': '17:00',
+        'audience': 'Toàn trường',
+        'sender': 'Ban Giám Hiệu',
+        'isRead': false,
+        'body': 'Nhà trường kính mời quý phụ huynh đến tham dự buổi họp phụ huynh đầu năm vào lúc 17:00 ngày 16/10/2026 tại Hội trường tầng 3. Nội dung: Phổ biến kế hoạch học tập, phương pháp rèn luyện và bầu Ban đại diện cha mẹ học sinh.',
+      },
+      {
+        'id': 2,
+        'title': 'Đổi giờ ra về chiều thứ Sáu ngày 16/10',
+        'date': '08/10/2026',
+        'time': '15:30',
+        'audience': 'Lớp 3A',
+        'sender': 'Cô Lê Thu Hà (GVCN)',
+        'isRead': false,
+        'body': 'Kính báo quý phụ huynh lớp 3A: Chiều thứ Sáu ngày 16/10 nhà trường tổ chức tập huấn chuyên môn giáo viên, học sinh lớp 3A sẽ tan học sớm 30 phút (lúc 16h00). Kính mong quý phụ huynh đón con đúng giờ.',
+      },
+      {
+        'id': 3,
+        'title': 'Kế hoạch kiểm tra sức khỏe và nha học đường định kỳ',
+        'date': '05/10/2026',
+        'time': '08:00',
+        'audience': 'Khối 3',
+        'sender': 'Phòng Y Tế Học Đường',
+        'isRead': true,
+        'body': 'Học sinh toàn khối 3 sẽ được khám sức khỏe định kỳ (chiều cao, cân nặng, thị lực, răng miệng) từ ngày 19/10 đến 23/10. Phụ huynh vui lòng nhắc con ăn sáng đầy đủ trước khi đến trường.',
+      },
+      {
+        'id': 4,
+        'title': 'Phát động phong trào thi đua chào mừng Ngày Nhà giáo 20/11',
+        'date': '01/10/2026',
+        'time': '07:30',
+        'audience': 'Toàn trường',
+        'sender': 'Tổng Phụ Trách Đội',
+        'isRead': true,
+        'body': 'Liên đội trường Tiểu học Đại Việt phát động chuỗi hoạt động ý nghĩa: Hội thi làm báo tường, tuần học tốt hoa điểm 10 và giải bóng đá mini cấp trường.',
       },
     ];
   }
@@ -476,15 +557,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ThemeManager? themeManager;
+    try {
+      themeManager = Provider.of<ThemeManager>(context);
+    } catch (_) {
+      themeManager = null;
+    }
+    final textMainColor = themeManager?.textMain ?? AppColors.textMain;
+    final bgImagePath = themeManager?.bgImagePath ?? 'images/school_bg.jpg';
+
     final scaffold = Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(
           _getAppBarTitle(),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textMainColor),
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1.0),
@@ -492,9 +582,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textMain),
+            icon: Icon(Icons.refresh, color: textMainColor),
             onPressed: _loadAllData,
             tooltip: 'Tải lại dữ liệu',
+          ),
+          IconButton(
+            icon: Icon(Icons.more_horiz, color: textMainColor),
+            onPressed: _showMoreBottomSheet,
+            tooltip: 'Thêm',
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.error),
@@ -529,66 +624,114 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           unselectedFontSize: 12,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
           elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home),
               label: 'Trang chủ',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.calendar_today_outlined),
               activeIcon: Icon(Icons.calendar_today),
               label: 'Lịch học',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.menu_book_outlined),
               activeIcon: Icon(Icons.menu_book),
               label: 'Sách học',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.assignment_outlined),
               activeIcon: Icon(Icons.assignment),
               label: 'Bài tập',
             ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.analytics_outlined),
+              activeIcon: Icon(Icons.analytics),
+              label: 'Bảng điểm',
+            ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              activeIcon: Icon(Icons.more_horiz),
-              label: 'Thêm',
+              icon: _unreadNoticesCount > 0
+                  ? Badge.count(
+                      count: _unreadNoticesCount,
+                      backgroundColor: AppColors.error,
+                      child: const Icon(Icons.notifications_outlined),
+                    )
+                  : const Icon(Icons.notifications_outlined),
+              activeIcon: _unreadNoticesCount > 0
+                  ? Badge.count(
+                      count: _unreadNoticesCount,
+                      backgroundColor: AppColors.error,
+                      child: const Icon(Icons.notifications),
+                    )
+                  : const Icon(Icons.notifications),
+              label: 'Thông báo',
             ),
           ],
         ),
       ),
     );
 
-    return Container(
-      color: const Color(0xFFF5F6F7),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.symmetric(
-                vertical: BorderSide(
-                  color: AppColors.border.withValues(alpha: 0.8),
-                  width: 1.0,
+    // Giao diện App Mobile chứa hình nền học đường động với hiệu ứng Bokeh Blur
+    final Widget mobileApp = ClipRRect(
+      borderRadius: BorderRadius.circular(kIsWeb ? 20 : 0),
+      child: Stack(
+        children: [
+          // 1. Hình nền học đường được chọn bởi người dùng với hiệu ứng Mờ nhẹ Soft Focus (2px) trong trẻo, sắc nét
+          Positioned.fill(
+            child: ClipRect(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                child: Transform.scale(
+                  scale: 1.02, // Giảm scale tối thiểu, tránh viền mờ màu trắng ở 4 góc cạnh
+                  child: Image.asset(
+                    bgImagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(color: Colors.white),
+                  ),
                 ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
-            child: ClipRect(
-              child: scaffold,
+          ),
+          // 2. Lớp phủ làm dịu mỏng nhẹ 8% trắng giúp ảnh trong trẻo rực rỡ và thẻ trắng nổi khối 3D
+          Positioned.fill(
+            child: Container(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          // 3. Toàn bộ nội dung giao diện Scaffold của học sinh
+          scaffold,
+        ],
+      ),
+    );
+
+    // Khi chạy trên Web / Desktop: Bọc khung mobile 480px đặt trên nền Studio tối làm nổi bật màn hình app
+    if (kIsWeb) {
+      return Container(
+        color: const Color(0xFF0F172A), // Nền xám đen studio sang trọng bên ngoài
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 36,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: mobileApp,
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
+
+    return mobileApp;
   }
 
   String _getAppBarTitle() {
@@ -602,7 +745,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       case 3:
         return 'Bài tập';
       case 4:
-        return 'Thêm';
+        return 'Bảng điểm & Kết quả';
+      case 5:
+        return 'Thông báo';
       default:
         return 'Cổng học sinh';
     }
@@ -619,7 +764,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       case 3:
         return _buildHwTab();
       case 4:
-        return _buildMoreTab();
+        return _buildMarksTab();
+      case 5:
+        return _buildNoticeTab();
       default:
         return _buildHomeTab();
     }
@@ -633,6 +780,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       section: _profile?['section']?.toString(),
       fallback: _profile?['className']?.toString(),
     );
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final levelShortTitle = EducationLevelHelper.getShortTitle(educationLevel);
     final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
     final now = DateTime.now();
     final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 4: Thứ 6
@@ -652,8 +801,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
+                color: Colors.white,
                 border: Border.all(color: AppColors.warning),
-                color: AppColors.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: const Row(
                 children: [
@@ -673,15 +823,46 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
               color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  studentName,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        studentName,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        levelShortTitle,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -698,7 +879,29 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Section 1: Bài tập cần làm
+          // Section 1: Sách đọc mới
+          AppSectionHeader(
+            title: 'Sách đọc mới',
+            linkLabel: 'Xem tất cả',
+            onLink: () => setState(() => _currentIndex = 2),
+          ),
+          const SizedBox(height: 8),
+          if (_hasMaterialsError)
+            AppCardErrorWithRetry(
+              title: 'Không thể tải sách đọc mới',
+              onRetry: _loadMaterials,
+            )
+          else if (_materials.isEmpty)
+            const AppEmptyCard(
+              title: 'Chưa có sách đọc mới',
+              message: 'Thầy cô chưa chia sẻ sách đọc mới cho lớp.',
+              icon: Icons.menu_book_outlined,
+            )
+          else
+            ..._materials.take(2).map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
+          const SizedBox(height: 20),
+
+          // Section 2: Bài tập cần làm
           AppSectionHeader(
             title: 'Bài tập cần làm',
             linkLabel: 'Xem tất cả',
@@ -727,7 +930,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 ),
           const SizedBox(height: 20),
 
-          // Section 2: Lịch học hôm nay
+          // Section 3: Lịch học hôm nay
           AppSectionHeader(
             title: 'Lịch học hôm nay',
             linkLabel: 'Xem tuần',
@@ -742,7 +945,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             )
           else
             Container(
-              decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: AppColors.border),
+              ),
               child: Column(
                 children: todayLessons.asMap().entries.map((entry) {
                   final i = entry.key;
@@ -766,28 +972,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 }).toList(),
               ),
             ),
-          const SizedBox(height: 20),
-
-          // Section 3: Sách đọc mới
-          AppSectionHeader(
-            title: 'Sách đọc mới',
-            linkLabel: 'Xem tất cả',
-            onLink: () => setState(() => _currentIndex = 2),
-          ),
-          const SizedBox(height: 8),
-          if (_hasMaterialsError)
-            AppCardErrorWithRetry(
-              title: 'Không thể tải sách đọc mới',
-              onRetry: _loadMaterials,
-            )
-          else if (_materials.isEmpty)
-            const AppEmptyCard(
-              title: 'Chưa có sách đọc mới',
-              message: 'Thầy cô chưa chia sẻ sách đọc mới cho lớp.',
-              icon: Icons.menu_book_outlined,
-            )
-          else
-            ..._materials.take(2).map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
         ],
       ),
     );
@@ -831,6 +1015,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         // Tabs Thứ 2 – Thứ 6
         Container(
           decoration: const BoxDecoration(
+            color: Colors.white,
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
           child: Row(
@@ -843,10 +1028,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     height: 48,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
+                      color: Colors.white,
                       border: Border(
                         bottom: BorderSide(
-                          color: isSelected ? AppColors.primary : Colors.transparent,
-                          width: 3.0,
+                          color: isSelected ? AppColors.primary : AppColors.border,
+                          width: isSelected ? 3.0 : 1.0,
                         ),
                       ),
                     ),
@@ -878,7 +1064,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 )
               else
                 Container(
-                  decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: AppColors.border),
+                  ),
                   child: Column(
                     children: lessons.asMap().entries.map((entry) {
                       final i = entry.key;
@@ -911,7 +1100,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   // ===================== TAB 2: SÁCH HỌC =====================
   Widget _buildMatTab() {
-    final subjects = ['Tất cả', 'Toán', 'Tiếng Việt', 'Tiếng Anh'];
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final subjects = EducationLevelHelper.getDefaultSubjects(educationLevel);
+    final levelTitle = EducationLevelHelper.getTitle(educationLevel);
     final filtered = _selectedSubjectFilter == 'Tất cả'
         ? _materials
         : _materials.where((m) => (m['subjectName'] ?? '').toString() == _selectedSubjectFilter).toList();
@@ -924,10 +1115,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
-            color: AppColors.surfaceAlt,
+            color: Colors.white,
           ),
           child: Text(
-            'Sách giáo khoa và tài liệu học tập được chia sẻ cho lớp ${_profile?['className'] ?? '3A'}.',
+            'Sách giáo khoa và tài liệu học tập $levelTitle được chia sẻ cho lớp ${_profile?['className'] ?? '3A'}.',
             style: const TextStyle(fontSize: 13, color: AppColors.textSub),
           ),
         ),
@@ -991,7 +1182,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
-            color: AppColors.surfaceAlt,
+            color: Colors.white,
           ),
           child: const Text(
             'Làm bài ngay trong ứng dụng. Bài làm được lưu nháp tự động, hạn nộp tính theo giờ máy chủ.',
@@ -1049,47 +1240,589 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // ===================== TAB 4: THÊM =====================
-  Widget _buildMoreTab() {
-    final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
-    final studentId = _profile?['admissionNumber'] ?? _profile?['rollNo'] ?? _profile?['studentId'] ?? 'HS001';
-    final className = FormatUtils.formatClassName(
-      grade: _profile?['grade']?.toString(),
-      section: _profile?['section']?.toString(),
-      fallback: _profile?['className']?.toString(),
+  // ===================== TAB 4: BẢNG ĐIỂM & KẾT QUẢ HỌC TẬP =====================
+  Widget _buildMarksTab() {
+    // 1. Tính toán số liệu thống kê học lực
+    double totalScore = 0.0;
+    int validCount = 0;
+    int perfectCount = 0;
+    for (final m in _marks) {
+      final sc = m['score'];
+      if (sc != null) {
+        final val = (sc is num) ? sc.toDouble() : double.tryParse(sc.toString());
+        if (val != null) {
+          totalScore += val;
+          validCount++;
+          if (val >= 10.0) {
+            perfectCount++;
+          }
+        }
+      }
+    }
+    final double avgScore = validCount > 0 ? (totalScore / validCount) : 0.0;
+
+    // Xếp loại học lực theo màu xanh dương thương hiệu
+    String academicRank = 'Chưa xếp loại';
+    Color rankColor = AppColors.textSub;
+    Color rankBg = AppColors.surfaceAlt;
+    if (validCount > 0) {
+      if (avgScore >= 9.0) {
+        academicRank = 'Học lực Xuất sắc';
+        rankColor = AppColors.primary;
+        rankBg = const Color(0xFFE8F0FE);
+      } else if (avgScore >= 8.0) {
+        academicRank = 'Học lực Giỏi';
+        rankColor = AppColors.primary;
+        rankBg = const Color(0xFFE8F0FE);
+      } else if (avgScore >= 6.5) {
+        academicRank = 'Học lực Khá';
+        rankColor = AppColors.warning;
+        rankBg = const Color(0xFFFEF7E0);
+      } else {
+        academicRank = 'Đang rèn luyện';
+        rankColor = AppColors.textSub;
+        rankBg = AppColors.surfaceAlt;
+      }
+    }
+
+    // 2. Bộ lọc đợt kiểm tra
+    const examFilters = ['Tất cả', 'Giữa kỳ', 'Định kỳ', 'Cuối kỳ'];
+    final filteredMarks = _marks.where((m) {
+      if (_selectedExamFilter == 'Tất cả') return true;
+      final exam = (m['examName'] ?? m['examType'] ?? '').toString().toLowerCase();
+      final filter = _selectedExamFilter.toLowerCase();
+      return exam.contains(filter);
+    }).toList();
+
+    final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        children: [
+          // Banner chế độ Demo (nếu đang bật)
+          if (FeatureFlags.useDemoFallback)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.warning, width: 1.0),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Bảng điểm đang hiển thị dữ liệu mô phỏng để minh họa tính năng.',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSub),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // 1. Hero KPI Card - Tổng quan kết quả học tập
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border, width: 1.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ĐIỂM TRUNG BÌNH HỌC KỲ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                            color: AppColors.textSub,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              avgScore.toStringAsFixed(1),
+                              style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textMainOf(context),
+                                height: 1.0,
+                              ),
+                            ),
+                            const Text(
+                              ' / 10.0',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSub,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: rankBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: rankColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.workspace_premium, size: 16, color: rankColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            academicRank,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: rankColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: 14),
+                // 3 Chỉ số phụ
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildKpiMiniItem(
+                        label: 'Số môn kiểm tra',
+                        value: '$validCount môn',
+                        icon: Icons.assignment_turned_in_outlined,
+                      ),
+                    ),
+                    Container(width: 1, height: 32, color: AppColors.border),
+                    Expanded(
+                      child: _buildKpiMiniItem(
+                        label: 'Điểm 10 tuyệt đối',
+                        value: '$perfectCount môn',
+                        icon: Icons.star_outline,
+                      ),
+                    ),
+                    Container(width: 1, height: 32, color: AppColors.border),
+                    Expanded(
+                      child: _buildKpiMiniItem(
+                        label: 'Tiến độ học tập',
+                        value: '100% Hoàn thành',
+                        icon: Icons.verified_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // 2. Bộ lọc đợt kiểm tra (Filter Chips)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: examFilters.map((filter) {
+                final isSelected = _selectedExamFilter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(
+                      filter,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? Colors.white : AppColors.textMain,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() => _selectedExamFilter = filter);
+                    },
+                    backgroundColor: Colors.white,
+                    selectedColor: AppColors.primary,
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? AppColors.primary : AppColors.border,
+                        width: 1.0,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // 3. Tiêu đề danh sách môn học
+          AppSectionHeader(
+            title: 'Kết quả chi tiết từng môn (${filteredMarks.length})',
+          ),
+          const SizedBox(height: 10),
+
+          // 4. Danh sách thẻ điểm
+          if (filteredMarks.isEmpty)
+            const AppEmptyCard(
+              title: 'Không có bài kiểm tra',
+              message: 'Chưa có dữ liệu bài kiểm tra nào phù hợp với bộ lọc đã chọn.',
+              icon: Icons.grade_outlined,
+            )
+          else
+            ...filteredMarks.map((m) {
+              final subject = (m['subjectName'] ?? 'Môn học').toString();
+              final score = m['score'];
+              final maxScore = m['maxScore'] ?? 10.0;
+              final exam = (m['examName'] ?? m['examType'] ?? 'Kiểm tra định kỳ').toString();
+              final grade = (m['grade'] ?? 'Đạt').toString();
+              final scoreNum = (score is num) ? score.toDouble() : (double.tryParse(score?.toString() ?? '0') ?? 0.0);
+              final maxScoreNum = (maxScore is num) ? maxScore.toDouble() : 10.0;
+              final progress = (maxScoreNum > 0) ? (scoreNum / maxScoreNum).clamp(0.0, 1.0) : 0.0;
+
+              // Màu sắc theo thang điểm chuẩn thương hiệu Xanh dương
+              Color scoreColor = AppColors.primary;
+              if (scoreNum >= 8.0) {
+                scoreColor = AppColors.primary; // Xanh dương thương hiệu cho điểm giỏi và xuất sắc
+              } else if (scoreNum >= 6.5) {
+                scoreColor = AppColors.warning;
+              } else {
+                scoreColor = AppColors.error;
+              }
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border, width: 1.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: scoreColor.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(_getSubjectIcon(subject), color: scoreColor, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                subject,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textMainOf(context),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                exam,
+                                style: const TextStyle(fontSize: 12.5, color: AppColors.textSub),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  score != null ? score.toString() : '-',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: scoreColor,
+                                  ),
+                                ),
+                                Text(
+                                  '/$maxScoreNum',
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.textSub,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: scoreColor.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                grade,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: scoreColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Thanh đo điểm số trực quan
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: AppColors.surfaceAlt,
+                        valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+          const SizedBox(height: 12),
+
+          // 5. Thẻ Đánh giá Rèn luyện & Nhận xét GVCN
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border, width: 1.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.psychology_outlined, color: AppColors.primary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Đánh giá Rèn luyện & Khen thưởng',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textMainOf(context),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Xếp loại Rèn luyện / Hạnh kiểm:',
+                        style: TextStyle(fontSize: 13, color: AppColors.textSub),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F0FE),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: const Text(
+                        'Tốt (Xuất sắc)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.format_quote, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Em có tinh thần học tập tự giác rất cao, tích cực tương tác trong giờ học và đạt thành tích xuất sắc ở tất cả các môn. Hãy tiếp tục phát huy nhé!\n— $classTeacher',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
+                            color: AppColors.textMain,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
     );
-    final teacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+  }
+
+  Widget _buildKpiMiniItem({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: AppColors.primary),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textMain),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10.5, color: AppColors.textSub),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  IconData _getSubjectIcon(String subjectName) {
+    final lower = subjectName.toLowerCase();
+    if (lower.contains('toán')) return Icons.calculate_outlined;
+    if (lower.contains('văn') || lower.contains('việt')) return Icons.edit_note_outlined;
+    if (lower.contains('anh') || lower.contains('ngữ')) return Icons.language_outlined;
+    if (lower.contains('tin') || lower.contains('công nghệ')) return Icons.computer_outlined;
+    if (lower.contains('tự nhiên') || lower.contains('khtn') || lower.contains('khoa học')) return Icons.eco_outlined;
+    if (lower.contains('sử') || lower.contains('địa')) return Icons.public_outlined;
+    if (lower.contains('lý') || lower.contains('vật')) return Icons.bolt_outlined;
+    if (lower.contains('hóa')) return Icons.science_outlined;
+    if (lower.contains('sinh')) return Icons.biotech_outlined;
+    if (lower.contains('nhạc') || lower.contains('âm')) return Icons.music_note_outlined;
+    if (lower.contains('mỹ thuật') || lower.contains('vẽ')) return Icons.palette_outlined;
+    if (lower.contains('thể dục') || lower.contains('gd thể chất')) return Icons.sports_soccer_outlined;
+    return Icons.school_outlined;
+  }
+
+  int get _unreadNoticesCount => _notices.where((n) => n['isRead'] == false).length;
+
+  // ===================== TAB 5: THÔNG BÁO =====================
+  Widget _buildNoticeTab() {
+    final dynamicAudiences = <String>['Tất cả'];
+    for (final n in _notices) {
+      final aud = (n['audience'] ?? '').toString().trim();
+      if (aud.isNotEmpty && !dynamicAudiences.contains(aud)) {
+        dynamicAudiences.add(aud);
+      }
+    }
+    final audiences = dynamicAudiences.length > 1
+        ? dynamicAudiences
+        : ['Tất cả', 'Toàn trường', _profile?['className'] ?? 'Lớp 3A'];
+
+    final filtered = _selectedNoticeAudience == 'Tất cả'
+        ? _notices
+        : _notices.where((n) => (n['audience'] ?? '').toString() == _selectedNoticeAudience).toList();
+    final unreadCount = _unreadNoticesCount;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Thẻ thông tin cá nhân tóm tắt
+        // Banner tóm tắt
         Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            color: Colors.white,
+          ),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: Colors.white,
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                 ),
-                child: const Icon(Icons.person, color: AppColors.primary, size: 28),
+                child: const Icon(Icons.campaign, color: AppColors.primary, size: 20),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      studentName,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                    const Text(
+                      'Bảng tin & Thông báo nhà trường',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textMain),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Mã: $studentId · $className',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                      unreadCount > 0
+                          ? 'Em có $unreadCount thông báo mới chưa đọc.'
+                          : 'Đã cập nhật đầy đủ mọi thông báo.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: unreadCount > 0 ? AppColors.primary : AppColors.textSub,
+                        fontWeight: unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                      ),
                     ),
                   ],
                 ),
@@ -1099,64 +1832,439 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Các mục chức năng
-        Container(
-          decoration: BoxDecoration(border: Border.all(color: AppColors.border)),
-          child: Column(
-            children: [
-              _buildMoreRow(
-                title: 'Bảng điểm & Kết quả học tập',
-                icon: Icons.grade_outlined,
-                onTap: () => _showMarksBottomSheet(),
-              ),
-              const Divider(height: 1, thickness: 1, color: AppColors.border),
-              _buildMoreRow(
-                title: 'Lịch sử Chuyên cần / Điểm danh',
-                icon: Icons.event_available_outlined,
-                onTap: () => _showAttendanceBottomSheet(),
-              ),
-              const Divider(height: 1, thickness: 1, color: AppColors.border),
-              _buildMoreRow(
-                title: 'Thông tin giáo viên chủ nhiệm',
-                sub: teacher,
-                icon: Icons.school_outlined,
-                onTap: () {},
-              ),
-              const Divider(height: 1, thickness: 1, color: AppColors.border),
-              SwitchListTile(
-                value: FeatureFlags.useDemoFallback,
-                onChanged: (val) {
-                  setState(() {
-                    FeatureFlags.useDemoFallback = val;
-                  });
-                  _loadAllData();
-                },
-                title: const Text(
-                  'Chế độ Dữ liệu Demo (Demo Mode)',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain),
+        // Bộ lọc phạm vi thông báo
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: audiences.map((aud) {
+              final isSel = _selectedNoticeAudience == aud;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(aud),
+                  selected: isSel,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedNoticeAudience = aud);
+                  },
+                  selectedColor: AppColors.primary,
+                  labelStyle: TextStyle(
+                    color: isSel ? Colors.white : AppColors.textMain,
+                    fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 13,
+                  ),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.border),
+                  backgroundColor: Colors.white,
                 ),
-                subtitle: Text(
-                  FeatureFlags.useDemoFallback
-                      ? 'Đang bật dữ liệu mẫu phục vụ trình chiếu với ban lãnh đạo'
-                      : 'Đang dùng 100% dữ liệu thực từ máy chủ API',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Danh sách thông báo
+        if (filtered.isEmpty)
+          const AppEmptyCard(
+            title: 'Chưa có thông báo',
+            message: 'Không có thông báo nào trong danh mục này.',
+            icon: Icons.notifications_none_outlined,
+          )
+        else
+          ...filtered.map((n) {
+            final isRead = n['isRead'] == true;
+            return InkWell(
+              onTap: () => _showNoticeDetailModal(n),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.5),
+                    width: isRead ? 1.0 : 1.5,
+                  ),
+                  color: Colors.white,
                 ),
-                secondary: const Icon(Icons.slideshow_outlined, color: AppColors.primary),
-                activeThumbColor: AppColors.primary,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Icon(
+                        isRead ? Icons.notifications_none : Icons.notifications_active,
+                        color: isRead ? AppColors.textSub : AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: Text(
+                                  n['audience'] ?? 'Chung',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSub),
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '${n['date']} · ${n['time']}',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            n['title'] ?? '',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
+                              color: AppColors.textMain,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            n['content'] ?? n['body'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13, color: AppColors.textSub, height: 1.35),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_outline, size: 14, color: AppColors.textSub),
+                              const SizedBox(width: 4),
+                              Text(
+                                n['sender'] ?? 'Nhà trường',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textSub, fontWeight: FontWeight.w500),
+                              ),
+                              const Spacer(),
+                              if (!isRead)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'MỚI',
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const Divider(height: 1, thickness: 1, color: AppColors.border),
-              _buildMoreRow(
-                title: 'Đăng xuất',
-                icon: Icons.logout,
-                color: AppColors.error,
-                onTap: _logout,
+            );
+          }),
+      ],
+    );
+  }
+
+  void _showNoticeDetailModal(Map<String, dynamic> n) {
+    if (n['isRead'] != true) {
+      setState(() {
+        n['isRead'] = true;
+      });
+      if (n['id'] != null) {
+        _portalService.markNoticeAsRead(n['id']).ignore();
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            color: Colors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        n['audience'] ?? 'Toàn trường',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20, color: AppColors.textSub),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      tooltip: 'Đóng',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  n['title'] ?? '',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain, height: 1.3),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: AppColors.textSub),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${n['date']} lúc ${n['time']}',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                    ),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.person_outline, size: 14, color: AppColors.textSub),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        n['sender'] ?? '',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24, thickness: 1, color: AppColors.border),
+                Text(
+                  n['body'] ?? n['content'] ?? '',
+                  style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.textMain),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoreBottomSheet() {
+    final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
+    final studentId = _profile?['admissionNumber'] ?? _profile?['rollNo'] ?? _profile?['studentId'] ?? 'HS001';
+    final className = FormatUtils.formatClassName(
+      grade: _profile?['grade']?.toString(),
+      section: _profile?['section']?.toString(),
+      fallback: _profile?['className']?.toString(),
+    );
+    final teacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Material(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            padding: EdgeInsets.only(
+              top: 16,
+              left: 16,
+              right: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Tiện ích học sinh',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textMain,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textSub, size: 22),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      tooltip: 'Đóng',
+                    ),
+                  ],
+                ),
+                const Divider(height: 16, thickness: 1, color: AppColors.border),
+                const SizedBox(height: 8),
+
+                // Thẻ thông tin cá nhân tóm tắt
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    color: Colors.white,
+                  ),
+                  child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: const Icon(Icons.person, color: AppColors.primary, size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            studentName,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Mã: $studentId · $className',
+                            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Các chức năng
+              Material(
+                color: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  side: BorderSide(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildMoreRow(
+                      title: 'Bảng điểm & Kết quả học tập',
+                      sub: 'Xem chi tiết kết quả học tập & điểm thi',
+                      icon: Icons.analytics_outlined,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        setState(() => _currentIndex = 4);
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    _buildMoreRow(
+                      title: 'Lịch sử Chuyên cần / Điểm danh',
+                      icon: Icons.event_available_outlined,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _showAttendanceBottomSheet();
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    _buildMoreRow(
+                      title: 'Thông tin giáo viên chủ nhiệm',
+                      sub: teacher,
+                      icon: Icons.school_outlined,
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    _buildMoreRow(
+                      title: 'Giao diện & Cá nhân hóa',
+                      sub: 'Màu chữ & 8 hình nền học đường',
+                      icon: Icons.palette_outlined,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _showThemeCustomizationSheet();
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    SwitchListTile(
+                      value: FeatureFlags.useDemoFallback,
+                      onChanged: (val) {
+                        setSheetState(() {
+                          FeatureFlags.useDemoFallback = val;
+                        });
+                        setState(() {});
+                        _loadAllData();
+                      },
+                      title: const Text(
+                        'Chế độ Dữ liệu Demo (Demo Mode)',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                      ),
+                      subtitle: Text(
+                        FeatureFlags.useDemoFallback
+                            ? 'Đang bật dữ liệu mẫu phục vụ trình chiếu với ban lãnh đạo'
+                            : 'Đang dùng 100% dữ liệu thực từ máy chủ API',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                      ),
+                      secondary: const Icon(Icons.slideshow_outlined, color: AppColors.primary),
+                      activeThumbColor: AppColors.primary,
+                    ),
+                    const Divider(height: 1, thickness: 1, color: AppColors.border),
+                    _buildMoreRow(
+                      title: 'Đăng xuất',
+                      icon: Icons.logout,
+                      color: AppColors.error,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _logout();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ],
+      ),
+      ),
     );
   }
+
 
   Widget _buildMoreRow({
     required String title,
@@ -1199,61 +2307,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // BottomSheet xem Bảng điểm
-  void _showMarksBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      builder: (ctx) => ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Bảng điểm của em', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textMain)),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(ctx).pop()),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _marks.isEmpty
-                  ? const Center(child: Text('Chưa có dữ liệu bảng điểm', style: TextStyle(color: AppColors.textSub)))
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _marks.length,
-                      separatorBuilder: (_, _) => const Divider(color: AppColors.border),
-                      itemBuilder: (_, i) {
-                        final m = _marks[i];
-                        final score = m['score'] ?? '-';
-                        final maxScore = m['maxScore'];
-                        final exam = m['examName'] ?? m['examType'] ?? 'Định kỳ';
-                        final grade = m['grade'];
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(m['subjectName'] ?? 'Môn học', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain)),
-                          subtitle: Text(
-                            grade != null ? 'Kỳ thi: $exam · Xếp loại: $grade' : 'Kỳ thi: $exam',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
-                          ),
-                          trailing: Text(
-                            FormatUtils.formatScore(score, maxScore: maxScore),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // BottomSheet xem Chuyên cần
   void _showAttendanceBottomSheet() {
@@ -1383,7 +2436,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
+                        color: Colors.white,
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
@@ -1395,7 +2448,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.12),
+                                  color: Colors.white,
+                                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                                 ),
                                 child: const Icon(Icons.menu_book, color: AppColors.primary, size: 24),
                               ),
@@ -1526,4 +2580,339 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       ],
     );
   }
+
+  void _showThemeCustomizationSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          ThemeManager? themeManager;
+          try {
+            themeManager = Provider.of<ThemeManager>(context);
+          } catch (_) {
+            themeManager = null;
+          }
+
+          final currentMode = themeManager?.textColorMode ?? AppTextColorMode.defaultBlack;
+          final currentBg = themeManager?.bgImagePath ?? 'images/school_bg.jpg';
+
+          return Material(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.palette_outlined, color: AppColors.primary, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Giao diện & Cá nhân hóa',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textMain,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textSub, size: 22),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          tooltip: 'Đóng',
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, thickness: 1, color: AppColors.border),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          // Mục 1: Chọn màu chữ giao diện
+                          const Text(
+                            'MÀU CHỮ GIAO DIỆN',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                              color: AppColors.textSub,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              _buildTextColorOption(
+                                label: 'Mặc định',
+                                mode: AppTextColorMode.defaultBlack,
+                                color: const Color(0xFF202124),
+                                isSelected: currentMode == AppTextColorMode.defaultBlack,
+                                onSelect: () {
+                                  themeManager?.setTextColorMode(AppTextColorMode.defaultBlack);
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildTextColorOption(
+                                label: 'Xanh lá',
+                                mode: AppTextColorMode.green,
+                                color: const Color(0xFF1B5E20),
+                                isSelected: currentMode == AppTextColorMode.green,
+                                onSelect: () {
+                                  themeManager?.setTextColorMode(AppTextColorMode.green);
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildTextColorOption(
+                                label: 'Xanh lục',
+                                mode: AppTextColorMode.emerald,
+                                color: const Color(0xFF004D40),
+                                isSelected: currentMode == AppTextColorMode.emerald,
+                                onSelect: () {
+                                  themeManager?.setTextColorMode(AppTextColorMode.emerald);
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildTextColorOption(
+                                label: 'Hồng',
+                                mode: AppTextColorMode.pink,
+                                color: const Color(0xFFAD1457),
+                                isSelected: currentMode == AppTextColorMode.pink,
+                                onSelect: () {
+                                  themeManager?.setTextColorMode(AppTextColorMode.pink);
+                                  setState(() {});
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Mục 2: Chọn hình nền học đường
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'HÌNH NỀN HỌC ĐƯỜNG',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                  color: AppColors.textSub,
+                                ),
+                              ),
+                              Text(
+                                '${ThemeManager.availableBackgrounds.length} hình ảnh',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 1.45,
+                            ),
+                            itemCount: ThemeManager.availableBackgrounds.length,
+                            itemBuilder: (context, index) {
+                              final b = ThemeManager.availableBackgrounds[index];
+                              final isSelected = currentBg == b.assetPath;
+
+                              return InkWell(
+                                onTap: () {
+                                  themeManager?.setBackgroundImage(b.assetPath);
+                                  setState(() {});
+                                },
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected ? AppColors.primary : AppColors.border,
+                                      width: isSelected ? 2.5 : 1.0,
+                                    ),
+                                    boxShadow: [
+                                      if (isSelected)
+                                        BoxShadow(
+                                          color: AppColors.primary.withValues(alpha: 0.25),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Image.asset(
+                                          b.assetPath,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, _, _) => Container(
+                                            color: AppColors.surfaceAlt,
+                                            child: const Icon(Icons.image_not_supported, color: AppColors.textSub),
+                                          ),
+                                        ),
+                                        // Gradient đen mờ ở chân ảnh để đọc tên
+                                        Positioned(
+                                          left: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          height: 38,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.bottomCenter,
+                                                end: Alignment.topCenter,
+                                                colors: [
+                                                  Colors.black.withValues(alpha: 0.75),
+                                                  Colors.transparent,
+                                                ],
+                                              ),
+                                            ),
+                                            alignment: Alignment.bottomLeft,
+                                            child: Text(
+                                              b.nameVi,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isSelected)
+                                          Positioned(
+                                            top: 6,
+                                            right: 6,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: const Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.check, size: 12, color: Colors.white),
+                                                  SizedBox(width: 2),
+                                                  Text(
+                                                    'Đang dùng',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTextColorOption({
+    required String label,
+    required AppTextColorMode mode,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onSelect,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onSelect,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: isSelected ? 2.0 : 1.0,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : null,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? color : AppColors.textMain,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
+
