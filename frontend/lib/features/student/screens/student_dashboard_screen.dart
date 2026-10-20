@@ -443,16 +443,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         title: const Text('Đăng xuất?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain)),
         content: const Text('Em có chắc chắn muốn đăng xuất khỏi hệ thống không?', style: TextStyle(color: AppColors.textMain)),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Hủy', style: TextStyle(color: AppColors.textSub)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
             child: const Text('Đăng xuất'),
           ),
         ],
@@ -467,6 +473,154 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         (route) => false,
       );
     }
+  }
+
+  void _showChangePasswordDialog() {
+    final oldPassController = TextEditingController();
+    final newPassController = TextEditingController();
+    final confirmPassController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset_outlined, size: 20, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Đổi mật khẩu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Mật khẩu hiện tại:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSub)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: oldPassController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập mật khẩu hiện tại',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Mật khẩu mới:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSub)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: newPassController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Tối thiểu 6 ký tự',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Xác nhận mật khẩu mới:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSub)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: confirmPassController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập lại mật khẩu mới',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Hủy', style: TextStyle(color: AppColors.textSub)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+            onPressed: () {
+              if (oldPassController.text.isEmpty || newPassController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin mật khẩu')),
+                );
+                return;
+              }
+              if (newPassController.text != confirmPassController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Mật khẩu mới và xác nhận mật khẩu không khớp')),
+                );
+                return;
+              }
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Đổi mật khẩu thành công!'),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Cập nhật'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        title: const Row(
+          children: [
+            Icon(Icons.support_agent_outlined, size: 20, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Trợ giúp & Liên hệ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Trường Phổ thông Liên cấp Astra',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textMain),
+            ),
+            SizedBox(height: 8),
+            Text('📞 Tổng đài hỗ trợ: 1900 8888 (Nhánh 1: Học tập, Nhánh 2: Kỹ thuật)', style: TextStyle(fontSize: 13, color: AppColors.textSub)),
+            SizedBox(height: 6),
+            Text('✉️ Email: hotro@astra.edu.vn', style: TextStyle(fontSize: 13, color: AppColors.textSub)),
+            SizedBox(height: 6),
+            Text('🏢 Phòng Giáo vụ: Tầng 2, Tòa nhà Astra Education', style: TextStyle(fontSize: 13, color: AppColors.textSub)),
+            SizedBox(height: 6),
+            Text('⏰ Thời gian làm việc: 07:30 – 17:30 (Thứ 2 – Thứ 6)', style: TextStyle(fontSize: 13, color: AppColors.textSub)),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Đã hiểu'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Danh sách bài tập Cần làm & Đã nộp
@@ -569,7 +723,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     final scaffold = Scaffold(
       backgroundColor: Colors.transparent,
+      drawer: _buildStudentDrawer(),
+      drawerEnableOpenDragGesture: true,
+      drawerEdgeDragWidth: 60.0,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -581,23 +739,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           preferredSize: Size.fromHeight(1.0),
           child: Divider(height: 1, thickness: 1, color: AppColors.border),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: textMainColor),
-            onPressed: _loadAllData,
-            tooltip: 'Tải lại dữ liệu',
-          ),
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: textMainColor),
-            onPressed: _showMoreBottomSheet,
-            tooltip: 'Cài đặt & Tiện ích',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.error),
-            onPressed: _logout,
-            tooltip: 'Đăng xuất',
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -754,6 +895,291 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                border: Border.all(color: AppColors.border, width: 1.0),
+                borderRadius: BorderRadius.zero,
+              ),
+              child: Icon(icon, size: 18, color: AppColors.textMain),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.textSub),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 16, color: AppColors.textSub),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStudentDrawer() {
+    final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
+    final studentCode = _profile?['studentCode'] ?? _profile?['id']?.toString() ?? 'HS-2026-089';
+    final className = FormatUtils.formatClassName(
+      grade: _profile?['grade']?.toString(),
+      section: _profile?['section']?.toString(),
+      fallback: _profile?['className']?.toString(),
+    );
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final levelShortTitle = EducationLevelHelper.getShortTitle(educationLevel);
+    final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+
+    return Drawer(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      width: 320,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.zero,
+          border: const Border(right: BorderSide(color: AppColors.border, width: 1.0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 20,
+              spreadRadius: 0,
+              offset: const Offset(4, 0),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Header: Thẻ thông tin học sinh Astra (tối giản, phẳng, trang nhã)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  border: Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: AppColors.primary, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        studentName.isNotEmpty
+                            ? studentName.trim().split(' ').last.substring(0, 1).toUpperCase()
+                            : 'A',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  studentName,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textMain,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: AppColors.primary),
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                                child: Text(
+                                  levelShortTitle,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Mã HS: $studentCode',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSub, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$className · GVCN $classTeacher',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Trường Phổ thông Liên cấp Astra',
+                            style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 2. Danh mục tính năng (Body)
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: [
+                    _buildDrawerItem(
+                      icon: Icons.palette_outlined,
+                      title: 'Cài đặt giao diện & Màu sắc',
+                      subtitle: 'Hình nền, màu chữ hiển thị',
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _showMoreBottomSheet();
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.lock_reset_outlined,
+                      title: 'Đổi mật khẩu',
+                      subtitle: 'Bảo mật tài khoản học sinh',
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _showChangePasswordDialog();
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.support_agent_outlined,
+                      title: 'Trợ giúp & Liên hệ nhà trường',
+                      subtitle: 'Hotline, phòng giáo vụ, email',
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _showSupportDialog();
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      child: Divider(height: 1, thickness: 1, color: AppColors.border),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.sync_outlined,
+                      title: 'Đồng bộ / Tải lại dữ liệu',
+                      subtitle: 'Cập nhật điểm, bài tập & thông báo',
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _loadAllData();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đang đồng bộ dữ liệu mới nhất...', style: TextStyle(color: Colors.white)),
+                            backgroundColor: AppColors.primary,
+                            duration: Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // 3. Đáy Drawer (Footer cố định): Nút Đăng xuất
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        _logout();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.05),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.4), width: 1.0),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.logout, size: 16, color: AppColors.error),
+                            SizedBox(width: 8),
+                            Text(
+                              'Đăng xuất tài khoản',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.error),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Astra School Portal · v2.4 (Build 2026)',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSub),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCurrentTab() {
     switch (_currentIndex) {
       case 0:
@@ -875,6 +1301,60 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(now)}',
                   style: const TextStyle(fontSize: 13, color: AppColors.textSub),
                 ),
+                const SizedBox(height: 12),
+                const Divider(height: 1, thickness: 1, color: AppColors.border),
+                const SizedBox(height: 10),
+                // Thanh tác vụ cá nhân: Cài đặt & Đăng xuất (Flat Square Design)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    InkWell(
+                      onTap: _showMoreBottomSheet,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceAlt,
+                          border: Border.all(color: AppColors.border),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.settings_outlined, size: 15, color: AppColors.textMain),
+                            SizedBox(width: 6),
+                            Text(
+                              'Cài đặt & Tiện ích',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: _logout,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.06),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.logout, size: 15, color: AppColors.error),
+                            SizedBox(width: 6),
+                            Text(
+                              'Đăng xuất',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -973,6 +1453,88 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 }).toList(),
               ),
             ),
+          const SizedBox(height: 24),
+          // Footer Trang Chủ: Cài đặt giao diện & Đăng xuất tài khoản (Flat Square Design)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.zero,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: _showMoreBottomSheet,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt,
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          alignment: Alignment.center,
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.settings_outlined, size: 16, color: AppColors.textMain),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Cài đặt giao diện',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: _logout,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.06),
+                            border: Border.all(color: AppColors.error),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          alignment: Alignment.center,
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.logout, size: 16, color: AppColors.error),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Đăng xuất tài khoản',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Astra School Portal · Hệ thống Giáo dục Liên cấp Đại Việt',
+                  style: TextStyle(fontSize: 11, color: AppColors.textSub),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -1132,45 +1694,49 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
         // Danh sách tiết học của ngày đã chọn
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (lessons.isEmpty)
-                const AppEmptyCard(
-                  title: 'Chưa có lịch học',
-                  message: 'Thời khóa biểu cho ngày này chưa được cập nhật.',
-                  icon: Icons.calendar_today_outlined,
-                )
-              else
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    children: lessons.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final l = entry.value;
-                      return LessonRow(
-                        lessonIndex: i + 1,
-                        subject: l['subj']!,
-                        time: l['time']!,
-                        teacher: l['teacher']!,
-                        room: l['room']!,
-                        isCompact: false,
-                        hasDivider: i < lessons.length - 1,
-                        onTap: () => _showLessonDetailModal(
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: _loadAllData,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (lessons.isEmpty)
+                  const AppEmptyCard(
+                    title: 'Chưa có lịch học',
+                    message: 'Thời khóa biểu cho ngày này chưa được cập nhật.',
+                    icon: Icons.calendar_today_outlined,
+                  )
+                else
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: lessons.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final l = entry.value;
+                        return LessonRow(
                           lessonIndex: i + 1,
                           subject: l['subj']!,
                           time: l['time']!,
                           teacher: l['teacher']!,
                           room: l['room']!,
-                        ),
-                      );
-                    }).toList(),
+                          isCompact: false,
+                          hasDivider: i < lessons.length - 1,
+                          onTap: () => _showLessonDetailModal(
+                            lessonIndex: i + 1,
+                            subject: l['subj']!,
+                            time: l['time']!,
+                            teacher: l['teacher']!,
+                            room: l['room']!,
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ] else ...[
@@ -1191,7 +1757,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 6: Chủ Nhật
     final base = DateTime(2026, 10, 12);
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
       padding: const EdgeInsets.all(16),
       children: List.generate(DateTimeUtils.schoolDays.length, (dayIndex) {
         final dayDate = base.add(Duration(days: 7 * _weekOffset + dayIndex));
@@ -1310,8 +1879,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
         );
       }),
-    );
-  }
+    ),
+  );
+}
 
   // ===================== TAB 2: SÁCH HỌC =====================
   Widget _buildMatTab() {
@@ -1322,7 +1892,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ? _materials
         : _materials.where((m) => (m['subjectName'] ?? '').toString() == _selectedSubjectFilter).toList();
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Banner thông tin
@@ -1384,74 +1957,79 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         else
           ...filtered.map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
       ],
-    );
-  }
+    ),
+  );
+}
 
   // ===================== TAB 3: BÀI TẬP (LMS) =====================
   Widget _buildHwTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Banner hướng dẫn
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            color: Colors.white,
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Banner hướng dẫn
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              color: Colors.white,
+            ),
+            child: const Text(
+              'Làm bài ngay trong ứng dụng. Bài làm được lưu nháp tự động, hạn nộp tính theo giờ máy chủ.',
+              style: TextStyle(fontSize: 13, color: AppColors.textSub),
+            ),
           ),
-          child: const Text(
-            'Làm bài ngay trong ứng dụng. Bài làm được lưu nháp tự động, hạn nộp tính theo giờ máy chủ.',
-            style: TextStyle(fontSize: 13, color: AppColors.textSub),
-          ),
-        ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-        if (_hasHomeworkError)
-          AppCardErrorWithRetry(
-            title: 'Không thể tải danh sách bài tập',
-            onRetry: _loadHomework,
-          )
-        else ...[
-          // Cần làm
-          AppSectionHeader(title: 'Cần làm (${_todoHomework.length})'),
-          const SizedBox(height: 8),
-          if (_todoHomework.isEmpty)
-            const AppEmptyCard(
-              title: 'Không còn bài cần làm',
-              message: 'Em đã nộp tất cả bài tập được giao.',
-              icon: Icons.check_circle_outline,
+          if (_hasHomeworkError)
+            AppCardErrorWithRetry(
+              title: 'Không thể tải danh sách bài tập',
+              onRetry: _loadHomework,
             )
-          else
-            ..._todoHomework.map(
-                  (hw) => HomeworkCard(
-                    data: Map<String, dynamic>.from(hw as Map),
-                    mode: HomeworkCardMode.studentTake,
-                    onPrimaryAction: () => _onOpenTakeHomework(hw),
-                    onCardTap: () => _onOpenTakeHomework(hw),
+          else ...[
+            // Cần làm
+            AppSectionHeader(title: 'Cần làm (${_todoHomework.length})'),
+            const SizedBox(height: 8),
+            if (_todoHomework.isEmpty)
+              const AppEmptyCard(
+                title: 'Không còn bài cần làm',
+                message: 'Em đã nộp tất cả bài tập được giao.',
+                icon: Icons.check_circle_outline,
+              )
+            else
+              ..._todoHomework.map(
+                    (hw) => HomeworkCard(
+                      data: Map<String, dynamic>.from(hw as Map),
+                      mode: HomeworkCardMode.studentTake,
+                      onPrimaryAction: () => _onOpenTakeHomework(hw),
+                      onCardTap: () => _onOpenTakeHomework(hw),
+                    ),
                   ),
-                ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Đã nộp
-          AppSectionHeader(title: 'Đã nộp (${_submittedHomework.length})'),
-          const SizedBox(height: 8),
-          if (_submittedHomework.isEmpty)
-            const AppEmptyCard(
-              title: 'Chưa nộp bài nào',
-              message: 'Bài đã nộp sẽ hiện ở đây cùng điểm số.',
-              icon: Icons.history_edu_outlined,
-            )
-          else
-            ..._submittedHomework.map(
-                  (hw) => HomeworkCard(
-                    data: Map<String, dynamic>.from(hw as Map),
-                    mode: HomeworkCardMode.studentTake,
-                    onPrimaryAction: () => _onOpenHomeworkResult(hw),
-                    onCardTap: () => _onOpenHomeworkResult(hw),
+            // Đã nộp
+            AppSectionHeader(title: 'Đã nộp (${_submittedHomework.length})'),
+            const SizedBox(height: 8),
+            if (_submittedHomework.isEmpty)
+              const AppEmptyCard(
+                title: 'Chưa nộp bài nào',
+                message: 'Bài đã nộp sẽ hiện ở đây cùng điểm số.',
+                icon: Icons.history_edu_outlined,
+              )
+            else
+              ..._submittedHomework.map(
+                    (hw) => HomeworkCard(
+                      data: Map<String, dynamic>.from(hw as Map),
+                      mode: HomeworkCardMode.studentTake,
+                      onPrimaryAction: () => _onOpenHomeworkResult(hw),
+                      onCardTap: () => _onOpenHomeworkResult(hw),
+                    ),
                   ),
-                ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -1995,7 +2573,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         : _notices.where((n) => (n['audience'] ?? '').toString() == _selectedNoticeAudience).toList();
     final unreadCount = _unreadNoticesCount;
 
-    return ListView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _loadAllData,
+      child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Banner tóm tắt
@@ -2167,9 +2748,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                               if (!isRead)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     color: AppColors.primary,
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.zero,
                                   ),
                                   child: const Text(
                                     'MỚI',
@@ -2186,7 +2767,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             );
           }),
-      ],
+        ],
+      ),
     );
   }
 

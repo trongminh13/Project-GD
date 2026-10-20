@@ -1538,5 +1538,83 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `flutter test test/widgets/student_dashboard_nav_test.dart`: **12 / 12 tests PASSED (100% passed)**.
 - `flutter test`: **79 / 79 tests PASSED (100% passed - 0 failure, 0 error)**.
 
+---
+
+### GIAI ĐOẠN 28: TINH GIẢN APPBAR (CLEAN APPBAR), PULL-TO-REFRESH TOÀN DIỆN & TÍCH HỢP CÀI ĐẶT, ĐĂNG XUẤT VÀO THẺ HỌC SINH VÀ FOOTER TRANG CHỦ
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Thắc mắc/yêu cầu từ người dùng: *"Nút Reload: Bỏ hẳn nút bấm! Thay thế hoàn toàn bằng cử chỉ Pull-to-Refresh (RefreshIndicator) — học sinh chỉ cần vuốt nhẹ từ đỉnh màn hình xuống để tải lại dữ liệu mới nhất (đây là thói quen tự nhiên 100% của người dùng smartphone hiện nay). Cài đặt & Đăng xuất: Được tích hợp trực tiếp vào Thẻ cá nhân học sinh (Hero Card) ở ngay đầu Tab Trang Chủ, và đặt ở dạng Footer (chân trang) khi cuộn xuống dưới cùng của Trang Chủ. senior dev lên /plan cho tôi"*.
+- Loại bỏ hoàn toàn các nút thao tác `Reload`, `Settings`, `Logout` khỏi thanh AppBar trên cùng.
+- Tự nhiên hóa tính năng tải lại dữ liệu bằng cử chỉ vuốt kéo xuống (`RefreshIndicator`) ở mọi tab màn hình.
+- Bố trí 2 điểm chạm tác vụ nhanh cho **Cài đặt & Tiện ích** và **Đăng xuất tài khoản**:
+  + **Điểm 1 (Đầu trang)**: Hàng nút phẳng vuông vức sắc nét tích hợp ngay dưới Thẻ cá nhân học sinh (Hero Card).
+  + **Điểm 2 (Cuối trang)**: Khối Footer chân trang sau khi cuộn hết nội dung Tab Trang chủ, kèm dòng nhận diện bản quyền Astra School Portal.
+- Chuẩn mực thiết kế: Tuân thủ tuyệt đối **Flat Square Design (BorderRadius.zero)**, viền phẳng 1.0px, chống tràn màn hình với `FittedBox`.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Gỡ bỏ thuộc tính `actions` khỏi `AppBar`, đưa thanh tiêu đề về trạng thái Clean Minimalist.
+  - Bao bọc toàn bộ các Tab cuộn (Tab 0 Trang chủ, Tab 1 Lịch học Ngày & Tuần, Tab 2 Sách học, Tab 3 Bài tập LMS, Tab 4 Bảng điểm, Tab 5 Bảng tin) bằng `RefreshIndicator` kết nối với `_loadAllData`.
+  - Cập nhật Thẻ cá nhân học sinh (`Hero Card`): Bổ sung vạch phân cách 1px và 2 nút tác vụ phẳng `[ Cài đặt & Tiện ích ]` và `[ Đăng xuất ]`.
+  - Bổ sung khối **Footer chân trang** vào cuối `_buildHomeTab()`: 2 nút bấm phẳng `[ Cài đặt giao diện ]` và `[ Đăng xuất tài khoản ]` bọc trong `FittedBox(fit: BoxFit.scaleDown)` để triệt tiêu hoàn toàn rủi ro tràn giao diện trên mọi kích thước màn hình điện thoại; dòng thông tin bản quyền trường liên cấp.
+  - Cập nhật hộp thoại `_logout()`: thiết kế phẳng `BorderRadius.zero` cho cả `AlertDialog`, nút `Hủy` và nút `Đăng xuất`.
+  - Chuẩn hóa huy hiệu `MỚI` trong tab Thông báo sang `BorderRadius.zero`.
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+  - Cập nhật `TC-NAV-02`: Xác thực AppBar tinh giản không chứa action buttons (`actions == null`), xác thực `RefreshIndicator` sẵn sàng cho cử chỉ vuốt kéo.
+  - Cập nhật `TC-NAV-04`: Thao tác chạm nút `Cài đặt & Tiện ích` trên Hero Card mở BottomSheet tiện ích học sinh.
+  - Cập nhật `TC-NAV-09`: Thao tác chạm nút `Cài đặt & Tiện ích` mở tiện ích để chuyển nhanh sang Bảng điểm.
+  - Bổ sung test case mới `TC-NAV-13`: Xác thực đồng thời Hero Card và Footer đều hiển thị đủ 2 nút Cài đặt & Đăng xuất, kiểm tra tương tác bấm Đăng xuất ở Footer kích hoạt hộp thoại xác nhận chính xác.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart test/widgets/student_dashboard_nav_test.dart`: **No issues found! (0 warnings, 0 errors)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **13 / 13 tests PASSED (100% passed)**.
+- `flutter test`: **80 / 80 tests PASSED (100% passed - 0 failure, 0 error)**.
+
+---
+
+### GIAI ĐOẠN 29: TÍCH HỢP NAVIGATION DRAWER BÊN HÔNG MÀN HÌNH (SIDEBAR DRAWER) VỚI CỬ CHỈ VUỐT MÉP TRÁI, ĐỔ BÓNG TINH TẾ & THIẾT KẾ PHẲNG TRANG NHÃ
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Thắc mắc/yêu cầu từ người dùng: *"chạm vào mép trái để vuốt ra một Drawer bên hông màn hình. Nội dung trong Drawer: Phần trên: Ảnh đại diện + Thẻ thông tin học sinh Astra. Danh mục: Cài đặt giao diện & Màu sắc, Đổi mật khẩu, Trợ giúp & Liên hệ nhà trường. Nút Đồng bộ / Tải lại dữ liệu. Đáy Drawer: Nút Đăng xuất cố định. làm đừng màu mè quá nhé senior dev. lên /plan cho tôi"* và *"nút ☰ có lẽ không cần đâu. chỉ cần vuốt thôi. với cả cho drawer đổ bóng tinh tế nhé"*.
+- Triển khai thanh điều hướng trượt bên hông (Navigation Drawer) với các tiêu chuẩn cốt lõi:
+  1. **Cử chỉ vuốt tự nhiên từ mép trái**: Kích hoạt mở Drawer khi học sinh chạm và vuốt từ cạnh trái màn hình (`drawerEdgeDragWidth: 60.0`, `drawerEnableOpenDragGesture: true`).
+  2. **Thanh AppBar sạch sẽ 100% (No Hamburger Button)**: Khóa hoàn toàn icon menu ☰ tự sinh của Flutter bằng `automaticallyImplyLeading: false`.
+  3. **Đổ bóng tinh tế (Subtle Soft Shadow)**: Sử dụng bóng mờ thanh lịch đa lớp nhẹ `BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: Offset(4, 0))`.
+  4. **Thẩm mỹ phẳng chuẩn mực (Flat Square Design)**: Không bo góc (`BorderRadius.zero`), viền phẳng sắc nét 1.0px (`AppColors.border`), màu sắc trang nhã, không màu mè.
+  5. **Nội dung cấu trúc hoàn chỉnh**:
+     - *Header*: Ảnh đại diện / Avatar chữ cái phẳng + Thẻ thông tin học sinh Astra (Tên, Mã HS, Cấp học, Lớp, GVCN, Trường Phổ thông Liên cấp Astra).
+     - *Body (Danh mục)*: Cài đặt giao diện & Màu sắc, Đổi mật khẩu tài khoản học sinh, Trợ giúp & Liên hệ nhà trường, Đồng bộ / Tải lại dữ liệu.
+     - *Footer (Đáy cố định)*: Nút Đăng xuất tài khoản viền đỏ phẳng 1px + Số hiệu phiên bản Astra Portal v2.4.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Khai báo cấu hình Scaffold:
+    + `drawer: _buildStudentDrawer()`
+    + `drawerEnableOpenDragGesture: true`
+    + `drawerEdgeDragWidth: 60.0`
+    + `appBar: AppBar(automaticallyImplyLeading: false, ...)`
+  - Hiện thực hóa `_buildStudentDrawer()`:
+    + Bọc trong `Drawer` với `shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero)`, `elevation: 0`.
+    + Đổ bóng tinh tế viền phải: `BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: Offset(4, 0))` kết hợp đường biên sắc nét `Border(right: BorderSide(color: AppColors.border, width: 1.0))`.
+    + Xây dựng `_buildDrawerItem()` bằng `InkWell` + `Container` thay vì `ListTile` trong `DecoratedBox` nhằm triệt tiêu hoàn toàn cảnh báo splash vô hình của Flutter.
+    + Thêm hộp thoại phẳng `_showChangePasswordDialog()`: Hỗ trợ học sinh đổi mật khẩu an toàn với xác thực mật khẩu cũ/mới, viền phẳng `BorderRadius.zero`.
+    + Thêm hộp thoại phẳng `_showSupportDialog()`: Cung cấp tổng đài hỗ trợ 1900 8888, email hỗ trợ và địa chỉ văn phòng giáo vụ Astra.
+    + Nút Đăng xuất cố định ở đáy bọc viền đỏ `AppColors.error.withValues(alpha: 0.4)` và hiển thị dòng phiên bản Astra School Portal v2.4.
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+  - Bổ sung test case tự động `TC-NAV-14`:
+    + Kiểm tra Drawer mặc định ẩn khi mới vào màn hình.
+    + Mở Drawer qua thao tác `scaffoldState.openDrawer()`.
+    + Kiểm tra hiển thị đầy đủ thông tin học sinh (Tên, Mã HS, GVCN, Trường liên cấp) bằng `find.descendant` bên trong Drawer.
+    + Kiểm tra hiển thị đủ 4 mục tiện ích: Cài đặt giao diện & Màu sắc, Đổi mật khẩu, Trợ giúp & Liên hệ nhà trường, Đồng bộ / Tải lại dữ liệu.
+    + Kiểm tra nút Đăng xuất cố định ở Footer Drawer.
+    + Tương tác mở và đóng hộp thoại Trợ giúp & Liên hệ nhà trường.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart test/widgets/student_dashboard_nav_test.dart`: **No issues found! (0 warnings, 0 errors - ran in 6.2s)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **14 / 14 tests PASSED (100% passed)**.
+- `flutter test`: **81 / 81 tests PASSED (100% passed - 0 failure, 0 error)**.
+
+
+
 
 

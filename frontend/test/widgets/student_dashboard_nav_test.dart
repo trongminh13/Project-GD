@@ -37,7 +37,7 @@ void main() {
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     });
 
-    testWidgets('TC-NAV-02: AppBar actions has Reload, Thêm, and Logout in exact sequence', (tester) async {
+    testWidgets('TC-NAV-02: Clean AppBar with no top action buttons; Pull-to-Refresh indicator exists', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: StudentDashboardScreen(),
@@ -45,21 +45,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final reloadFinder = find.byIcon(Icons.refresh);
-      final moreFinder = find.byIcon(Icons.settings_outlined);
-      final logoutFinder = find.byIcon(Icons.logout);
+      // Verify AppBar has no actions buttons
+      final appBar = tester.widget<AppBar>(find.byType(AppBar));
+      expect(appBar.actions, isNull);
 
-      expect(reloadFinder, findsOneWidget);
-      expect(moreFinder, findsOneWidget);
-      expect(logoutFinder, findsOneWidget);
-
-      // Verify horizontal positions: Reload < Thêm < Logout
-      final reloadX = tester.getTopLeft(reloadFinder).dx;
-      final moreX = tester.getTopLeft(moreFinder).dx;
-      final logoutX = tester.getTopLeft(logoutFinder).dx;
-
-      expect(reloadX, lessThan(moreX));
-      expect(moreX, lessThan(logoutX));
+      // Verify RefreshIndicator exists for pull-to-refresh
+      expect(find.byType(RefreshIndicator), findsWidgets);
     });
 
     testWidgets('TC-NAV-03: Tapping Thông báo tab switches to notice view and updates AppBar title', (tester) async {
@@ -82,7 +73,7 @@ void main() {
       expect(find.text('Họp phụ huynh đầu học kỳ 1 năm học 2026–2027'), findsOneWidget);
     });
 
-    testWidgets('TC-NAV-04: Tapping Thêm on AppBar opens student utilities BottomSheet', (tester) async {
+    testWidgets('TC-NAV-04: Tapping Cài đặt on Hero Card opens student utilities BottomSheet', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: StudentDashboardScreen(),
@@ -90,8 +81,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap the Cài đặt / Tiện ích icon on AppBar
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      // Tap the Cài đặt & Tiện ích button on Hero Card
+      await tester.tap(find.text('Cài đặt & Tiện ích'));
       await tester.pumpAndSettle();
 
       // Verify Modal BottomSheet opens with utilities
@@ -209,8 +200,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Open Tiện ích sheet via Cài đặt icon
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      // Open Tiện ích sheet via Cài đặt button in Hero Card
+      await tester.tap(find.text('Cài đặt & Tiện ích'));
       await tester.pumpAndSettle();
 
       // Tap on Bảng điểm & Kết quả học tập
@@ -314,5 +305,90 @@ void main() {
       expect(find.text('Thứ 3'), findsOneWidget);
       expect(find.textContaining('THỨ HAI ·'), findsNothing);
     });
+
+    testWidgets('TC-NAV-13: Both Hero Card and Footer have Settings and Logout buttons with Flat Square Design', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Hero Card buttons
+      expect(find.text('Cài đặt & Tiện ích'), findsOneWidget);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+
+      // Scroll to Footer
+      await tester.scrollUntilVisible(find.text('Đăng xuất tài khoản'), 300);
+      await tester.pumpAndSettle();
+
+      // Footer buttons
+      expect(find.text('Cài đặt giao diện'), findsOneWidget);
+      expect(find.text('Đăng xuất tài khoản'), findsOneWidget);
+      expect(find.textContaining('Astra School Portal · Hệ thống Giáo dục Liên cấp Đại Việt'), findsOneWidget);
+
+      // Tap Logout in Footer to verify dialog opens
+      await tester.tap(find.text('Đăng xuất tài khoản'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Đăng xuất?'), findsOneWidget);
+      expect(find.text('Em có chắc chắn muốn đăng xuất khỏi hệ thống không?'), findsOneWidget);
+
+      // Dismiss dialog
+      await tester.tap(find.text('Hủy'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Đăng xuất?'), findsNothing);
+    });
+
+    testWidgets('TC-NAV-14: Left edge swipe opens Navigation Drawer with student info, utilities, sync, and fixed logout', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify Drawer is initially closed
+      expect(find.text('Trường Phổ thông Liên cấp Astra'), findsNothing);
+
+      // Open drawer using ScaffoldState openDrawer
+      final scaffoldFinder = find.byType(Scaffold);
+      expect(scaffoldFinder, findsOneWidget);
+      final scaffoldState = tester.state<ScaffoldState>(scaffoldFinder);
+      scaffoldState.openDrawer();
+      await tester.pumpAndSettle();
+
+      // 1. Verify Student Info Header in Drawer
+      final drawerFinder = find.byType(Drawer);
+      expect(drawerFinder, findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Trường Phổ thông Liên cấp Astra')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Nguyễn Minh Anh')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.textContaining('Mã HS:')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.textContaining('GVCN')), findsOneWidget);
+
+      // 2. Verify Utility & Configuration Menu Items
+      expect(find.descendant(of: drawerFinder, matching: find.text('Cài đặt giao diện & Màu sắc')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Đổi mật khẩu')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Trợ giúp & Liên hệ nhà trường')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Đồng bộ / Tải lại dữ liệu')), findsOneWidget);
+
+      // 3. Verify Fixed Logout at Drawer Footer
+      expect(find.descendant(of: drawerFinder, matching: find.text('Đăng xuất tài khoản')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Astra School Portal · v2.4 (Build 2026)')), findsOneWidget);
+
+      // 4. Test tapping an item (e.g., Trợ giúp & Liên hệ nhà trường)
+      await tester.tap(find.text('Trợ giúp & Liên hệ nhà trường'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trợ giúp & Liên hệ'), findsOneWidget);
+      expect(find.textContaining('1900 8888'), findsOneWidget);
+
+      // Close dialog
+      await tester.tap(find.text('Đã hiểu'));
+      await tester.pumpAndSettle();
+      expect(find.text('Trợ giúp & Liên hệ'), findsNothing);
+    });
   });
 }
+
