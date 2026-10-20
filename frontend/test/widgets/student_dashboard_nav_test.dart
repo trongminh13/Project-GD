@@ -37,7 +37,7 @@ void main() {
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     });
 
-    testWidgets('TC-NAV-02: Clean AppBar with no top action buttons; Pull-to-Refresh indicator exists', (tester) async {
+    testWidgets('TC-NAV-02: Clean layout without top AppBar; Pull-to-Refresh indicator exists', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: StudentDashboardScreen(),
@@ -45,15 +45,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verify AppBar has no actions buttons
-      final appBar = tester.widget<AppBar>(find.byType(AppBar));
-      expect(appBar.actions, isNull);
+      // Verify AppBar is eliminated to maximize screen real estate
+      expect(find.byType(AppBar), findsNothing);
 
       // Verify RefreshIndicator exists for pull-to-refresh
       expect(find.byType(RefreshIndicator), findsWidgets);
     });
 
-    testWidgets('TC-NAV-03: Tapping Thông báo tab switches to notice view and updates AppBar title', (tester) async {
+    testWidgets('TC-NAV-03: Tapping Thông báo tab switches to notice view', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: StudentDashboardScreen(),

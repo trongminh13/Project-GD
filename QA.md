@@ -1614,6 +1614,33 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `flutter test test/widgets/student_dashboard_nav_test.dart`: **14 / 14 tests PASSED (100% passed)**.
 - `flutter test`: **81 / 81 tests PASSED (100% passed - 0 failure, 0 error)**.
 
+---
+
+### GIAI ĐOẠN 30: BỎ HOÀN TOÀN THANH APPBAR TRÊN CÙNG (CLEAN IMMERSIVE LAYOUT), TỐI ƯU HÓA 100% DIỆN TÍCH MÀN HÌNH CHO HỌC SINH
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Phản hồi từ người dùng: *"ok các thanh bar ở trên có chữ trang chủ lịch học sách học bài tập bảng điểm nên xóa đi để tạo chỗ trống nhỉ senior"* và *"ok làm đi"*.
+- Xóa bỏ triệt để thanh AppBar trên cùng:
+  1. Loại bỏ tình trạng trùng lặp thông tin giữa AppBar và BottomNavigationBar (đã hiển thị rõ ràng icon + tên tab đang chọn).
+  2. Thu hồi toàn bộ 56–60px không gian quý giá theo chiều dọc màn hình điện thoại, tạo trải nghiệm tràn viền hiện đại (Edge-to-Edge Immersive).
+  3. Bọc phần nội dung bằng `SafeArea` an toàn, chống cấn tai thỏ/camera trước.
+  4. Đảm bảo cử chỉ vuốt từ mép trái mở Sidebar Navigation Drawer vẫn hoạt động trơn tru 100%.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Xóa bỏ thuộc tính `appBar: AppBar(...)` khỏi `Scaffold`.
+  - Bọc khối `body: SafeArea(child: Column(children: [DemoModeBanner(), Expanded(...)]))` bảo vệ vùng hiển thị sát đỉnh màn hình.
+  - Dọn dẹp sạch sẽ biến không còn sử dụng `textMainColor` và phương thức thừa `_getAppBarTitle()`.
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+  - Cập nhật test case `TC-NAV-02`: Đổi tên thành *"Clean layout without top AppBar; Pull-to-Refresh indicator exists"*, xác nhận `find.byType(AppBar)` đạt `findsNothing`, và xác nhận `RefreshIndicator` hoạt động bình thường.
+  - Cập nhật test case `TC-NAV-03`: Xác nhận chuyển tab Thông báo hiển thị tiêu đề và nội dung bài viết tin tức đầy đủ.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart test/widgets/student_dashboard_nav_test.dart`: **No issues found! (0 warnings, 0 errors - ran in 6.0s)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **14 / 14 tests PASSED (100% passed)**.
+- `flutter test`: **81 / 81 tests PASSED (100% passed - 0 failure, 0 error)**.
+
+
 
 
 

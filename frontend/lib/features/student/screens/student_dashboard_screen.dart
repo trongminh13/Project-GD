@@ -718,7 +718,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     } catch (_) {
       themeManager = null;
     }
-    final textMainColor = themeManager?.textMain ?? AppColors.textMain;
     final bgImagePath = themeManager?.bgImagePath ?? 'images/school_bg.jpg';
 
     final scaffold = Scaffold(
@@ -726,29 +725,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       drawer: _buildStudentDrawer(),
       drawerEnableOpenDragGesture: true,
       drawerEdgeDragWidth: 60.0,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          _getAppBarTitle(),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textMainColor),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const DemoModeBanner(),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  : _buildCurrentTab(),
+            ),
+          ],
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(height: 1, thickness: 1, color: AppColors.border),
-        ),
-      ),
-      body: Column(
-        children: [
-          const DemoModeBanner(),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                : _buildCurrentTab(),
-          ),
-        ],
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -874,25 +861,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
 
     return mobileApp;
-  }
-
-  String _getAppBarTitle() {
-    switch (_currentIndex) {
-      case 0:
-        return 'Trang chủ';
-      case 1:
-        return 'Lịch học';
-      case 2:
-        return 'Sách học';
-      case 3:
-        return 'Bài tập';
-      case 4:
-        return 'Bảng điểm & Kết quả';
-      case 5:
-        return 'Thông báo';
-      default:
-        return 'Cổng học sinh';
-    }
   }
 
   Widget _buildDrawerItem({
