@@ -46,7 +46,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final reloadFinder = find.byIcon(Icons.refresh);
-      final moreFinder = find.byIcon(Icons.more_horiz);
+      final moreFinder = find.byIcon(Icons.settings_outlined);
       final logoutFinder = find.byIcon(Icons.logout);
 
       expect(reloadFinder, findsOneWidget);
@@ -90,8 +90,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap the Thêm icon on AppBar
-      await tester.tap(find.byIcon(Icons.more_horiz));
+      // Tap the Cài đặt / Tiện ích icon on AppBar
+      await tester.tap(find.byIcon(Icons.settings_outlined));
       await tester.pumpAndSettle();
 
       // Verify Modal BottomSheet opens with utilities
@@ -209,8 +209,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Open Thêm sheet
-      await tester.tap(find.byIcon(Icons.more_horiz));
+      // Open Tiện ích sheet via Cài đặt icon
+      await tester.tap(find.byIcon(Icons.settings_outlined));
       await tester.pumpAndSettle();
 
       // Tap on Bảng điểm & Kết quả học tập

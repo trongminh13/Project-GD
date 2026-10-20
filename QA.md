@@ -1485,4 +1485,24 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `flutter test test/widgets/student_dashboard_nav_test.dart`: **9 / 9 tests PASSED (100% passed)**.
 - `flutter test`: **76 / 76 tests PASSED (100% passed - 0 failure, 0 error)**.
 
+---
+
+### GIAI ĐOẠN 26: CHUYỂN ĐỔI BIỂU TƯỢNG "THÊM" SANG BÁNH RĂNG CƯA CÀI ĐẶT (ICONS.SETTINGS_OUTLINED)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Chuyển đổi biểu tượng nút mở menu tiện ích trên AppBar từ dấu 3 chấm (`Icons.more_horiz`) thành biểu tượng **Cài đặt hình bánh răng cưa (`Icons.settings_outlined`)**.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Thay đổi icon trong `actions` của `AppBar`: từ `Icons.more_horiz` $\rightarrow$ `Icons.settings_outlined`.
+  - Cập nhật tooltip từ `'Thêm'` $\rightarrow$ `'Cài đặt & Tiện ích'`.
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+  - Cập nhật các test case `TC-NAV-02`, `TC-NAV-04`, `TC-NAV-09` tìm kiếm và tương tác với icon `Icons.settings_outlined`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart test/widgets/student_dashboard_nav_test.dart`: **No issues found! (0 warnings, 0 errors - ran in 7.1s)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **9 / 9 tests PASSED (100% passed)**.
+- `flutter test`: **76 / 76 tests PASSED (100% passed - 0 failure, 0 error)**.
+
+
 

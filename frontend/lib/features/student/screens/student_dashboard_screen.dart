@@ -587,9 +587,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             tooltip: 'Tải lại dữ liệu',
           ),
           IconButton(
-            icon: Icon(Icons.more_horiz, color: textMainColor),
+            icon: Icon(Icons.settings_outlined, color: textMainColor),
             onPressed: _showMoreBottomSheet,
-            tooltip: 'Thêm',
+            tooltip: 'Cài đặt & Tiện ích',
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.error),
