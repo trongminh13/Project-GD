@@ -674,7 +674,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     // Giao diện App Mobile chứa hình nền học đường động với hiệu ứng Bokeh Blur
     final Widget mobileApp = ClipRRect(
-      borderRadius: BorderRadius.circular(kIsWeb ? 20 : 0),
+      borderRadius: BorderRadius.zero,
       child: Stack(
         children: [
           // 1. Hình nền học đường được chọn bởi người dùng với hiệu ứng Mờ nhẹ Soft Focus (2px) trong trẻo, sắc nét
@@ -714,7 +714,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             constraints: const BoxConstraints(maxWidth: 480),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.zero,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.35),
@@ -803,7 +803,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(color: AppColors.warning),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
               ),
               child: const Row(
                 children: [
@@ -824,7 +824,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.border),
               boxShadow: [
                 BoxShadow(
@@ -851,7 +851,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(color: AppColors.primary),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.zero,
                       ),
                       child: Text(
                         levelShortTitle,
@@ -1309,7 +1309,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(color: AppColors.warning, width: 1.0),
               ),
               child: const Row(
@@ -1331,7 +1331,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.border, width: 1.0),
               boxShadow: [
                 BoxShadow(
@@ -1390,7 +1390,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: rankBg,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.zero,
                         border: Border.all(color: rankColor.withValues(alpha: 0.3)),
                       ),
                       child: Row(
@@ -1472,7 +1472,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     selectedColor: AppColors.primary,
                     showCheckmark: false,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.zero,
                       side: BorderSide(
                         color: isSelected ? AppColors.primary : AppColors.border,
                         width: 1.0,
@@ -1525,7 +1525,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.zero,
                   border: Border.all(color: AppColors.border, width: 1.0),
                   boxShadow: [
                     BoxShadow(
@@ -1546,7 +1546,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           height: 44,
                           decoration: BoxDecoration(
                             color: scoreColor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.zero,
                           ),
                           child: Icon(_getSubjectIcon(subject), color: scoreColor, size: 24),
                         ),
@@ -1600,7 +1600,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: scoreColor.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.zero,
                               ),
                               child: Text(
                                 grade,
@@ -1616,15 +1616,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    // Thanh đo điểm số trực quan
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 6,
-                        backgroundColor: AppColors.surfaceAlt,
-                        valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
-                      ),
+                    // Thanh đo điểm số trực quan phẳng vuông vức
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: AppColors.surfaceAlt,
+                      valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
                     ),
                   ],
                 ),
@@ -1638,7 +1635,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.border, width: 1.0),
             ),
             child: Column(
@@ -1673,7 +1670,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F0FE),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.zero,
                         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                       ),
                       child: const Text(
@@ -1692,7 +1689,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.zero,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2755,10 +2752,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                   themeManager?.setBackgroundImage(b.assetPath);
                                   setState(() {});
                                 },
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.zero,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.zero,
                                     border: Border.all(
                                       color: isSelected ? AppColors.primary : AppColors.border,
                                       width: isSelected ? 2.5 : 1.0,
@@ -2773,7 +2770,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                     ],
                                   ),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.zero,
                                     child: Stack(
                                       fit: StackFit.expand,
                                       children: [
@@ -2823,7 +2820,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
                                                 color: AppColors.primary,
-                                                borderRadius: BorderRadius.circular(4),
+                                                borderRadius: BorderRadius.zero,
                                               ),
                                               child: const Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -2872,12 +2869,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     return Expanded(
       child: InkWell(
         onTap: onSelect,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.zero,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.border,
               width: isSelected ? 2.0 : 1.0,

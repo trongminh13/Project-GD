@@ -1448,4 +1448,41 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `flutter test test/widgets/student_dashboard_nav_test.dart`: **9 / 9 tests PASSED (100% passed)**.
 - `flutter test`: **76 / 76 tests PASSED (100% passed)**.
 
+---
+
+### GIAI ĐOẠN 25: CHUẨN HÓA THIẾT KẾ PHẲNG VUÔNG VỨC (FLAT SQUARE DESIGN - BORDERRADIUS.ZERO)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Thắc mắc/yêu cầu từ người dùng: *"sao lại bo góc hả senior design"*.
+- Toàn bộ giao diện phải tuân thủ nghiêm ngặt chuẩn mực **Flat Square Design (BorderRadius.zero)**: viền phẳng sắc nét 1.0px, cạnh vuông vức, loại bỏ hoàn toàn các góc bo tròn (`BorderRadius.circular`) để đồng bộ tuyệt đối với các tab Trang chủ, Lịch học, Sách học và Bài tập.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - **Khung App Web Mobile (`mobileApp` & Khung ngoài)**:
+    + Đổi `ClipRRect(borderRadius: BorderRadius.circular(kIsWeb ? 20 : 0))` sang `BorderRadius.zero`.
+    + Đổi `Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)))` sang `BorderRadius.zero`.
+    + Khắc phục triệt để hiện tượng khung app trên màn hình Web bị bo tròn mép 20px.
+  - **Trang chủ (`_buildHomeTab()`)**:
+    + Chuyển Banner chế độ Demo từ `circular(4)` sang `BorderRadius.zero`.
+    + Chuyển Header cá nhân học sinh từ `circular(12)` sang `BorderRadius.zero`.
+    + Chuyển Huy hiệu cấp học (`levelShortTitle`) từ `circular(4)` sang `BorderRadius.zero`.
+  - **Tab Bảng điểm (`_buildMarksTab()`)**:
+    + Chuyển Banner demo sang `BorderRadius.zero`.
+    + Chuyển Hero KPI Card tổng quan học lực sang `BorderRadius.zero`.
+    + Chuyển Huy hiệu xếp loại học lực (`Học lực Xuất sắc`) từ viên thuốc tròn `circular(20)` sang nhãn chữ nhật phẳng viền vuông sắc nét `BorderRadius.zero`.
+    + Chuyển Bộ lọc đợt kiểm tra Filter Chips sang `shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero)`.
+    + Chuyển Thẻ điểm từng môn học từ `circular(12)` sang `BorderRadius.zero`.
+    + Chuyển Khung biểu tượng môn học (`_getSubjectIcon`) từ `circular(10)` sang `BorderRadius.zero`.
+    + Chuyển Huy hiệu xếp loại điểm số từ `circular(4)` sang `BorderRadius.zero`.
+    + Bỏ bọc `ClipRRect(borderRadius: BorderRadius.circular(3))` trên thanh đo tiến trình điểm số, chuyển sang `LinearProgressIndicator` cạnh phẳng vuông vức.
+    + Chuyển Thẻ Đánh giá Rèn luyện & Hạnh kiểm từ `circular(12)` sang `BorderRadius.zero`.
+    + Chuyển Huy hiệu hạnh kiểm và hộp nhận xét của giáo viên chủ nhiệm sang `BorderRadius.zero`.
+  - **Bộ chọn chủ đề Theme Picker**:
+    + Đồng bộ thumbnail ảnh nền và các nút chọn màu chữ sang `BorderRadius.zero`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze lib/features/student/screens/student_dashboard_screen.dart`: **No issues found! (0 warnings, 0 errors - ran in 7.1s)**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart`: **9 / 9 tests PASSED (100% passed)**.
+- `flutter test`: **76 / 76 tests PASSED (100% passed - 0 failure, 0 error)**.
+
 
