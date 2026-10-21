@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/models/markbook.dart';
 
 class MarksService {
   static final MarksService _instance = MarksService._internal();
@@ -30,6 +31,38 @@ class MarksService {
       // Return empty on failure
     }
     return [];
+  }
+
+  /// Fetches the full Vietnamese học bạ for a student.
+  /// [academicYearId] is optional; if null, the backend uses the current year.
+  Future<StudentMarkbook?> getStudentMarkbook(
+    String studentId, {
+    String? academicYearId,
+  }) async {
+    final token = await AuthService().getToken();
+    String path = '${ApiConstants.baseUrl}/marks/student/$studentId/markbook';
+    if (academicYearId != null) {
+      path += '?academicYearId=$academicYearId';
+    }
+    final url = Uri.parse(path);
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return StudentMarkbook.fromJson(data);
+      }
+    } catch (_) {
+      // Return null on failure – caller shows empty state
+    }
+    return null;
   }
 
   /// Teachers bulk submit marks for an assessment

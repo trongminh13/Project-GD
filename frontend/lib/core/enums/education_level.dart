@@ -9,8 +9,33 @@ enum EducationLevel {
 class EducationLevelHelper {
   EducationLevelHelper._();
 
-  /// Phân loại cấp học dựa trên chuỗi grade (ví dụ: '1', '5', '3A', '10', '10-A1')
-  static EducationLevel fromGrade(dynamic grade) {
+  /// Phân loại cấp học dựa trên chuỗi tên Enum hoặc mô tả từ Backend API ("HIGH_SCHOOL", "SECONDARY", "PRIMARY", v.v.)
+  static EducationLevel? fromString(dynamic value) {
+    if (value == null) return null;
+    final str = value.toString().trim().toUpperCase();
+    if (str.contains('HIGH') || str.contains('THPT') || str.contains('CẤP 3') || str.contains('CAP 3') || str.contains('PHỔ THÔNG')) {
+      return EducationLevel.highSchool;
+    }
+    if (str.contains('SECOND') || str.contains('THCS') || str.contains('CẤP 2') || str.contains('CAP 2') || str.contains('CƠ SỞ')) {
+      return EducationLevel.secondary;
+    }
+    if (str.contains('PRIM') || str.contains('TIỂU') || str.contains('TIEU') || str.contains('CẤP 1') || str.contains('CAP 1')) {
+      return EducationLevel.primary;
+    }
+    return null;
+  }
+
+  /// Phân loại cấp học dựa trên chuỗi grade hoặc cấp học
+  static EducationLevel fromGrade(dynamic grade, [dynamic levelStr]) {
+    // 1. Ưu tiên cấp học truyền kèm nếu có
+    final parsedFromLevel = fromString(levelStr);
+    if (parsedFromLevel != null) return parsedFromLevel;
+
+    // 2. Kiểm tra nếu grade thực chất là tên cấp học (ví dụ: "HIGH_SCHOOL", "THPT")
+    final parsedFromGrade = fromString(grade);
+    if (parsedFromGrade != null) return parsedFromGrade;
+
+    // 3. Phân loại theo khối lớp số (1 đến 12)
     if (grade == null) return EducationLevel.primary;
     final cleanStr = grade.toString().replaceAll(RegExp(r'[^0-9]'), '');
     final g = int.tryParse(cleanStr) ?? 1;
@@ -40,6 +65,21 @@ class EducationLevelHelper {
         return 'THCS';
       case EducationLevel.highSchool:
         return 'THPT';
+    }
+  }
+
+  /// Tên trường tương ứng theo từng cấp bậc học
+  static String getSchoolName(EducationLevel level, [String? customSchoolName]) {
+    if (customSchoolName != null && customSchoolName.trim().isNotEmpty) {
+      return customSchoolName.trim();
+    }
+    switch (level) {
+      case EducationLevel.primary:
+        return 'Trường Tiểu học Astra';
+      case EducationLevel.secondary:
+        return 'Trường THCS Astra';
+      case EducationLevel.highSchool:
+        return 'Trường THPT Astra';
     }
   }
 

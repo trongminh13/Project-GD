@@ -11,5 +11,6 @@ public interface TeachingAssignmentRepository extends JpaRepository<TeachingAssi
     List<TeachingAssignment> findByTeacherIdAndAcademicYearIsCurrentTrue(Long teacherId);
     List<TeachingAssignment> findBySchoolClassIdAndAcademicYearIsCurrentTrue(Long classId);
     List<TeachingAssignment> findByTeacherIdAndSchoolClassIdAndAcademicYearIsCurrentTrue(Long teacherId, Long classId);
+    List<TeachingAssignment> findByTeacherIdAndSchoolClassIdAndSubjectIdAndAcademicYearIsCurrentTrue(Long teacherId, Long classId, Long subjectId);
     List<TeachingAssignment> findByTeacherId(Long teacherId);
 }

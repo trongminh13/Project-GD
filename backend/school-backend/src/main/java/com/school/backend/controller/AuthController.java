@@ -14,6 +14,8 @@ import com.school.backend.service.OtpService;
 import com.school.backend.repository.ParentRepository;
 import com.school.backend.payload.request.OtpRequest;
 import com.school.backend.entity.Parent;
+import com.school.backend.entity.Student;
+import com.school.backend.repository.StudentRepository;
 import java.util.Map;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,9 @@ public class AuthController {
     @Autowired
     ParentRepository parentRepository;
 
+    @Autowired
+    StudentRepository studentRepository;
+
     // In-memory rate limiting cho OTP: phone -> timestamp gửi lần cuối
     private static final java.util.concurrent.ConcurrentHashMap<String, Long> OTP_LAST_SENT = new java.util.concurrent.ConcurrentHashMap<>();
     private static final java.util.concurrent.ConcurrentHashMap<String, Integer> OTP_HOURLY_COUNT = new java.util.concurrent.ConcurrentHashMap<>();
@@ -64,7 +69,8 @@ public class AuthController {
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         String username = loginRequest.getUsername();
         Optional<User> userOpt = userRepository.findByUsername(username)
-                .or(() -> parentRepository.findByPhone(username).map(Parent::getUser));
+                .or(() -> parentRepository.findByPhone(username).map(Parent::getUser))
+                .or(() -> studentRepository.findByAdmissionNumber(username).map(Student::getUser));
 
         // 1. Kiểm tra trạng thái khóa tài khoản (Miễn trừ khóa cứng cho ADMIN chống DoS)
         if (userOpt.isPresent()) {

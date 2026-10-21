@@ -9,6 +9,7 @@ import com.school.backend.entity.Student;
 import com.school.backend.payload.dto.StudentAttendanceDto;
 import com.school.backend.payload.dto.StudentMarkDto;
 import com.school.backend.payload.dto.StudentProfileDto;
+import com.school.backend.payload.response.StudentMarkbookResponse;
 import com.school.backend.repository.AttendanceRepository;
 import com.school.backend.repository.EnrollmentRepository;
 import com.school.backend.repository.MarksRepository;
@@ -39,6 +40,9 @@ public class StudentPortalService {
     @Autowired
     private EnrollmentRepository enrollmentRepository;
 
+    @Autowired
+    private MarksService marksService;
+
     private Student getStudentByUserId(Long userId) {
         return studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -68,6 +72,7 @@ public class StudentPortalService {
                 .photoUrl(student.getPhotoUrl())
                 .educationLevel(level)
                 .educationLevelName(level.getDisplayName())
+                .schoolName(level.getDefaultSchoolName())
                 .build();
     }
 
@@ -133,5 +138,10 @@ public class StudentPortalService {
             if (percentage.compareTo(java.math.BigDecimal.valueOf(50)) >= 0) return "Đạt";
             return "Chưa đạt";
         }
+    }
+
+    public StudentMarkbookResponse getMarkbookByUserId(Long userId, Long academicYearId, String username) {
+        Student student = getStudentByUserId(userId);
+        return marksService.getStudentMarkbook(student.getId(), academicYearId, username, false, false);
     }
 }

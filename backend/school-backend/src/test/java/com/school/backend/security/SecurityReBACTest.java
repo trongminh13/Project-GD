@@ -862,4 +862,65 @@ public class SecurityReBACTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(studentA.getName())));
     }
+
+    @Test
+    @DisplayName("SEC-MARK-01: Học sinh xem học bạ của chính mình -> 200 OK; xem học bạ của bạn khác (BOLA/IDOR) -> 403 Forbidden")
+    void testStudent_CannotAccessOtherStudentMarkbook_BOLA() throws Exception {
+        String tokenStudentA = jwtUtils.generateTokenFromUsername(userStudentA.getUsername());
+
+        // 1. Học sinh A xem học bạ của chính mình -> 200 OK
+        mockMvc.perform(get("/api/marks/student/" + studentA.getId() + "/markbook")
+                        .header("Authorization", "Bearer " + tokenStudentA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studentId", is(studentA.getId().intValue())));
+
+        // 2. Học sinh A cố tình xem học bạ của học sinh B -> 403 Forbidden (chặn BOLA/IDOR)
+        mockMvc.perform(get("/api/marks/student/" + studentB.getId() + "/markbook")
+                        .header("Authorization", "Bearer " + tokenStudentA))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("SEC-MARK-02: Giáo viên không có phân công giảng dạy môn học cho lớp -> 403 Forbidden khi nhập điểm")
+    void testTeacher_CannotInputMarksForUnassignedSubject() throws Exception {
+        String tokenOtherTeacher = jwtUtils.generateTokenFromUsername(userOtherTeacher.getUsername());
+
+        // otherTeacher không dạy lớp A, gửi payload nhập điểm môn Toán cho studentA
+        String payload = """
+                {
+                    "subject": "Toán",
+                    "records": [
+                        {"studentId": %d, "marksObtained": 8.5}
+                    ]
+                }
+                """.formatted(studentA.getId());
+
+        mockMvc.perform(post("/api/marks/bulk")
+                        .header("Authorization", "Bearer " + tokenOtherTeacher)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("SEC-MARK-03: Giáo viên chủ nhiệm nhưng không dạy môn Toán -> 403 Forbidden khi cố tình sửa điểm môn Toán")
+    void testHomeroomTeacher_CannotGradeSubjectWithoutAssignment() throws Exception {
+        String tokenHomeroom = jwtUtils.generateTokenFromUsername(userHomeroomTeacher.getUsername());
+
+        // homeroomTeacher là GVCN lớp A nhưng không có TeachingAssignment môn mathSubject
+        String payload = """
+                {
+                    "subjectId": %d,
+                    "records": [
+                        {"studentId": %d, "marksObtained": 9.0}
+                    ]
+                }
+                """.formatted(mathSubject.getId(), studentA.getId());
+
+        mockMvc.perform(post("/api/marks/bulk")
+                        .header("Authorization", "Bearer " + tokenHomeroom)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isForbidden());
+    }
 }

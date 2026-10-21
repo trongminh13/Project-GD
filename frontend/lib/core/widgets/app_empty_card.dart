@@ -20,7 +20,8 @@ class AppEmptyCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.cardBg,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+        borderRadius: BorderRadius.zero,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

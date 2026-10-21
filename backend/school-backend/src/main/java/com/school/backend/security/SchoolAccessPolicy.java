@@ -441,4 +441,61 @@ public class SchoolAccessPolicy {
 
         throw new AccessDeniedException("Bạn không có quyền tải tệp này.");
     }
+
+    /**
+     * Xác thực quyền giáo viên nhập/sửa điểm cho một môn học cụ thể của học sinh.
+     * - ADMIN: Toàn quyền
+     * - GVCN: Toàn quyền với học sinh lớp chủ nhiệm
+     * - GV bộ môn: BẮT BUỘC phải có phân công giảng dạy đúng môn học đó tại lớp của học sinh
+     */
+    public void verifyTeacherCanGradeSubject(Authentication auth, Student student, Subject subject) {
+        if (auth == null) {
+            throw new AccessDeniedException("Yêu cầu xác thực tài khoản.");
+        }
+
+        if (isAdmin(auth)) {
+            return;
+        }
+
+        if (isTeacher(auth)) {
+            String username = auth.getName();
+            Teacher teacher = teacherRepository.findByUserUsername(username)
+                    .orElseThrow(() -> new AccessDeniedException("Hồ sơ giáo viên không tồn tại trong hệ thống."));
+
+            SchoolClass studentClass = enrollmentRepository.findByStudentIdAndAcademicYearIsCurrentTrue(student.getId())
+                    .map(Enrollment::getSchoolClass)
+                    .orElse(student.getSchoolClass());
+
+            if (studentClass == null) {
+                throw new AccessDeniedException("Học sinh chưa được phân vào lớp học.");
+            }
+
+            // Giáo viên bắt buộc phải có phân công giảng dạy môn học này cho lớp của học sinh
+            if (subject != null && subject.getId() != null) {
+                boolean isAssignedSubject = !teachingAssignmentRepository
+                        .findByTeacherIdAndSchoolClassIdAndSubjectIdAndAcademicYearIsCurrentTrue(
+                                teacher.getId(), studentClass.getId(), subject.getId())
+                        .isEmpty();
+
+                if (!isAssignedSubject) {
+                    throw new AccessDeniedException("Giáo viên không có phân công giảng dạy môn "
+                            + subject.getName() + " cho lớp của học sinh này.");
+                }
+            } else {
+                // Nếu là cập nhật chung không chỉ định môn cụ thể, cho phép GVCN hoặc GV có dạy lớp này
+                boolean isHomeroom = studentClass.getEffectiveHomeroomTeacher() != null
+                        && studentClass.getEffectiveHomeroomTeacher().getId().equals(teacher.getId());
+                boolean isAssignedClass = !teachingAssignmentRepository
+                        .findByTeacherIdAndSchoolClassIdAndAcademicYearIsCurrentTrue(teacher.getId(), studentClass.getId())
+                        .isEmpty();
+
+                if (!isHomeroom && !isAssignedClass) {
+                    throw new AccessDeniedException("Giáo viên không có phân công giảng dạy lớp của học sinh này.");
+                }
+            }
+            return;
+        }
+
+        throw new AccessDeniedException("Chỉ giáo viên phụ trách hoặc ban giám hiệu mới có quyền nhập điểm.");
+    }
 }

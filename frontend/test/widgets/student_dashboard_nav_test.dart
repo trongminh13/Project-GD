@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ashadeep/features/student/screens/student_dashboard_screen.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/core/widgets/material_card.dart';
+import 'package:ashadeep/core/widgets/homework_card.dart';
 
 void main() {
   setUp(() {
@@ -178,12 +180,15 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify KPI Header and Academic Rank
-      expect(find.text('ĐIỂM TRUNG BÌNH HỌC KỲ'), findsOneWidget);
-      expect(find.text('Học lực Xuất sắc'), findsOneWidget);
+      expect(find.textContaining('ĐIỂM TRUNG BÌNH'), findsOneWidget);
+      expect(find.text('Xuất sắc'), findsWidgets);
 
-      // Verify Subject marks are displayed
+      // Verify LinearProgressIndicator is removed as requested
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+
+      // Verify Subject marks are displayed (THPT Grade 10 subjects)
       expect(find.text('Toán học'), findsOneWidget);
-      expect(find.text('Tiếng Việt'), findsOneWidget);
+      expect(find.text('Ngữ văn'), findsOneWidget);
       expect(find.text('Tiếng Anh'), findsOneWidget);
 
       // Verify Teacher Remarks Card
@@ -209,8 +214,8 @@ void main() {
 
       // Verify navigates directly to Marks tab and displays GPA
       expect(find.text('Tiện ích học sinh'), findsNothing); // Sheet is closed
-      expect(find.text('ĐIỂM TRUNG BÌNH HỌC KỲ'), findsOneWidget);
-      expect(find.text('Học lực Xuất sắc'), findsOneWidget);
+      expect(find.textContaining('ĐIỂM TRUNG BÌNH'), findsOneWidget);
+      expect(find.text('Xuất sắc'), findsWidgets);
     });
 
     testWidgets('TC-NAV-10: Timetable defaults to Daily view and shows weekday tabs', (tester) async {
@@ -236,9 +241,9 @@ void main() {
       expect(find.text('Thứ 5'), findsOneWidget);
       expect(find.text('Thứ 6'), findsOneWidget);
 
-      // Verify lessons of selected day (Thứ 2) are displayed
+      // Verify lessons of selected day (Thứ 2) are displayed (THPT Grade 10 subjects)
       expect(find.text('Toán'), findsWidgets);
-      expect(find.text('Tiếng Việt'), findsWidgets);
+      expect(find.text('Ngữ văn'), findsWidgets);
     });
 
     testWidgets('TC-NAV-11: Tapping Theo tuần switches to Weekly full view and displays all 5 days', (tester) async {
@@ -305,7 +310,7 @@ void main() {
       expect(find.textContaining('THỨ HAI ·'), findsNothing);
     });
 
-    testWidgets('TC-NAV-13: Both Hero Card and Footer have Settings and Logout buttons with Flat Square Design', (tester) async {
+    testWidgets('TC-NAV-13: Hero Card has Settings/Logout and Footer has standalone Logout button (px=0) with Flat Square Design', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: StudentDashboardScreen(),
@@ -321,8 +326,8 @@ void main() {
       await tester.scrollUntilVisible(find.text('Đăng xuất tài khoản'), 300);
       await tester.pumpAndSettle();
 
-      // Footer buttons
-      expect(find.text('Cài đặt giao diện'), findsOneWidget);
+      // Footer has only Logout button (Cài đặt giao diện removed as requested)
+      expect(find.text('Cài đặt giao diện'), findsNothing);
       expect(find.text('Đăng xuất tài khoản'), findsOneWidget);
       expect(find.textContaining('Astra School Portal · Hệ thống Giáo dục Liên cấp Đại Việt'), findsOneWidget);
 
@@ -361,7 +366,7 @@ void main() {
       // 1. Verify Student Info Header in Drawer
       final drawerFinder = find.byType(Drawer);
       expect(drawerFinder, findsOneWidget);
-      expect(find.descendant(of: drawerFinder, matching: find.text('Trường Phổ thông Liên cấp Astra')), findsOneWidget);
+      expect(find.descendant(of: drawerFinder, matching: find.text('Trường THPT Astra')), findsOneWidget);
       expect(find.descendant(of: drawerFinder, matching: find.text('Nguyễn Minh Anh')), findsOneWidget);
       expect(find.descendant(of: drawerFinder, matching: find.textContaining('Mã HS:')), findsOneWidget);
       expect(find.descendant(of: drawerFinder, matching: find.textContaining('GVCN')), findsOneWidget);
@@ -388,6 +393,99 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Trợ giúp & Liên hệ'), findsNothing);
     });
+
+    testWidgets('TC-NAV-15: Student Dashboard cards and boxes have High-Contrast Black Border and Flat Square Design', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify MaterialCard has black border and zero radius
+      final materialCardFinder = find.byType(MaterialCard).first;
+      expect(materialCardFinder, findsOneWidget);
+      final materialCardContainer = tester.widget<Container>(
+        find.descendant(of: materialCardFinder, matching: find.byType(Container)).first,
+      );
+      final matDeco = materialCardContainer.decoration as BoxDecoration;
+      expect(matDeco.border?.top.color, Colors.black);
+      expect(matDeco.border?.top.width, 1.0);
+      expect(matDeco.borderRadius, BorderRadius.zero);
+
+      // Verify HomeworkCard has black border and zero radius
+      final homeworkCardFinder = find.byType(HomeworkCard).first;
+      expect(homeworkCardFinder, findsOneWidget);
+      final homeworkCardContainer = tester.widget<Container>(
+        find.descendant(of: homeworkCardFinder, matching: find.byType(Container)).first,
+      );
+      final hwDeco = homeworkCardContainer.decoration as BoxDecoration;
+      expect(hwDeco.border?.top.color, Colors.black);
+      expect(hwDeco.border?.top.width, 1.0);
+      expect(hwDeco.borderRadius, BorderRadius.zero);
+    });
+
+    testWidgets('TC-NAV-16: Marks tab features Hero KPI Card with prominent Rank Box, solid black grid dividers, and no progress bars', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Switch to Bảng điểm tab
+      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.pumpAndSettle();
+
+      // 1. Verify Rank Box contains large icon and short title 'Xuất sắc'
+      expect(find.byIcon(Icons.emoji_events_rounded), findsOneWidget);
+      expect(find.text('Xuất sắc'), findsWidgets);
+
+      // 2. Verify LinearProgressIndicator is completely removed from subject cards
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+
+      // 3. Verify KPI dividers use solid black border color
+      final dividers = tester.widgetList<Container>(
+        find.byWidgetPredicate((widget) {
+          if (widget is Container && widget.color == Colors.black) {
+            return true;
+          }
+          return false;
+        }),
+      );
+      // At least horizontal divider + 2 vertical dividers = 3 black dividing line containers
+      expect(dividers.length, greaterThanOrEqualTo(3));
+    });
+
+    testWidgets('TC-NAV-17: Student Header Card displays time greeting, school name, and tapping header card opens utilities sheet', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Verify greeting by time exists
+      expect(find.textContaining('Chào buổi'), findsOneWidget);
+
+      // 2. Verify student name, THPT badge, and school name
+      expect(find.text('Nguyễn Minh Anh'), findsOneWidget);
+      expect(find.text('THPT'), findsWidgets);
+      expect(find.textContaining('Trường THPT Astra'), findsWidgets);
+
+      // 3. Tap on the student name inside Header Card to verify it opens utilities sheet
+      await tester.tap(find.text('Nguyễn Minh Anh'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tiện ích học sinh'), findsOneWidget);
+      expect(find.textContaining('Trường THPT Astra'), findsWidgets);
+
+      // Dismiss sheet
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+      expect(find.text('Tiện ích học sinh'), findsNothing);
+    });
   });
 }
+
 

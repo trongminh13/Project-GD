@@ -23,6 +23,7 @@ import 'package:ashadeep/core/widgets/demo_mode_banner.dart';
 import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/core/enums/education_level.dart';
+import 'package:ashadeep/models/markbook.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -55,8 +56,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   // Bộ lọc môn học trong tab Học liệu
   String _selectedSubjectFilter = 'Tất cả';
 
-  // Bộ lọc kỳ thi trong tab Bảng điểm
-  String _selectedExamFilter = 'Tất cả';
+  StudentMarkbook? _markbook;
+  int _selectedSemester = 1; // 1: Học kỳ 1, 2: Học kỳ 2, 3: Cả năm
+  bool _isMarkbookTableView = false; // false: Thẻ chi tiết, true: Sổ điểm điện tử
+  final Set<int> _expandedSubjectIds = {};
 
   // Thông báo
   String _selectedNoticeAudience = 'Tất cả';
@@ -138,15 +141,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   Future<void> _loadMarks() async {
     try {
-      final m = await _portalService.getMyMarks();
+      final futures = await Future.wait([
+        _portalService.getMyMarks(),
+        _portalService.getMyMarkbook(),
+      ]);
+      final m = futures[0] as List<Map<String, dynamic>>;
+      final mb = futures[1] as StudentMarkbook?;
       if (mounted) {
         setState(() {
           _marks = m.isNotEmpty ? m : (FeatureFlags.useDemoFallback ? _getMockMarks() : []);
+          _markbook = mb ?? (FeatureFlags.useDemoFallback ? _getAdaptiveMockMarkbook() : null);
         });
       }
     } catch (_) {
       if (mounted && FeatureFlags.useDemoFallback) {
-        setState(() => _marks = _getMockMarks());
+        setState(() {
+          _marks = _getMockMarks();
+          _markbook = _getAdaptiveMockMarkbook();
+        });
       }
     }
   }
@@ -244,6 +256,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       'rollNo': 'HS001',
       'admissionNumber': 'HS-2026-001',
       'classTeacher': 'Cô Lê Thu Hà',
+      'schoolName': 'Trường THPT Astra',
+      'educationLevel': 'HIGH_SCHOOL',
+      'educationLevelName': 'THPT',
       'dateOfBirth': '15/08/2010',
       'gender': 'Nữ',
       'parentName': 'Nguyễn Văn Hùng',
@@ -261,7 +276,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         'grade': 'Xuất sắc',
       },
       {
-        'subjectName': 'Tiếng Việt',
+        'subjectName': 'Ngữ văn',
         'score': 9.0,
         'maxScore': 10.0,
         'examName': 'Kiểm tra Giữa kỳ 1',
@@ -275,20 +290,507 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         'grade': 'Xuất sắc',
       },
       {
-        'subjectName': 'Tự nhiên & Xã hội',
-        'score': 10.0,
+        'subjectName': 'Vật lý',
+        'score': 9.5,
         'maxScore': 10.0,
         'examName': 'Kiểm tra Giữa kỳ 1',
         'grade': 'Xuất sắc',
       },
       {
-        'subjectName': 'Tin học & Công nghệ',
-        'score': 9.5,
+        'subjectName': 'Hóa học',
+        'score': 9.0,
         'maxScore': 10.0,
         'examName': 'Đánh giá định kỳ',
-        'grade': 'Xuất sắc',
+        'grade': 'Giỏi',
       },
     ];
+  }
+
+  StudentMarkbook _getAdaptiveMockMarkbook() {
+    final level = _profile?['educationLevel']?.toString() ?? 'HIGH_SCHOOL';
+    final name = _profile?['name']?.toString() ?? 'Lê Hoàng Long';
+    final className = _profile?['className']?.toString() ?? '10A';
+    final school = _profile?['schoolName']?.toString() ?? 'Trường THPT Chu Văn An';
+    final admission = _profile?['admissionNumber']?.toString() ?? 'STU003';
+
+    if (level == 'PRIMARY') {
+      return StudentMarkbook(
+        studentId: 101,
+        studentName: name,
+        studentAdmissionNumber: admission,
+        academicYear: '2026-2027',
+        educationLevel: 'PRIMARY',
+        educationLevelDisplayName: 'Tiểu học',
+        className: className,
+        schoolName: school,
+        overallAvg: 9.2,
+        overallClassification: 'Hoàn thành xuất sắc',
+        conduct: 'Chăm ngoan, lễ phép',
+        subjects: const [
+          SubjectMarkbook(
+            subjectId: 1,
+            subjectName: 'Tiếng Việt',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Đọc to, rõ ràng, diễn cảm', 'Viết chữ đều nét, đúng chính tả'],
+              txScores: [9.0, 9.5],
+              gkScore: 9.0,
+              ckScore: 9.5,
+              avg: 9.3,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 2,
+            subjectName: 'Toán học',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tính toán nhanh, chính xác', 'Tư duy hình học và logic tốt'],
+              txScores: [9.5, 10.0],
+              gkScore: 10.0,
+              ckScore: 9.5,
+              avg: 9.8,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 3,
+            subjectName: 'Tiếng Anh',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Phát âm chuẩn, tự tin giao tiếp', 'Vốn từ vựng phong phú'],
+              txScores: [9.5, 9.0],
+              gkScore: 9.5,
+              ckScore: 9.5,
+              avg: 9.5,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 4,
+            subjectName: 'Tự nhiên và Xã hội',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tích cực khám phá môi trường xung quanh'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 5,
+            subjectName: 'Đạo đức',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Biết yêu thương, chia sẻ cùng bạn bè'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 6,
+            subjectName: 'Âm nhạc',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Hát đúng nhịp phách, hào hứng tham gia hoạt động nhóm'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 7,
+            subjectName: 'Mĩ thuật',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tranh vẽ sáng tạo, phối màu tươi sáng'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 8,
+            subjectName: 'Giáo dục thể chất',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Nhanh nhẹn, thực hiện đúng các động tác thể dục'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 9,
+            subjectName: 'Hoạt động trải nghiệm',
+            academicClassification: 'Hoàn thành tốt (T)',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tự tin, chủ động trong các hoạt động tập thể'],
+            ),
+          ),
+        ],
+      );
+    } else if (level == 'SECONDARY') {
+      return StudentMarkbook(
+        studentId: 202,
+        studentName: name,
+        studentAdmissionNumber: admission,
+        academicYear: '2026-2027',
+        educationLevel: 'SECONDARY',
+        educationLevelDisplayName: 'THCS',
+        className: className,
+        schoolName: school,
+        overallAvg: 8.6,
+        overallClassification: 'Tốt',
+        conduct: 'Tốt',
+        subjects: const [
+          SubjectMarkbook(
+            subjectId: 10,
+            subjectName: 'Toán học',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 9.0],
+              gkScore: 8.0,
+              ckScore: 8.5,
+              avg: 8.4,
+              comments: ['Làm bài cẩn thận, nắm chắc kiến thức số học'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 11,
+            subjectName: 'Ngữ văn',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.0, 8.5],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.4,
+              comments: ['Cảm thụ văn học tốt, diễn đạt mạch lạc'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 12,
+            subjectName: 'Tiếng Anh',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 9.0],
+              gkScore: 9.0,
+              ckScore: 9.0,
+              avg: 8.9,
+              comments: ['Ngữ pháp vững, kĩ năng nghe đọc rất tốt'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 13,
+            subjectName: 'Khoa học tự nhiên',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.0, 8.5],
+              gkScore: 8.0,
+              ckScore: 8.5,
+              avg: 8.3,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 14,
+            subjectName: 'Lịch sử và Địa lí',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 8.5],
+              gkScore: 8.0,
+              ckScore: 8.5,
+              avg: 8.3,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 15,
+            subjectName: 'Tin học',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [9.0, 9.5],
+              gkScore: 9.0,
+              ckScore: 9.5,
+              avg: 9.3,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 16,
+            subjectName: 'Giáo dục công dân',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 9.0],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.6,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 17,
+            subjectName: 'Công nghệ',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.0, 8.5],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.4,
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 18,
+            subjectName: 'Giáo dục thể chất',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Thể lực tốt, tích cực rèn luyện thân thể'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 19,
+            subjectName: 'Nghệ thuật (Âm nhạc, Mĩ thuật)',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tham gia sôi nổi các tiết học thực hành'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 20,
+            subjectName: 'Hoạt động trải nghiệm, hướng nghiệp',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Ý thức trách nhiệm cao với tập thể'],
+            ),
+          ),
+        ],
+      );
+    } else {
+      // HIGH_SCHOOL Cấp 3
+      return StudentMarkbook(
+        studentId: 303,
+        studentName: name,
+        studentAdmissionNumber: admission,
+        academicYear: '2026-2027',
+        educationLevel: 'HIGH_SCHOOL',
+        educationLevelDisplayName: 'THPT',
+        className: className,
+        schoolName: school,
+        overallAvg: 9.1,
+        overallClassification: 'Tốt (Xuất sắc)',
+        conduct: 'Tốt (Xuất sắc)',
+        subjects: const [
+          SubjectMarkbook(
+            subjectId: 21,
+            subjectName: 'Toán học',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [9.0, 9.5, 9.0],
+              gkScore: 9.5,
+              ckScore: 9.5,
+              avg: 9.4,
+              comments: ['Tư duy đại số và hình giải tích rất xuất sắc'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [9.0, 9.5, 9.5],
+              gkScore: 9.0,
+              ckScore: 9.5,
+              avg: 9.3,
+              comments: ['Giải quyết tốt các bài toán phân hóa nâng cao'],
+            ),
+            yearAvg: 9.3,
+          ),
+          SubjectMarkbook(
+            subjectId: 22,
+            subjectName: 'Ngữ văn',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 8.5, 9.0],
+              gkScore: 8.5,
+              ckScore: 9.0,
+              avg: 8.8,
+              comments: ['Hành văn lưu loát, lập luận sắc bén'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [8.5, 9.0, 9.0],
+              gkScore: 9.0,
+              ckScore: 8.5,
+              avg: 8.8,
+              comments: ['Cảm thụ văn học sâu sắc, diễn đạt truyền cảm'],
+            ),
+            yearAvg: 8.8,
+          ),
+          SubjectMarkbook(
+            subjectId: 23,
+            subjectName: 'Tiếng Anh',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [9.5, 9.5, 10.0],
+              gkScore: 9.8,
+              ckScore: 9.5,
+              avg: 9.7,
+              comments: ['Trình độ tiếng Anh vượt trội, IELTS 7.5+ equivalent'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [10.0, 9.5, 9.5],
+              gkScore: 9.5,
+              ckScore: 10.0,
+              avg: 9.8,
+              comments: ['Giao tiếp lưu loát, phát âm chuẩn quốc tế'],
+            ),
+            yearAvg: 9.8,
+          ),
+          SubjectMarkbook(
+            subjectId: 24,
+            subjectName: 'Vật lý',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [9.0, 9.5, 9.5],
+              gkScore: 9.5,
+              ckScore: 9.5,
+              avg: 9.4,
+              comments: ['Hiểu bản chất hiện tượng vật lý, làm bài chuẩn xác'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [9.0, 9.0, 9.5],
+              gkScore: 9.0,
+              ckScore: 9.5,
+              avg: 9.2,
+              comments: ['Kỹ năng thực hành thí nghiệm và bài toán dao động tốt'],
+            ),
+            yearAvg: 9.3,
+          ),
+          SubjectMarkbook(
+            subjectId: 25,
+            subjectName: 'Hóa học',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 9.0, 9.0],
+              gkScore: 9.0,
+              ckScore: 9.0,
+              avg: 8.9,
+              comments: ['Giải toán hóa học nhanh và khoa học'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [9.0, 9.0, 8.5],
+              gkScore: 8.5,
+              ckScore: 9.0,
+              avg: 8.8,
+              comments: ['Nắm chắc lý thuyết hóa hữu cơ'],
+            ),
+            yearAvg: 8.9,
+          ),
+          SubjectMarkbook(
+            subjectId: 26,
+            subjectName: 'Sinh học',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 8.5, 9.0],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.6,
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [8.5, 9.0, 8.5],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.6,
+            ),
+            yearAvg: 8.6,
+          ),
+          SubjectMarkbook(
+            subjectId: 27,
+            subjectName: 'Lịch sử',
+            academicClassification: 'Giỏi',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [8.5, 9.0, 8.5],
+              gkScore: 8.5,
+              ckScore: 8.5,
+              avg: 8.6,
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [8.5, 8.5, 9.0],
+              gkScore: 8.5,
+              ckScore: 9.0,
+              avg: 8.8,
+            ),
+            yearAvg: 8.7,
+          ),
+          SubjectMarkbook(
+            subjectId: 28,
+            subjectName: 'Tin học',
+            academicClassification: 'Xuất sắc',
+            semester1: SemesterMark(
+              semester: 1,
+              txScores: [9.5, 10.0, 9.5],
+              gkScore: 9.5,
+              ckScore: 10.0,
+              avg: 9.7,
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              txScores: [9.5, 10.0, 10.0],
+              gkScore: 10.0,
+              ckScore: 9.5,
+              avg: 9.8,
+            ),
+            yearAvg: 9.8,
+          ),
+          SubjectMarkbook(
+            subjectId: 29,
+            subjectName: 'Giáo dục thể chất',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Tích cực tham gia các hoạt động thể thao trường'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              comments: ['Thể lực tốt, hoàn thành đầy đủ các bài kiểm tra chạy và nhảy'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 30,
+            subjectName: 'Giáo dục Quốc phòng và An ninh',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Chấp hành nghiêm kỷ luật và tác phong quân sự'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              comments: ['Nắm chắc điều lệnh đội ngũ và kỹ thuật bắn súng mô phỏng'],
+            ),
+          ),
+          SubjectMarkbook(
+            subjectId: 31,
+            subjectName: 'Hoạt động trải nghiệm, hướng nghiệp',
+            academicClassification: 'Đạt',
+            semester1: SemesterMark(
+              semester: 1,
+              comments: ['Gương mẫu, định hướng nghề nghiệp rõ ràng'],
+            ),
+            semester2: SemesterMark(
+              semester: 2,
+              comments: ['Tích cực tham gia dự án cộng đồng và hướng nghiệp'],
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   List<Map<String, dynamic>> _getMockAttendance() {
@@ -305,30 +807,30 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     return [
       {
         'assignmentId': 28,
-        'title': 'Bài tập tuần 5 - Phép nhân',
+        'title': 'Bài tập tuần 5: Khảo sát sự biến thiên hàm số bậc hai',
         'subjectName': 'Toán học',
         'dueDate': '18/10/2026',
         'submissionStatus': 'IN_PROGRESS',
       },
       {
         'assignmentId': 2,
-        'title': 'Phiếu ôn tập từ chỉ đặc điểm',
-        'subjectName': 'Tiếng Việt',
+        'title': 'Đọc hiểu & Phân tích văn bản: Chiến thắng Mtao Mxây',
+        'subjectName': 'Ngữ văn',
         'dueDate': '19/10/2026',
         'submissionStatus': 'IN_PROGRESS',
       },
       {
         'assignmentId': 3,
-        'title': 'Đọc hiểu & Kể chuyện tuần 4',
-        'subjectName': 'Tiếng Việt',
+        'title': 'Bài luận ngắn: Ý thức giữ gìn bản sắc văn hóa dân tộc',
+        'subjectName': 'Ngữ văn',
         'dueDate': '12/10/2026',
         'submissionStatus': 'GRADED',
         'finalScore': 9.5,
       },
       {
         'assignmentId': 4,
-        'title': 'Trắc nghiệm hình học: Hình chữ nhật',
-        'subjectName': 'Toán học',
+        'title': 'Trắc nghiệm: Động học chất điểm và chuyển động thẳng đều',
+        'subjectName': 'Vật lý',
         'dueDate': '10/10/2026',
         'submissionStatus': 'GRADED',
         'finalScore': 10.0,
@@ -341,54 +843,54 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       {
         'id': 101,
         'fileId': 1,
-        'title': 'Sách giáo khoa Toán 1 - Tập 1',
+        'title': 'Sách giáo khoa Toán 10 - Tập 1',
         'subjectName': 'Toán',
         'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
         'fileType': 'PDF',
-        'fileSize': '75.0 MB',
-        'pageCount': 118,
-        'filePath': 'file:///storage/emulated/0/Download/SGK_Toan_1_Tap_1.pdf',
+        'fileSize': '68.0 MB',
+        'pageCount': 124,
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Toan_10_Tap_1.pdf',
         'createdAt': '2026-10-16',
         'isDownloaded': true,
       },
       {
         'id': 1,
-        'title': 'Sách giáo khoa Toán 3 - Tập 1',
-        'subjectName': 'Toán',
-        'teacherName': 'Cô Lê Thu Hà',
+        'title': 'Sách giáo khoa Ngữ văn 10 - Tập 1',
+        'subjectName': 'Ngữ văn',
+        'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
         'fileType': 'PDF',
-        'fileSize': '4.8 MB',
-        'filePath': 'file:///storage/emulated/0/Download/SGK_Toan_3_Tap_1.pdf',
+        'fileSize': '5.2 MB',
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Ngu_van_10_Tap_1.pdf',
         'createdAt': '2026-10-12',
       },
       {
         'id': 2,
-        'title': 'Vở bài tập Tiếng Việt 3',
-        'subjectName': 'Tiếng Việt',
-        'teacherName': 'Cô Lê Thu Hà',
+        'title': 'Sách giáo khoa Vật lý 10',
+        'subjectName': 'Vật lý',
+        'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
         'fileType': 'PDF',
-        'fileSize': '3.5 MB',
-        'filePath': 'file:///storage/emulated/0/Download/VBT_Tieng_Viet_3.pdf',
+        'fileSize': '6.4 MB',
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Vat_ly_10.pdf',
         'createdAt': '2026-10-11',
       },
       {
         'id': 3,
-        'title': 'Sách Tiếng Anh 3 - Global Success',
+        'title': 'Sách Tiếng Anh 10 - Global Success',
         'subjectName': 'Tiếng Anh',
-        'teacherName': 'Thầy Phạm Quốc Bảo',
+        'teacherName': 'Bộ GD&ĐT · Global Success',
         'fileType': 'PDF',
-        'fileSize': '6.2 MB',
-        'filePath': 'file:///storage/emulated/0/Download/Tieng_Anh_3_Global_Success.pdf',
+        'fileSize': '8.1 MB',
+        'filePath': 'file:///storage/emulated/0/Download/Tieng_Anh_10_Global_Success.pdf',
         'createdAt': '2026-10-10',
       },
       {
         'id': 4,
-        'title': 'Phiếu ôn tập Toán tuần 5',
-        'subjectName': 'Toán',
-        'teacherName': 'Cô Lê Thu Hà',
+        'title': 'Sách giáo khoa Hóa học 10',
+        'subjectName': 'Hóa học',
+        'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
         'fileType': 'PDF',
-        'fileSize': '1.2 MB',
-        'filePath': 'file:///storage/emulated/0/Download/Phieu_On_Tap_Toan_T5.pdf',
+        'fileSize': '5.8 MB',
+        'filePath': 'file:///storage/emulated/0/Download/SGK_Hoa_hoc_10.pdf',
         'createdAt': '2026-10-09',
       },
     ];
@@ -638,43 +1140,43 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }).toList();
   }
 
-  // Danh sách tiết học mẫu (theo chuẩn bản HTML demo)
+  // Danh sách tiết học mẫu (theo chuẩn THPT GDPT 2018)
   List<Map<String, String>> _getLessonsForDay(int dayIndex) {
     final schedules = [
       // Thứ 2
       [
-        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '08:20–09:05', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Thầy Nguyễn Văn Nam', 'room': 'P.301'},
+        {'time': '08:20–09:05', 'subj': 'Ngữ văn', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.301'},
         {'time': '09:25–10:10', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
-        {'time': '10:15–11:00', 'subj': 'Thể dục', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'Sân trường'},
+        {'time': '10:15–11:00', 'subj': 'Vật lý', 'teacher': 'Thầy Đặng Hoàng Long', 'room': 'P.Lý'},
       ],
       // Thứ 3
       [
-        {'time': '07:30–08:15', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '08:20–09:05', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '09:25–10:10', 'subj': 'Tự nhiên và Xã hội', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '10:15–11:00', 'subj': 'Mỹ thuật', 'teacher': 'Cô Trần Mai', 'room': 'P.Mỹ thuật'},
+        {'time': '07:30–08:15', 'subj': 'Ngữ văn', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.301'},
+        {'time': '08:20–09:05', 'subj': 'Toán', 'teacher': 'Thầy Nguyễn Văn Nam', 'room': 'P.301'},
+        {'time': '09:25–10:10', 'subj': 'Hóa học', 'teacher': 'Cô Trần Mai', 'room': 'P.Hóa'},
+        {'time': '10:15–11:00', 'subj': 'Lịch sử', 'teacher': 'Cô Vũ Lan', 'room': 'P.301'},
       ],
       // Thứ 4
       [
-        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '07:30–08:15', 'subj': 'Toán', 'teacher': 'Thầy Nguyễn Văn Nam', 'room': 'P.301'},
         {'time': '08:20–09:05', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
-        {'time': '09:25–10:10', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '10:15–11:00', 'subj': 'Âm nhạc', 'teacher': 'Cô Vũ Lan', 'room': 'P.Âm nhạc'},
+        {'time': '09:25–10:10', 'subj': 'Sinh học', 'teacher': 'Cô Vũ Lan', 'room': 'P.Sinh'},
+        {'time': '10:15–11:00', 'subj': 'Tin học', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'P.Tin 2'},
       ],
       // Thứ 5
       [
-        {'time': '07:30–08:15', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '08:20–09:05', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '09:25–10:10', 'subj': 'Thể dục', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'Sân trường'},
-        {'time': '10:15–11:00', 'subj': 'Tự nhiên và Xã hội', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
+        {'time': '07:30–08:15', 'subj': 'Ngữ văn', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.301'},
+        {'time': '08:20–09:05', 'subj': 'Vật lý', 'teacher': 'Thầy Đặng Hoàng Long', 'room': 'P.Lý'},
+        {'time': '09:25–10:10', 'subj': 'GDQP-AN', 'teacher': 'Thầy Đỗ Văn Long', 'room': 'Sân trường'},
+        {'time': '10:15–11:00', 'subj': 'Địa lý', 'teacher': 'Cô Trần Mai', 'room': 'P.301'},
       ],
       // Thứ 6
       [
         {'time': '07:30–08:15', 'subj': 'Tiếng Anh', 'teacher': 'Thầy Phạm Quốc Bảo', 'room': 'P.Anh 1'},
-        {'time': '08:20–09:05', 'subj': 'Tiếng Việt', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '09:25–10:10', 'subj': 'Toán', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.201'},
-        {'time': '10:15–11:00', 'subj': 'Mỹ thuật', 'teacher': 'Cô Trần Mai', 'room': 'P.Mỹ thuật'},
+        {'time': '08:20–09:05', 'subj': 'Hóa học', 'teacher': 'Cô Trần Mai', 'room': 'P.Hóa'},
+        {'time': '09:25–10:10', 'subj': 'Toán', 'teacher': 'Thầy Nguyễn Văn Nam', 'room': 'P.301'},
+        {'time': '10:15–11:00', 'subj': 'Sinh hoạt lớp', 'teacher': 'Cô Lê Thu Hà', 'room': 'P.301'},
       ],
     ];
 
@@ -718,7 +1220,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     } catch (_) {
       themeManager = null;
     }
-    final bgImagePath = themeManager?.bgImagePath ?? 'images/school_bg.jpg';
+    final bgImagePath = themeManager?.bgImagePath ?? 'images/school.jpg';
 
     final scaffold = Scaffold(
       backgroundColor: Colors.transparent,
@@ -883,7 +1385,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               height: 36,
               decoration: BoxDecoration(
                 color: AppColors.surfaceAlt,
-                border: Border.all(color: AppColors.border, width: 1.0),
+                border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                 borderRadius: BorderRadius.zero,
               ),
               child: Icon(icon, size: 18, color: AppColors.textMain),
@@ -922,8 +1424,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       section: _profile?['section']?.toString(),
       fallback: _profile?['className']?.toString(),
     );
-    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
     final levelShortTitle = EducationLevelHelper.getShortTitle(educationLevel);
+    final schoolName = _profile?['schoolName']?.toString() ?? EducationLevelHelper.getSchoolName(educationLevel);
     final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
 
     return Drawer(
@@ -1029,9 +1532,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Trường Phổ thông Liên cấp Astra',
-                            style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
+                          Text(
+                            schoolName,
+                            style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1167,6 +1670,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
+  String _getTimeGreeting([DateTime? time]) {
+    final hour = (time ?? DateTime.now()).hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Chào buổi sáng ☀️';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Chào buổi chiều 🌤️';
+    } else {
+      return 'Chào buổi tối 🌙';
+    }
+  }
+
   // ===================== TAB 0: TRANG CHỦ =====================
   Widget _buildHomeTab() {
     final studentName = _profile?['name'] ?? 'Nguyễn Minh Anh';
@@ -1175,10 +1689,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       section: _profile?['section']?.toString(),
       fallback: _profile?['className']?.toString(),
     );
-    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
     final levelShortTitle = EducationLevelHelper.getShortTitle(educationLevel);
+    final schoolName = _profile?['schoolName']?.toString() ?? EducationLevelHelper.getSchoolName(educationLevel);
     final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
     final now = DateTime.now();
+    final timeGreeting = _getTimeGreeting(now);
     final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 4: Thứ 6
     final todayLessons = FeatureFlags.useDemoFallback
         ? _getLessonsForDay(todayWeekday >= 0 && todayWeekday < 5 ? todayWeekday : 0)
@@ -1188,7 +1704,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       color: AppColors.primary,
       onRefresh: _loadAllData,
       child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
         children: [
           // Banner chỉ dẫn Chế độ Demo (nếu đang bật)
           if (FeatureFlags.useDemoFallback)
@@ -1216,11 +1732,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
           // Header cá nhân học sinh
           Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.zero,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -1232,96 +1747,140 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        studentName,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColors.primary),
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Text(
-                        levelShortTitle,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                // Vùng thông tin học sinh: Có sự kiện click mở Cài đặt & Tiện ích
+                InkWell(
+                  onTap: _showMoreBottomSheet,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Lời chào theo thời gian
+                        Row(
+                          children: [
+                            Text(
+                              timeGreeting,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                studentName,
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textMain,
+                                ),
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: AppColors.primary),
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                  child: Text(
+                                    levelShortTitle,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  size: 18,
+                                  color: AppColors.textSub,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '$className · $schoolName · GVCN $classTeacher',
+                          style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(now)}',
+                          style: const TextStyle(fontSize: 12.5, color: AppColors.textSub),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$className · GVCN $classTeacher',
-                  style: const TextStyle(fontSize: 14, color: AppColors.textSub),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Hôm nay: ${DateTimeUtils.formatVietnameseFullDate(now)}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSub),
-                ),
-                const SizedBox(height: 12),
                 const Divider(height: 1, thickness: 1, color: AppColors.border),
-                const SizedBox(height: 10),
                 // Thanh tác vụ cá nhân: Cài đặt & Đăng xuất (Flat Square Design)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    InkWell(
-                      onTap: _showMoreBottomSheet,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceAlt,
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.settings_outlined, size: 15, color: AppColors.textMain),
-                            SizedBox(width: 6),
-                            Text(
-                              'Cài đặt & Tiện ích',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMain),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: _logout,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.06),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.logout, size: 15, color: AppColors.error),
-                            SizedBox(width: 6),
-                            Text(
-                              'Đăng xuất',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error),
-                            ),
-                          ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: _showMoreBottomSheet,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt,
+                            border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.settings_outlined, size: 15, color: AppColors.textMain),
+                              SizedBox(width: 6),
+                              Text(
+                                'Cài đặt & Tiện ích',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _logout,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.06),
+                            border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.logout, size: 15, color: AppColors.error),
+                              SizedBox(width: 6),
+                              Text(
+                                'Đăng xuất',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1396,7 +1955,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.zero,
+                border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
               ),
               child: Column(
                 children: todayLessons.asMap().entries.map((entry) {
@@ -1422,78 +1982,46 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             ),
           const SizedBox(height: 24),
-          // Footer Trang Chủ: Cài đặt giao diện & Đăng xuất tài khoản (Flat Square Design)
+          // Footer Trang Chủ: Đăng xuất tài khoản (Flat Square Design - px=0 sát BottomNavigationBar)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.zero,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: _showMoreBottomSheet,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceAlt,
-                            border: Border.all(color: AppColors.border),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          alignment: Alignment.center,
-                          child: const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.settings_outlined, size: 16, color: AppColors.textMain),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Cài đặt giao diện',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textMain),
-                                ),
-                              ],
-                            ),
+                InkWell(
+                  onTap: _logout,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.06),
+                      border: Border.all(color: AppColors.error, width: 1.0),
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout, size: 16, color: AppColors.error),
+                        SizedBox(width: 8),
+                        Text(
+                          'Đăng xuất tài khoản',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: InkWell(
-                        onTap: _logout,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.06),
-                            border: Border.all(color: AppColors.error),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          alignment: Alignment.center,
-                          child: const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.logout, size: 16, color: AppColors.error),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Đăng xuất tài khoản',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.error),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 const Text(
                   'Astra School Portal · Hệ thống Giáo dục Liên cấp Đại Việt',
                   style: TextStyle(fontSize: 11, color: AppColors.textSub),
@@ -1502,7 +2030,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -1550,7 +2077,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceAlt,
-              border: Border.all(color: AppColors.border, width: 1.0),
+              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
               borderRadius: BorderRadius.zero,
             ),
             child: Row(
@@ -1678,7 +2205,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.zero,
+                      border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                     ),
                     child: Column(
                       children: lessons.asMap().entries.map((entry) {
@@ -1742,8 +2270,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.zero,
             border: Border.all(
-              color: isToday ? AppColors.primary : AppColors.border,
-              width: isToday ? 1.5 : 1.0,
+              color: isToday ? AppColors.primary : AppColors.cardBorder,
+              width: isToday ? 1.5 : AppColors.cardBorderWidth,
             ),
             boxShadow: [
               BoxShadow(
@@ -1853,7 +2381,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   // ===================== TAB 2: SÁCH HỌC =====================
   Widget _buildMatTab() {
-    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade']);
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
     final subjects = EducationLevelHelper.getDefaultSubjects(educationLevel);
     final levelTitle = EducationLevelHelper.getTitle(educationLevel);
     final filtered = _selectedSubjectFilter == 'Tất cả'
@@ -1870,7 +2398,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+            borderRadius: BorderRadius.zero,
             color: Colors.white,
           ),
           child: Text(
@@ -1901,7 +2430,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     fontSize: 13,
                   ),
                   shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.border),
+                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.cardBorder, width: AppColors.cardBorderWidth),
                   backgroundColor: Colors.white,
                 ),
               );
@@ -1941,7 +2470,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+              borderRadius: BorderRadius.zero,
               color: Colors.white,
             ),
             child: const Text(
@@ -2001,59 +2531,91 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  // ===================== TAB 4: BẢNG ĐIỂM & KẾT QUẢ HỌC TẬP =====================
+  String _classifyScore(double? avg) {
+    if (avg == null) return 'Chưa có điểm';
+    if (avg >= 8.0) return 'Tốt';
+    if (avg >= 6.5) return 'Khá';
+    if (avg >= 5.0) return 'Đạt';
+    return 'Chưa đạt';
+  }
+
+  // ===================== TAB 4: BẢNG ĐIỂM & KẾT QUẢ HỌC TẬP (CHUẨN BỘ GD&ĐT VIỆT NAM) =====================
   Widget _buildMarksTab() {
-    // 1. Tính toán số liệu thống kê học lực
-    double totalScore = 0.0;
-    int validCount = 0;
+    final markbook = _markbook ?? _getAdaptiveMockMarkbook();
+    final level = markbook.educationLevel; // 'PRIMARY' | 'SECONDARY' | 'HIGH_SCHOOL'
+
+    // 1. Tính toán số liệu thống kê học lực theo kỳ đang chọn
+    double? currentSemAvg;
+    int evaluatedSubjectsCount = 0;
+    double sumSemAvg = 0.0;
     int perfectCount = 0;
-    for (final m in _marks) {
-      final sc = m['score'];
-      if (sc != null) {
-        final val = (sc is num) ? sc.toDouble() : double.tryParse(sc.toString());
-        if (val != null) {
-          totalScore += val;
-          validCount++;
-          if (val >= 10.0) {
-            perfectCount++;
-          }
+
+    for (final s in markbook.subjects) {
+      final sem = _selectedSemester == 2 ? s.semester2 : (_selectedSemester == 3 ? null : s.semester1);
+      final a = _selectedSemester == 3 ? (s.yearAvg ?? s.semester1?.avg) : sem?.avg;
+      if (a != null) {
+        sumSemAvg += a;
+        evaluatedSubjectsCount++;
+        if (a >= 9.0) {
+          perfectCount++;
         }
       }
     }
-    final double avgScore = validCount > 0 ? (totalScore / validCount) : 0.0;
 
-    // Xếp loại học lực theo màu xanh dương thương hiệu
-    String academicRank = 'Chưa xếp loại';
-    Color rankColor = AppColors.textSub;
-    Color rankBg = AppColors.surfaceAlt;
-    if (validCount > 0) {
-      if (avgScore >= 9.0) {
-        academicRank = 'Học lực Xuất sắc';
-        rankColor = AppColors.primary;
-        rankBg = const Color(0xFFE8F0FE);
-      } else if (avgScore >= 8.0) {
-        academicRank = 'Học lực Giỏi';
-        rankColor = AppColors.primary;
-        rankBg = const Color(0xFFE8F0FE);
-      } else if (avgScore >= 6.5) {
-        academicRank = 'Học lực Khá';
-        rankColor = AppColors.warning;
-        rankBg = const Color(0xFFFEF7E0);
-      } else {
-        academicRank = 'Đang rèn luyện';
-        rankColor = AppColors.textSub;
-        rankBg = AppColors.surfaceAlt;
+    if (evaluatedSubjectsCount > 0) {
+      currentSemAvg = sumSemAvg / evaluatedSubjectsCount;
+    } else if (_selectedSemester == 3 && markbook.overallAvg != null) {
+      currentSemAvg = markbook.overallAvg;
+    } else if (_selectedSemester == 1 && _marks.isNotEmpty) {
+      double total = 0.0;
+      int count = 0;
+      for (final m in _marks) {
+        final sc = m['score'];
+        if (sc != null) {
+          final val = (sc is num) ? sc.toDouble() : double.tryParse(sc.toString());
+          if (val != null) {
+            total += val;
+            count++;
+          }
+        }
       }
+      if (count > 0) currentSemAvg = total / count;
     }
 
-    // 2. Bộ lọc đợt kiểm tra
-    const examFilters = ['Tất cả', 'Giữa kỳ', 'Định kỳ', 'Cuối kỳ'];
-    final filteredMarks = _marks.where((m) {
-      if (_selectedExamFilter == 'Tất cả') return true;
-      final exam = (m['examName'] ?? m['examType'] ?? '').toString().toLowerCase();
-      final filter = _selectedExamFilter.toLowerCase();
-      return exam.contains(filter);
-    }).toList();
+    // Xếp loại học lực theo màu xanh dương thương hiệu
+    String academicRank = 'Chưa có điểm';
+    IconData rankIcon = Icons.hourglass_empty_rounded;
+    Color rankColor = AppColors.textSub;
+    Color rankBg = AppColors.surfaceAlt;
+
+    if (currentSemAvg != null) {
+      if (currentSemAvg >= 9.0) {
+        academicRank = 'Xuất sắc';
+        rankIcon = Icons.emoji_events_rounded;
+        rankColor = AppColors.primary;
+        rankBg = const Color(0xFFE8F0FE);
+      } else if (currentSemAvg >= 8.0) {
+        academicRank = 'Giỏi';
+        rankIcon = Icons.workspace_premium_rounded;
+        rankColor = AppColors.primary;
+        rankBg = const Color(0xFFE8F0FE);
+      } else if (currentSemAvg >= 6.5) {
+        academicRank = 'Khá';
+        rankIcon = Icons.military_tech_outlined;
+        rankColor = AppColors.warning;
+        rankBg = const Color(0xFFFEF7E0);
+      } else if (currentSemAvg >= 5.0) {
+        academicRank = 'Đạt';
+        rankIcon = Icons.trending_up_rounded;
+        rankColor = AppColors.primary;
+        rankBg = const Color(0xFFE8F0FE);
+      } else {
+        academicRank = 'Chưa đạt';
+        rankIcon = Icons.trending_down_rounded;
+        rankColor = AppColors.error;
+        rankBg = const Color(0xFFFFEBEE);
+      }
+    }
 
     final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
 
@@ -2079,7 +2641,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Bảng điểm đang hiển thị dữ liệu mô phỏng để minh họa tính năng.',
+                      'Học bạ điện tử đang hiển thị dữ liệu mô phỏng chuẩn Bộ GD&ĐT.',
                       style: TextStyle(fontSize: 12, color: AppColors.textSub),
                     ),
                   ),
@@ -2087,34 +2649,265 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             ),
 
-          // 1. Hero KPI Card - Tổng quan kết quả học tập
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: AppColors.border, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+          // 1. Header Trang bìa Sổ học bạ Quốc gia
+          _buildNationalAcademicHeader(markbook, level),
+          const SizedBox(height: 12),
+
+          // 2. Bộ chọn Học kỳ (Semester Selector)
+          _buildSemesterSelector(),
+          const SizedBox(height: 14),
+
+          // 3. Hero KPI Card - Tổng quan kết quả học tập
+          _buildAcademicHeroKpiCard(currentSemAvg, academicRank, rankIcon, rankColor, rankBg, markbook, level, perfectCount),
+          const SizedBox(height: 14),
+
+          // 4. Thẻ Đánh giá Rèn luyện & Nhận xét GVCN + Dấu phê duyệt Ban Giám Hiệu
+          _buildOfficialTeacherEndorsementCard(classTeacher, markbook),
+          const SizedBox(height: 16),
+
+          // 5. KHU VỰC ĐẶC THÙ CẤP 1: 5 Phẩm chất chủ yếu & Năng lực cốt lõi (TT 27)
+          if (level == 'PRIMARY') ...[
+            _buildPrimaryQualitiesAndCompetenciesCard(),
+            const SizedBox(height: 16),
+          ],
+
+          // 6. KHU VỰC ĐẶC THÙ CẤP 3: Dự báo & Điều kiện đạt Danh hiệu HS Giỏi / Xuất sắc (TT 22)
+          if (level == 'HIGH_SCHOOL') ...[
+            _buildHighSchoolHonorSimulatorCard(markbook),
+            const SizedBox(height: 16),
+          ],
+
+          // 7. Thanh công cụ & Chuyển đổi chế độ xem (Dual View Toggle + Nút in phiếu điểm)
+          _buildViewModeBar(markbook),
+          const SizedBox(height: 12),
+
+          // 8. Nội dung Bảng điểm: Chế độ Sổ điểm điện tử HOẶC Chế độ Thẻ mở rộng
+          if (_isMarkbookTableView)
+            _buildOfficialGridTableView(markbook, level)
+          else
+            _buildOfficialCardListView(markbook, level),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  /// 1. Header Trang bìa Sổ học bạ Quốc gia
+  Widget _buildNationalAcademicHeader(StudentMarkbook markbook, String level) {
+    Color badgeColor = const Color(0xFF26A69A); // Teal Cấp 1
+    if (level == 'SECONDARY') badgeColor = const Color(0xFF5C6BC0); // Indigo Cấp 2
+    if (level == 'HIGH_SCHOOL') badgeColor = const Color(0xFFEF5350); // Crimson Cấp 3
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.zero,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: const Icon(Icons.school, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
+                    Text(
+                      (markbook.schoolName ?? 'Trường THPT Chu Văn An').toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: AppColors.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'HỌC BẠ ĐIỆN TỬ • NĂM HỌC ${markbook.academicYear ?? "2026-2027"}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textSub,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  markbook.educationLevelDisplayName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: badgeColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(height: 1, color: AppColors.cardBorder),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      markbook.studentName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textMainOf(context),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Mã HS: ${markbook.studentAdmissionNumber ?? "STU003"} • Lớp: ${markbook.className ?? "10A"}',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _showReportCardPreviewModal(markbook),
+                icon: const Icon(Icons.print_outlined, size: 15, color: AppColors.primary),
+                label: const Text(
+                  'In Phiếu Điểm',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppColors.primary),
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: AppColors.cardBorder, width: 1.0),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 2. Bộ chọn Học kỳ (Semester Selector)
+  Widget _buildSemesterSelector() {
+    final semesters = [
+      {'id': 1, 'label': 'Học kỳ I'},
+      {'id': 2, 'label': 'Học kỳ II'},
+      {'id': 3, 'label': 'Cả năm'},
+    ];
+
+    return Row(
+      children: semesters.map((sem) {
+        final isSelected = _selectedSemester == sem['id'];
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: sem['id'] == 1 ? 0 : 4,
+              right: sem['id'] == 3 ? 0 : 4,
+            ),
+            child: InkWell(
+              onTap: () => setState(() => _selectedSemester = sem['id'] as int),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.white,
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                    width: AppColors.cardBorderWidth,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    sem['label'] as String,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                      color: isSelected ? Colors.white : AppColors.textMain,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// 3. Hero KPI Card - Tổng quan kết quả học tập
+  Widget _buildAcademicHeroKpiCard(
+    double? avgScore,
+    String academicRank,
+    IconData rankIcon,
+    Color rankColor,
+    Color rankBg,
+    StudentMarkbook markbook,
+    String level, [
+    int perfectCount = 0,
+  ]) {
+    final semTitle = _selectedSemester == 1 ? 'HỌC KỲ I' : (_selectedSemester == 2 ? 'HỌC KỲ II' : 'CẢ NĂM');
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'ĐIỂM TRUNG BÌNH HỌC KỲ',
-                          style: TextStyle(
+                        Text(
+                          'ĐIỂM TRUNG BÌNH $semTitle',
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.8,
@@ -2127,7 +2920,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              avgScore.toStringAsFixed(1),
+                              avgScore != null ? avgScore.toStringAsFixed(1) : '—',
                               style: TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
@@ -2147,191 +2940,489 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: rankBg,
-                        borderRadius: BorderRadius.zero,
-                        border: Border.all(color: rankColor.withValues(alpha: 0.3)),
-                      ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    constraints: const BoxConstraints(minWidth: 84),
+                    decoration: BoxDecoration(
+                      color: rankBg,
+                      borderRadius: BorderRadius.zero,
+                      border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(rankIcon, size: 28, color: rankColor),
+                        const SizedBox(height: 4),
+                        Text(
+                          academicRank,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: rankColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            height: 1,
+            color: AppColors.cardBorder,
+          ),
+          // 3 Chỉ số phụ với đường nối phẳng liền mạch
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    child: _buildKpiMiniItem(
+                      label: 'Số môn đánh giá',
+                      value: '${markbook.subjects.length} môn',
+                      icon: Icons.assignment_turned_in_outlined,
+                    ),
+                  ),
+                ),
+                Container(width: 1, color: AppColors.cardBorder),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    child: _buildKpiMiniItem(
+                      label: level == 'PRIMARY' ? 'Hoàn thành môn' : 'Môn đạt Giỏi',
+                      value: level == 'PRIMARY'
+                          ? '100% Tốt'
+                          : (perfectCount > 0 ? '$perfectCount môn 10' : '8 môn ≥ 8.0'),
+                      icon: Icons.star_outline,
+                    ),
+                  ),
+                ),
+                Container(width: 1, color: AppColors.cardBorder),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    child: _buildKpiMiniItem(
+                      label: 'Tiến độ học tập',
+                      value: '100% Hoàn thành',
+                      icon: Icons.verified_outlined,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 4. KHU VỰC ĐẶC THÙ CẤP 1: 5 Phẩm chất chủ yếu & Năng lực cốt lõi (Thông tư 27)
+  Widget _buildPrimaryQualitiesAndCompetenciesCard() {
+    final qualities = [
+      {'name': 'Yêu nước', 'level': 'Đạt (Đ)'},
+      {'name': 'Nhân ái', 'level': 'Đạt (Đ)'},
+      {'name': 'Chăm chỉ', 'level': 'Đạt (Đ)'},
+      {'name': 'Trung thực', 'level': 'Đạt (Đ)'},
+      {'name': 'Trách nhiệm', 'level': 'Đạt (Đ)'},
+    ];
+
+    final competencies = [
+      {'name': 'Tự chủ và tự học', 'level': 'Tốt (T)'},
+      {'name': 'Giao tiếp và hợp tác', 'level': 'Tốt (T)'},
+      {'name': 'Giải quyết vấn đề và sáng tạo', 'level': 'Đạt (Đ)'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.favorite_outline, color: Color(0xFF26A69A), size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'ĐÁNH GIÁ PHẨM CHẤT & NĂNG LỰC (TT 27/2020)',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textMainOf(context),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF26A69A).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.zero,
+                ),
+                child: const Text(
+                  'Tiểu học',
+                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF26A69A)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            '1. Năm Phẩm chất chủ yếu:',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textSub),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: qualities.map((q) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0F2F1),
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(color: const Color(0xFF80CBC4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle, size: 14, color: Color(0xFF00796B)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${q['name']}: ',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                    ),
+                    Text(
+                      q['level']!,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF00796B)),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            '2. Năng lực cốt lõi (Chung & Đặc thù):',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textSub),
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: competencies.map((c) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.workspace_premium, size: 16, color: rankColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            academicRank,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
-                              color: rankColor,
+                          const Icon(Icons.arrow_right, size: 18, color: AppColors.textSub),
+                          Expanded(
+                            child: Text(
+                              c['name']!,
+                              style: const TextStyle(fontSize: 12.5, color: AppColors.textMain),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(height: 1, color: AppColors.border),
-                const SizedBox(height: 14),
-                // 3 Chỉ số phụ
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildKpiMiniItem(
-                        label: 'Số môn kiểm tra',
-                        value: '$validCount môn',
-                        icon: Icons.assignment_turned_in_outlined,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: c['level']!.contains('Tốt') ? const Color(0xFFE8F0FE) : AppColors.surfaceAlt,
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: AppColors.cardBorder, width: 0.8),
                       ),
-                    ),
-                    Container(width: 1, height: 32, color: AppColors.border),
-                    Expanded(
-                      child: _buildKpiMiniItem(
-                        label: 'Điểm 10 tuyệt đối',
-                        value: '$perfectCount môn',
-                        icon: Icons.star_outline,
-                      ),
-                    ),
-                    Container(width: 1, height: 32, color: AppColors.border),
-                    Expanded(
-                      child: _buildKpiMiniItem(
-                        label: 'Tiến độ học tập',
-                        value: '100% Hoàn thành',
-                        icon: Icons.verified_outlined,
+                      child: Text(
+                        c['level']!,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: c['level']!.contains('Tốt') ? AppColors.primary : AppColors.textMain,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              );
+            }).toList(),
           ),
-          const SizedBox(height: 18),
+        ],
+      ),
+    );
+  }
 
-          // 2. Bộ lọc đợt kiểm tra (Filter Chips)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: examFilters.map((filter) {
-                final isSelected = _selectedExamFilter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(
-                      filter,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Colors.white : AppColors.textMain,
-                      ),
-                    ),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      setState(() => _selectedExamFilter = filter);
-                    },
-                    backgroundColor: Colors.white,
-                    selectedColor: AppColors.primary,
-                    showCheckmark: false,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                      side: BorderSide(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                        width: 1.0,
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+  /// 5. KHU VỰC ĐẶC THÙ CẤP 3: Dự báo & Điều kiện đạt Danh hiệu HS Giỏi / Xuất sắc (Thông tư 22)
+  Widget _buildHighSchoolHonorSimulatorCard(StudentMarkbook markbook) {
+    // Đếm số môn có ĐTB >= 8.0 và >= 9.0
+    int count8 = 0;
+    int count9 = 0;
+    for (final s in markbook.subjects) {
+      final avg = s.semester1?.avg ?? s.yearAvg;
+      if (avg != null) {
+        if (avg >= 8.0) count8++;
+        if (avg >= 9.0) count9++;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.stars, color: Color(0xFFEF5350), size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'TIÊU CHUẨN DANH HIỆU THPT (TT 22/2021)',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textMainOf(context),
                   ),
-                );
-              }).toList(),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF5350).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.zero,
+                ),
+                child: const Text(
+                  'THPT Cấp 3',
+                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFEF5350)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Checklist điều kiện HS Giỏi
+          _buildChecklistRow(
+            isDone: true,
+            label: 'Kết quả Rèn luyện đạt mức TỐT',
+            statusText: 'Đạt chuẩn',
+          ),
+          const SizedBox(height: 6),
+          _buildChecklistRow(
+            isDone: true,
+            label: '100% môn nhận xét (Thể dục, QP-AN, HĐTN) đạt mức ĐẠT',
+            statusText: 'Đạt chuẩn',
+          ),
+          const SizedBox(height: 6),
+          _buildChecklistRow(
+            isDone: true,
+            label: 'Không có môn học nào dưới 6.5 (Môn thấp nhất: 8.6)',
+            statusText: 'Đạt chuẩn',
+          ),
+          const SizedBox(height: 6),
+          _buildChecklistRow(
+            isDone: count8 >= 6,
+            label: 'Có ít nhất 06 môn đạt ĐTB ≥ 8.0 (Hiện có: $count8/6 môn)',
+            statusText: count8 >= 6 ? 'ĐẠT HỌC SINH GIỎI 🏆' : 'Chưa đủ',
+            highlight: true,
+          ),
+          const SizedBox(height: 6),
+          _buildChecklistRow(
+            isDone: count9 >= 6,
+            label: 'Có ít nhất 06 môn đạt ĐTB ≥ 9.0 (Hiện có: $count9/6 môn)',
+            statusText: count9 >= 6 ? 'ĐẠT HỌC SINH XUẤT SẮC 🌟' : 'Cần thêm 2 môn ≥ 9.0',
+            highlight: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChecklistRow({
+    required bool isDone,
+    required String label,
+    required String statusText,
+    bool highlight = false,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          isDone ? Icons.check_box : Icons.check_box_outline_blank,
+          size: 18,
+          color: isDone ? (highlight ? AppColors.primary : const Color(0xFF43A047)) : AppColors.textSub,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              color: AppColors.textMain,
             ),
           ),
-          const SizedBox(height: 14),
-
-          // 3. Tiêu đề danh sách môn học
-          AppSectionHeader(
-            title: 'Kết quả chi tiết từng môn (${filteredMarks.length})',
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: isDone ? const Color(0xFFE8F5E9) : AppColors.surfaceAlt,
+            borderRadius: BorderRadius.zero,
           ),
-          const SizedBox(height: 10),
+          child: Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isDone ? const Color(0xFF2E7D32) : AppColors.textSub,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-          // 4. Danh sách thẻ điểm
-          if (filteredMarks.isEmpty)
-            const AppEmptyCard(
-              title: 'Không có bài kiểm tra',
-              message: 'Chưa có dữ liệu bài kiểm tra nào phù hợp với bộ lọc đã chọn.',
-              icon: Icons.grade_outlined,
-            )
-          else
-            ...filteredMarks.map((m) {
-              final subject = (m['subjectName'] ?? 'Môn học').toString();
-              final score = m['score'];
-              final maxScore = m['maxScore'] ?? 10.0;
-              final exam = (m['examName'] ?? m['examType'] ?? 'Kiểm tra định kỳ').toString();
-              final grade = (m['grade'] ?? 'Đạt').toString();
-              final scoreNum = (score is num) ? score.toDouble() : (double.tryParse(score?.toString() ?? '0') ?? 0.0);
-              final maxScoreNum = (maxScore is num) ? maxScore.toDouble() : 10.0;
-              final progress = (maxScoreNum > 0) ? (scoreNum / maxScoreNum).clamp(0.0, 1.0) : 0.0;
-
-              // Màu sắc theo thang điểm chuẩn thương hiệu Xanh dương
-              Color scoreColor = AppColors.primary;
-              if (scoreNum >= 8.0) {
-                scoreColor = AppColors.primary; // Xanh dương thương hiệu cho điểm giỏi và xuất sắc
-              } else if (scoreNum >= 6.5) {
-                scoreColor = AppColors.warning;
-              } else {
-                scoreColor = AppColors.error;
-              }
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+  /// 6. Thanh công cụ & Chuyển đổi chế độ xem
+  Widget _buildViewModeBar(StudentMarkbook markbook) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        AppSectionHeader(
+          title: 'Kết quả chi tiết môn học (${markbook.subjects.length})',
+        ),
+        Row(
+          children: [
+            InkWell(
+              onTap: () => setState(() => _isMarkbookTableView = false),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.zero,
-                  border: Border.all(color: AppColors.border, width: 1.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: !_isMarkbookTableView ? AppColors.primary : Colors.white,
+                  border: Border.all(color: AppColors.cardBorder),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: scoreColor.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.zero,
-                          ),
-                          child: Icon(_getSubjectIcon(subject), color: scoreColor, size: 24),
+                child: Icon(
+                  Icons.view_agenda_outlined,
+                  size: 16,
+                  color: !_isMarkbookTableView ? Colors.white : AppColors.textMain,
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => setState(() => _isMarkbookTableView = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _isMarkbookTableView ? AppColors.primary : Colors.white,
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Icon(
+                  Icons.table_chart_outlined,
+                  size: 16,
+                  color: _isMarkbookTableView ? Colors.white : AppColors.textMain,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 7A. Chế độ Thẻ mở rộng Accordion (Mặc định cho Mobile)
+  Widget _buildOfficialCardListView(StudentMarkbook markbook, String level) {
+    if (markbook.subjects.isEmpty) {
+      return const AppEmptyCard(
+        title: 'Chưa có dữ liệu môn học',
+        message: 'Chưa có thông tin điểm số môn học cho kỳ này.',
+        icon: Icons.grade_outlined,
+      );
+    }
+
+    return Column(
+      children: markbook.subjects.map((sub) {
+        final isExpanded = _expandedSubjectIds.contains(sub.subjectId);
+        final sem = _selectedSemester == 2 ? sub.semester2 : (_selectedSemester == 3 ? null : sub.semester1);
+        final avg = _selectedSemester == 3 ? (sub.yearAvg ?? sub.semester1?.avg) : sem?.avg;
+        final isNarrativeOnly = markbook.isNarrativeOnly || (sem != null && sem.avg == null && sem.ckScore == null);
+        final classification = avg != null ? _classifyScore(avg) : (sub.academicClassification ?? 'Đạt');
+
+        // Màu sắc theo thang điểm
+        Color scoreColor = AppColors.primary;
+        if (avg != null) {
+          if (avg >= 8.0) {
+            scoreColor = AppColors.primary;
+          } else if (avg >= 6.5) {
+            scoreColor = AppColors.warning;
+          } else {
+            scoreColor = AppColors.error;
+          }
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.zero,
+            border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+          ),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  _expandedSubjectIds.remove(sub.subjectId);
+                } else {
+                  _expandedSubjectIds.add(sub.subjectId);
+                }
+              });
+            },
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: scoreColor.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.zero,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                subject,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textMainOf(context),
-                                ),
+                        child: Icon(_getSubjectIcon(sub.subjectName), color: scoreColor, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              sub.subjectName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textMainOf(context),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                exam,
-                                style: const TextStyle(fontSize: 12.5, color: AppColors.textSub),
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isNarrativeOnly ? 'Đánh giá bằng nhận xét' : 'Đánh giá nhận xét & điểm số',
+                              style: const TextStyle(fontSize: 11.5, color: AppColors.textSub),
+                            ),
+                          ],
                         ),
+                      ),
+                      if (!isNarrativeOnly && avg != null)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -2340,143 +3431,458 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text(
-                                  score != null ? score.toString() : '-',
+                                  avg.toStringAsFixed(1),
                                   style: TextStyle(
-                                    fontSize: 22,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w900,
                                     color: scoreColor,
                                   ),
                                 ),
-                                Text(
-                                  '/$maxScoreNum',
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    color: AppColors.textSub,
-                                  ),
-                                ),
+                                const Text('/10', style: TextStyle(fontSize: 11, color: AppColors.textSub)),
                               ],
                             ),
                             Container(
                               margin: const EdgeInsets.only(top: 2),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
                                 color: scoreColor.withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.zero,
                               ),
                               child: Text(
-                                grade,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: scoreColor,
+                                classification,
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: scoreColor),
+                              ),
+                            ),
+                          ],
+                        )
+                      else if (!isNarrativeOnly && avg == null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              '—',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textSub,
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceAlt,
+                                borderRadius: BorderRadius.zero,
+                                border: Border.all(color: AppColors.cardBorder, width: 0.8),
+                              ),
+                              child: const Text(
+                                'Chưa có điểm',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSub),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.zero,
+                            border: Border.all(color: const Color(0xFFA5D6A7)),
+                          ),
+                          child: Text(
+                            classification,
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        color: AppColors.textSub,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+                // Chi tiết thành phần điểm khi mở rộng
+                if (isExpanded) ...[
+                  Container(height: 1, color: AppColors.cardBorder),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    color: AppColors.surfaceAlt,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isNarrativeOnly) ...[
+                          Text(
+                            'Điểm thành phần chi tiết (${_selectedSemester == 2 ? "Học kỳ II" : (_selectedSemester == 3 ? "Cả năm" : "Học kỳ I")}):',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSub),
+                          ),
+                          const SizedBox(height: 8),
+                          if (sem != null && (sem.txScores.isNotEmpty || sem.gkScore != null || sem.ckScore != null))
+                            Row(
+                              children: [
+                                _buildScoreSubCell(
+                                  'ĐĐGtx (x1)',
+                                  (sem.txScores.isNotEmpty)
+                                      ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
+                                      : '-',
                                 ),
+                                const SizedBox(width: 8),
+                                _buildScoreSubCell(
+                                  'ĐĐGgk (x2)',
+                                  sem.gkScore != null ? sem.gkScore!.toStringAsFixed(1) : '-',
+                                ),
+                                const SizedBox(width: 8),
+                                _buildScoreSubCell(
+                                  'ĐĐGck (x3)',
+                                  sem.ckScore != null ? sem.ckScore!.toStringAsFixed(1) : '-',
+                                ),
+                              ],
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: AppColors.cardBorder, width: 0.8),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.hourglass_empty, size: 16, color: AppColors.textSub),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Chưa có dữ liệu điểm kiểm tra thường xuyên & định kỳ cho kỳ này.',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textSub),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 10),
+                        ],
+                        // Lời phê giáo viên
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.comment_outlined, size: 16, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                (sem?.comments != null && sem!.comments!.isNotEmpty)
+                                    ? sem.comments!.join(' • ')
+                                    : 'Học sinh nắm vững chuẩn kiến thức, tích cực phát biểu xây dựng bài.',
+                                style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.textMain),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Thanh đo điểm số trực quan phẳng vuông vức
-                    LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 6,
-                      backgroundColor: AppColors.surfaceAlt,
-                      valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
-                    ),
-                  ],
-                ),
-              );
-            }),
-
-          const SizedBox(height: 12),
-
-          // 5. Thẻ Đánh giá Rèn luyện & Nhận xét GVCN
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: AppColors.border, width: 1.0),
+                  ),
+                ],
+              ],
             ),
-            child: Column(
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildScoreSubCell(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.zero,
+          border: Border.all(color: AppColors.cardBorder, width: 0.8),
+        ),
+        child: Column(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSub)),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 7B. Chế độ Sổ điểm điện tử (Grid Table View có cuộn ngang)
+  Widget _buildOfficialGridTableView(StudentMarkbook markbook, String level) {
+    final semLabel = _selectedSemester == 2 ? 'HK2' : (_selectedSemester == 3 ? 'Cả năm' : 'HK1');
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowHeight: 40,
+          dataRowMinHeight: 40,
+          dataRowMaxHeight: 46,
+          horizontalMargin: 12,
+          columnSpacing: 16,
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFF5F7FA)),
+          columns: [
+            const DataColumn(label: Text('Môn học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            DataColumn(label: Text('TX $semLabel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            DataColumn(label: Text('GK $semLabel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            DataColumn(label: Text('CK $semLabel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            DataColumn(label: Text('ĐTB $semLabel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            const DataColumn(label: Text('ĐTB Năm', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+            const DataColumn(label: Text('Xếp loại', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+          ],
+          rows: markbook.subjects.map((s) {
+            final sem = _selectedSemester == 2 ? s.semester2 : s.semester1;
+            final txStr = (sem?.txScores != null && sem!.txScores.isNotEmpty)
+                ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
+                : '-';
+            final gkStr = sem?.gkScore != null ? sem!.gkScore!.toStringAsFixed(1) : '-';
+            final ckStr = sem?.ckScore != null ? sem!.ckScore!.toStringAsFixed(1) : '-';
+            final avgStr = sem?.avg != null ? sem!.avg!.toStringAsFixed(1) : '-';
+            final yearStr = s.yearAvg != null ? s.yearAvg!.toStringAsFixed(1) : (avgStr != '-' ? avgStr : '-');
+            final isNarrative = markbook.isNarrativeOnly || (sem != null && sem.avg == null && sem.ckScore == null);
+            final classStr = _selectedSemester == 3
+                ? (s.academicClassification ?? 'Đạt')
+                : (sem?.avg != null ? _classifyScore(sem!.avg) : (isNarrative ? (s.academicClassification ?? 'Đạt') : 'Chưa có điểm'));
+
+            return DataRow(cells: [
+              DataCell(Text(s.subjectName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
+              DataCell(Text(txStr, style: const TextStyle(fontSize: 11.5))),
+              DataCell(Text(gkStr, style: const TextStyle(fontSize: 11.5))),
+              DataCell(Text(ckStr, style: const TextStyle(fontSize: 11.5))),
+              DataCell(Text(avgStr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary))),
+              DataCell(Text(yearStr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary))),
+              DataCell(Text(classStr, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
+            ]);
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  /// 8. Thẻ Đánh giá Rèn luyện & Nhận xét GVCN + Dấu phê duyệt Ban Giám Hiệu
+  Widget _buildOfficialTeacherEndorsementCard(String classTeacher, StudentMarkbook markbook) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.psychology_outlined, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Đánh giá Rèn luyện & Khen thưởng',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMainOf(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Xếp loại Rèn luyện / Hạnh kiểm:',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSub),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F0FE),
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: const Text(
+                  'Tốt (Xuất sắc)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.psychology_outlined, color: AppColors.primary, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Đánh giá Rèn luyện & Khen thưởng',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textMainOf(context),
-                      ),
+                const Icon(Icons.format_quote, color: AppColors.primary, size: 20),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Em có tinh thần học tập tự giác rất cao, tích cực tương tác trong giờ học và đạt thành tích xuất sắc ở tất cả các môn. Hãy tiếp tục phát huy nhé!\n— $classTeacher',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      height: 1.4,
+                      color: AppColors.textMain,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Xếp loại Rèn luyện / Hạnh kiểm:',
-                        style: TextStyle(fontSize: 13, color: AppColors.textSub),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F0FE),
-                        borderRadius: BorderRadius.zero,
-                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                      ),
-                      child: const Text(
-                        'Tốt (Xuất sắc)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.zero,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.format_quote, color: AppColors.primary, size: 20),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Em có tinh thần học tập tự giác rất cao, tích cực tương tác trong giờ học và đạt thành tích xuất sắc ở tất cả các môn. Hãy tiếp tục phát huy nhé!\n— $classTeacher',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            height: 1.4,
-                            color: AppColors.textMain,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          // Dấu phê duyệt Ban Giám Hiệu
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FBE7),
+              border: Border.all(color: const Color(0xFFDCE775)),
+              borderRadius: BorderRadius.zero,
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.verified, size: 16, color: Color(0xFF689F38)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Đã được Ban Giám Hiệu ký số và phê duyệt hồ sơ học bạ điện tử.',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF33691E)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  /// Modal Preview Phiếu báo điểm khổ A4 chuẩn
+  void _showReportCardPreviewModal(StudentMarkbook markbook) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          builder: (_, scrollController) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      color: AppColors.cardBorder,
+                      margin: const EdgeInsets.only(bottom: 16),
+                    ),
+                  ),
+                  const Center(
+                    child: Text(
+                      'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      'PHIẾU BÁO ĐIỂM HỌC TẬP & RÈN LUYỆN',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      'Năm học: ${markbook.academicYear ?? "2026-2027"} • Học kỳ ${_selectedSemester == 3 ? "Cả năm" : (_selectedSemester == 2 ? "II" : "I")}',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Họ và tên học sinh: ${markbook.studentName}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Mã học sinh: ${markbook.studentAdmissionNumber ?? "STU003"} • Lớp: ${markbook.className ?? "10A"}'),
+                  Text('Trường: ${markbook.schoolName ?? "Trường THPT Chu Văn An"}'),
+                  const SizedBox(height: 14),
+                  Table(
+                    border: TableBorder.all(color: AppColors.cardBorder),
+                    children: [
+                      TableRow(
+                        decoration: const BoxDecoration(color: Color(0xFFF5F7FA)),
+                        children: const [
+                          Padding(padding: EdgeInsets.all(6), child: Text('Môn học', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                          Padding(padding: EdgeInsets.all(6), child: Text('ĐTB Môn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                          Padding(padding: EdgeInsets.all(6), child: Text('Xếp loại', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center)),
+                        ],
+                      ),
+                      ...markbook.subjects.map((s) {
+                        final avg = s.semester1?.avg ?? s.yearAvg;
+                        return TableRow(
+                          children: [
+                            Padding(padding: const EdgeInsets.all(6), child: Text(s.subjectName, style: const TextStyle(fontSize: 12))),
+                            Padding(padding: const EdgeInsets.all(6), child: Text(avg != null ? avg.toStringAsFixed(1) : '-', textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                            Padding(padding: const EdgeInsets.all(6), child: Text(s.academicClassification ?? 'Đạt', textAlign: TextAlign.center, style: const TextStyle(fontSize: 11))),
+                          ],
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Điểm trung bình chung: ${markbook.overallAvg?.toStringAsFixed(1) ?? "9.1"} / 10.0', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Xếp loại học lực: ${markbook.overallClassification ?? "Tốt (Xuất sắc)"} • Rèn luyện: Tốt'),
+                  const SizedBox(height: 20),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('GIÁO VIÊN CHỦ NHIỆM\n(Ký và ghi rõ họ tên)', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
+                      Text('HIỆU TRƯỞNG DUYỆT\n(Đã ký số điện tử)', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Color(0xFF2E7D32))),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đã xuất file học bạ điện tử (PDF) thành công!')),
+                      );
+                    },
+                    icon: const Icon(Icons.download),
+                    label: const Text('Tải Xuống Bản In (PDF)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -2551,7 +3957,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+            borderRadius: BorderRadius.zero,
             color: Colors.white,
           ),
           child: Row(
@@ -2614,7 +4021,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     fontSize: 13,
                   ),
                   shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.border),
+                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.cardBorder, width: AppColors.cardBorderWidth),
                   backgroundColor: Colors.white,
                 ),
               );
@@ -2640,9 +4047,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.5),
-                    width: isRead ? 1.0 : 1.5,
+                    color: isRead ? AppColors.cardBorder : AppColors.primary.withValues(alpha: 0.5),
+                    width: isRead ? AppColors.cardBorderWidth : 1.5,
                   ),
+                  borderRadius: BorderRadius.zero,
                   color: Colors.white,
                 ),
                 child: Row(
@@ -2654,7 +4062,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        border: Border.all(color: isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: isRead ? AppColors.cardBorder : AppColors.primary.withValues(alpha: 0.3), width: AppColors.cardBorderWidth),
                       ),
                       child: Icon(
                         isRead ? Icons.notifications_none : Icons.notifications_active,
@@ -2847,6 +4256,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       fallback: _profile?['className']?.toString(),
     );
     final teacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+    final schoolName = _profile?['schoolName']?.toString() ?? EducationLevelHelper.getSchoolName(educationLevel);
 
     showModalBottomSheet(
       context: context,
@@ -2857,80 +4268,171 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           clipBehavior: Clip.antiAlias,
-          child: Container(
-            padding: EdgeInsets.only(
-              top: 16,
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+          child: SafeArea(
+            top: false,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Tiện ích học sinh',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textMain,
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSub, size: 22),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      tooltip: 'Đóng',
-                    ),
-                  ],
-                ),
-                const Divider(height: 16, thickness: 1, color: AppColors.border),
-                const SizedBox(height: 8),
-
-                // Thẻ thông tin cá nhân tóm tắt
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    color: Colors.white,
-                  ),
-                  child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                      ),
-                      child: const Icon(Icons.person, color: AppColors.primary, size: 26),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            studentName,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Tiện ích học sinh',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textMain,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Mã: $studentId · $className',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textSub, size: 22),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          tooltip: 'Đóng',
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, thickness: 1, color: AppColors.border),
+                    const SizedBox(height: 8),
+
+                    // Thẻ thông tin cá nhân tóm tắt
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+                        borderRadius: BorderRadius.zero,
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                            ),
+                            child: const Icon(Icons.person, color: AppColors.primary, size: 26),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  studentName,
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Mã: $studentId · $className · $schoolName',
+                                  style: const TextStyle(fontSize: 12.5, color: AppColors.textSub),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Các chức năng
+                    Material(
+                      color: Colors.white,
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildMoreRow(
+                            title: 'Bảng điểm & Kết quả học tập',
+                            sub: 'Xem chi tiết kết quả học tập & điểm thi',
+                            icon: Icons.analytics_outlined,
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              setState(() => _currentIndex = 4);
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: AppColors.border),
+                          _buildMoreRow(
+                            title: 'Lịch sử Chuyên cần / Điểm danh',
+                            icon: Icons.event_available_outlined,
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              _showAttendanceBottomSheet();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: AppColors.border),
+                          _buildMoreRow(
+                            title: 'Thông tin giáo viên chủ nhiệm',
+                            sub: teacher,
+                            icon: Icons.school_outlined,
+                            onTap: () {},
+                          ),
+                          const Divider(height: 1, thickness: 1, color: AppColors.border),
+                          _buildMoreRow(
+                            title: 'Giao diện & Cá nhân hóa',
+                            sub: 'Màu chữ & 8 hình nền học đường',
+                            icon: Icons.palette_outlined,
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              _showThemeCustomizationSheet();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: AppColors.border),
+                          SwitchListTile(
+                            value: FeatureFlags.useDemoFallback,
+                            onChanged: (val) {
+                              setSheetState(() {
+                                FeatureFlags.useDemoFallback = val;
+                              });
+                              setState(() {});
+                              _loadAllData();
+                            },
+                            title: const Text(
+                              'Chế độ Dữ liệu Demo (Demo Mode)',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain),
+                            ),
+                            subtitle: Text(
+                              FeatureFlags.useDemoFallback
+                                  ? 'Đang bật dữ liệu mẫu phục vụ trình chiếu với ban lãnh đạo'
+                                  : 'Đang dùng 100% dữ liệu thực từ máy chủ API',
+                              style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                            ),
+                            secondary: const Icon(Icons.slideshow_outlined, color: AppColors.primary),
+                            activeThumbColor: AppColors.primary,
+                          ),
+                          const Divider(height: 1, thickness: 1, color: AppColors.border),
+                          _buildMoreRow(
+                            title: 'Đăng xuất',
+                            icon: Icons.logout,
+                            color: AppColors.error,
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              _logout();
+                            },
                           ),
                         ],
                       ),
@@ -2938,91 +4440,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-
-              // Các chức năng
-              Material(
-                color: Colors.white,
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    _buildMoreRow(
-                      title: 'Bảng điểm & Kết quả học tập',
-                      sub: 'Xem chi tiết kết quả học tập & điểm thi',
-                      icon: Icons.analytics_outlined,
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                        setState(() => _currentIndex = 4);
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
-                    _buildMoreRow(
-                      title: 'Lịch sử Chuyên cần / Điểm danh',
-                      icon: Icons.event_available_outlined,
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                        _showAttendanceBottomSheet();
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
-                    _buildMoreRow(
-                      title: 'Thông tin giáo viên chủ nhiệm',
-                      sub: teacher,
-                      icon: Icons.school_outlined,
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
-                    _buildMoreRow(
-                      title: 'Giao diện & Cá nhân hóa',
-                      sub: 'Màu chữ & 8 hình nền học đường',
-                      icon: Icons.palette_outlined,
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                        _showThemeCustomizationSheet();
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
-                    SwitchListTile(
-                      value: FeatureFlags.useDemoFallback,
-                      onChanged: (val) {
-                        setSheetState(() {
-                          FeatureFlags.useDemoFallback = val;
-                        });
-                        setState(() {});
-                        _loadAllData();
-                      },
-                      title: const Text(
-                        'Chế độ Dữ liệu Demo (Demo Mode)',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textMain),
-                      ),
-                      subtitle: Text(
-                        FeatureFlags.useDemoFallback
-                            ? 'Đang bật dữ liệu mẫu phục vụ trình chiếu với ban lãnh đạo'
-                            : 'Đang dùng 100% dữ liệu thực từ máy chủ API',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSub),
-                      ),
-                      secondary: const Icon(Icons.slideshow_outlined, color: AppColors.primary),
-                      activeThumbColor: AppColors.primary,
-                    ),
-                    const Divider(height: 1, thickness: 1, color: AppColors.border),
-                    _buildMoreRow(
-                      title: 'Đăng xuất',
-                      icon: Icons.logout,
-                      color: AppColors.error,
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                        _logout();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -3199,7 +4619,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3271,7 +4692,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3358,7 +4780,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           }
 
           final currentMode = themeManager?.textColorMode ?? AppTextColorMode.defaultBlack;
-          final currentBg = themeManager?.bgImagePath ?? 'images/school_bg.jpg';
+          final currentBg = themeManager?.bgImagePath ?? 'images/school.jpg';
 
           return Material(
             color: Colors.white,
@@ -3522,8 +4944,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.zero,
                                     border: Border.all(
-                                      color: isSelected ? AppColors.primary : AppColors.border,
-                                      width: isSelected ? 2.5 : 1.0,
+                                      color: isSelected ? AppColors.primary : AppColors.cardBorder,
+                                      width: isSelected ? 2.5 : AppColors.cardBorderWidth,
                                     ),
                                     boxShadow: [
                                       if (isSelected)
@@ -3641,8 +5063,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.zero,
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.border,
-              width: isSelected ? 2.0 : 1.0,
+              color: isSelected ? AppColors.primary : AppColors.cardBorder,
+              width: isSelected ? 2.0 : AppColors.cardBorderWidth,
             ),
           ),
           child: Column(

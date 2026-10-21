@@ -1,21 +1,28 @@
 package com.school.backend.service;
 
 import com.school.backend.entity.*;
+import com.school.backend.enums.EducationLevel;
+import com.school.backend.enums.ExamType;
+import com.school.backend.payload.dto.SemesterMarkDto;
+import com.school.backend.payload.dto.SubjectMarkbookDto;
 import com.school.backend.payload.request.BulkMarksRequest;
 import com.school.backend.payload.response.StudentMarkResponse;
+import com.school.backend.payload.response.StudentMarkbookResponse;
 import com.school.backend.repository.*;
+import com.school.backend.security.SchoolAccessPolicy;
+import com.school.backend.util.MarksCalculationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,38 +57,25 @@ public class MarksService {
     @Autowired
     private SubjectRepository subjectRepository;
 
+    @Autowired
+    private AcademicYearRepository academicYearRepository;
+
+    @Autowired
+    private SchoolAccessPolicy schoolAccessPolicy;
+
     public void verifyTeacherAuthorizedForStudent(Student student, String teacherUsername) {
-        Teacher teacher = teacherRepository.findByUserUsername(teacherUsername)
-                .orElseThrow(() -> new AccessDeniedException("Tài khoản giáo viên không tồn tại trong hệ thống."));
-
-        SchoolClass studentClass = enrollmentRepository.findByStudentIdAndAcademicYearIsCurrentTrue(student.getId())
-                .map(Enrollment::getSchoolClass)
-                .orElse(student.getSchoolClass());
-
-        if (studentClass == null) {
-            throw new AccessDeniedException("Học sinh chưa được phân vào lớp học.");
-        }
-
-        // 1. GV Chủ nhiệm
-        boolean isHomeroom = studentClass.getEffectiveHomeroomTeacher() != null
-                && studentClass.getEffectiveHomeroomTeacher().getId().equals(teacher.getId());
-
-        if (isHomeroom) {
-            return;
-        }
-
-        // 2. Phân công giảng dạy
-        boolean isAssigned = !teachingAssignmentRepository
-                .findByTeacherIdAndSchoolClassIdAndAcademicYearIsCurrentTrue(teacher.getId(), studentClass.getId())
-                .isEmpty();
-
-        if (!isAssigned) {
-            throw new AccessDeniedException("Giáo viên không có phân công giảng dạy hoặc chủ nhiệm lớp của học sinh này.");
-        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        schoolAccessPolicy.verifyCanAccessStudent(auth, student.getId());
     }
 
     @Transactional(rollbackFor = Exception.class)
     public List<Marks> saveBulkMarks(BulkMarksRequest request, String currentUsername, boolean isTeacher) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return saveBulkMarks(request, auth);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public List<Marks> saveBulkMarks(BulkMarksRequest request, Authentication auth) {
         if (request == null || request.getRecords() == null || request.getRecords().isEmpty()) {
             return new ArrayList<>();
         }
@@ -139,7 +133,22 @@ public class MarksService {
             }
         }
 
-        BigDecimal maxScore = request.getMaxMarks() != null ? request.getMaxMarks() : BigDecimal.valueOf(100.00);
+        // 3. Resolve Academic Year
+        AcademicYear academicYear = null;
+        if (request.getAcademicYearId() != null) {
+            academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElse(null);
+        }
+        if (academicYear == null) {
+            academicYear = academicYearRepository.findAll().stream()
+                    .filter(y -> Boolean.TRUE.equals(y.getIsCurrent()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        Integer semester = request.getSemester() != null ? request.getSemester() : 1;
+        ExamType examType = request.getExamType() != null ? request.getExamType() : ExamType.THUONG_XUYEN;
+        Integer txIndex = request.getTxIndex();
+        BigDecimal maxScore = request.getMaxMarks() != null ? request.getMaxMarks() : BigDecimal.valueOf(10.00);
 
         List<Marks> savedMarks = new ArrayList<>();
         for (BulkMarksRequest.Record rec : request.getRecords()) {
@@ -148,54 +157,75 @@ public class MarksService {
             Student student = studentRepository.findById(rec.getStudentId()).orElse(null);
             if (student == null) continue;
 
-            if (isTeacher) {
-                verifyTeacherAuthorizedForStudent(student, currentUsername);
+            // BẢO MẬT P1: Xác thực giáo viên có thẩm quyền nhập điểm cho môn học này
+            schoolAccessPolicy.verifyTeacherCanGradeSubject(auth, student, subject);
+
+            BigDecimal score = rec.getMarksObtained();
+            if (score != null) {
+                if (score.compareTo(BigDecimal.ZERO) < 0 || score.compareTo(maxScore) > 0) {
+                    throw new IllegalArgumentException("Điểm số " + score + " của học sinh "
+                            + student.getName() + " không hợp lệ (phải từ 0 đến " + maxScore + ")");
+                }
             }
 
-            Marks mark = marksRepository.findByStudentIdAndExamIdAndSubjectId(student.getId(), exam.getId(), subject.getId())
-                    .orElse(new Marks());
+            String lockKey = ("mark_lock_" + student.getId() + "_" + subject.getId() + "_" + semester + "_" + examType + (txIndex != null ? "_" + txIndex : "")).intern();
+            synchronized (lockKey) {
+                // Tìm con điểm đã tồn tại theo cấu trúc học bạ để upsert
+                Marks mark = null;
+                if (academicYear != null) {
+                    if (examType == ExamType.THUONG_XUYEN && txIndex != null) {
+                        mark = marksRepository.findByStudentIdAndSubjectIdAndSemesterAndAcademicYearIdAndExamTypeAndTxIndex(
+                                student.getId(), subject.getId(), semester, academicYear.getId(), examType, txIndex)
+                                .orElse(null);
+                    } else {
+                        mark = marksRepository.findByStudentIdAndSubjectIdAndSemesterAndAcademicYearIdAndExamType(
+                                student.getId(), subject.getId(), semester, academicYear.getId(), examType)
+                                .orElse(null);
+                    }
+                }
 
-            mark.setStudent(student);
-            mark.setExam(exam);
-            mark.setSubject(subject);
-            mark.setScore(rec.getMarksObtained());
-            mark.setMaxScore(maxScore);
+                if (mark == null) {
+                    mark = marksRepository.findByStudentIdAndExamIdAndSubjectId(student.getId(), exam.getId(), subject.getId())
+                            .orElse(new Marks());
+                }
 
-            savedMarks.add(marksRepository.save(mark));
+                mark.setStudent(student);
+                mark.setExam(exam);
+                mark.setSubject(subject);
+                mark.setScore(score);
+                mark.setMaxScore(maxScore);
+                mark.setAcademicYear(academicYear);
+                mark.setSemester(semester);
+                mark.setExamType(examType);
+                mark.setTxIndex(txIndex);
+                if (rec.getRemarks() != null && !rec.getRemarks().isBlank()) {
+                    mark.setComment(rec.getRemarks());
+                }
+
+                savedMarks.add(marksRepository.saveAndFlush(mark));
+            }
         }
 
         return savedMarks;
     }
 
     public List<StudentMarkResponse> getMarksByStudentId(Long studentId, String currentUsername, boolean isParent, boolean isTeacher) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return getMarksByStudentId(studentId, auth);
+    }
 
-        if (isParent) {
-            boolean isAuthorized = false;
-            // 1. ReBAC: Kiểm tra qua bảng nối guardian_students
-            Optional<Parent> parentOpt = parentRepository.findByPhone(currentUsername);
-            if (parentOpt.isPresent()) {
-                isAuthorized = guardianStudentRepository.findByGuardianIdAndStudentId(parentOpt.get().getId(), studentId).isPresent();
-            }
-            // 2. Fallback: Kiểm tra qua cột parent_id cũ có ghi log
-            if (!isAuthorized) {
-                log.warn("[DUAL-READ FALLBACK] Checking legacy parent_id for parent={} on studentId={}", currentUsername, studentId);
-                isAuthorized = student.getParent() != null
-                        && student.getParent().getPhone() != null
-                        && student.getParent().getPhone().equals(currentUsername);
-            }
-            if (!isAuthorized) {
-                throw new AccessDeniedException("Bạn không có quyền xem điểm của học sinh này.");
-            }
-        } else if (isTeacher) {
-            verifyTeacherAuthorizedForStudent(student, currentUsername);
-        }
+    public List<StudentMarkResponse> getMarksByStudentId(Long studentId, Authentication auth) {
+        // BẢO MẬT P0: Cưỡng chế phân quyền theo SchoolAccessPolicy, triệt tiêu hoàn toàn BOLA/IDOR
+        Student student = schoolAccessPolicy.verifyCanAccessStudent(auth, studentId);
 
         List<Marks> marksList = marksRepository.findByStudentId(studentId);
         return marksList.stream().map(m -> {
-            BigDecimal maxScore = m.getMaxScore() != null ? m.getMaxScore() : BigDecimal.valueOf(100.00);
-            String grade = calculateGrade(m.getScore(), maxScore);
+            BigDecimal maxScore = m.getMaxScore() != null ? m.getMaxScore() : BigDecimal.valueOf(10.00);
+            EducationLevel level = EducationLevel.PRIMARY;
+            if (student.getSchoolClass() != null && student.getSchoolClass().getGrade() != null) {
+                level = EducationLevel.fromGrade(student.getSchoolClass().getGrade());
+            }
+            String grade = MarksCalculationHelper.classifyAcademic(m.getScore(), level);
 
             return StudentMarkResponse.builder()
                     .id(m.getId())
@@ -208,20 +238,212 @@ public class MarksService {
                     .marksObtained(m.getScore())
                     .maxMarks(maxScore)
                     .grade(grade)
+                    .examType(m.getExamType() != null ? m.getExamType().name() : null)
+                    .semester(m.getSemester())
+                    .txIndex(m.getTxIndex())
+                    .academicYear(m.getAcademicYear() != null ? m.getAcademicYear().getName() : null)
+                    .comment(m.getComment())
                     .build();
         }).collect(Collectors.toList());
     }
 
-    private String calculateGrade(BigDecimal score, BigDecimal maxScore) {
-        if (score == null || maxScore == null || maxScore.compareTo(BigDecimal.ZERO) <= 0) {
-            return "N/A";
+    public StudentMarkbookResponse getStudentMarkbook(
+            Long studentId, Long academicYearId,
+            String currentUsername, boolean isParent, boolean isTeacher) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return getStudentMarkbook(studentId, academicYearId, auth);
+    }
+
+    /**
+     * Xây dựng học bạ đầy đủ cho học sinh trong một năm học.
+     * Đảm bảo kiểm soát an ninh đa tầng theo SchoolAccessPolicy (chống BOLA/IDOR).
+     */
+    public StudentMarkbookResponse getStudentMarkbook(
+            Long studentId, Long academicYearId, Authentication auth) {
+
+        // BẢO MẬT P0: Cưỡng chế phân quyền theo SchoolAccessPolicy (STUDENT chỉ xem chính mình)
+        Student student = schoolAccessPolicy.verifyCanAccessStudent(auth, studentId);
+
+        // Resolve năm học
+        AcademicYear year;
+        if (academicYearId != null) {
+            year = academicYearRepository.findById(academicYearId)
+                    .orElseThrow(() -> new RuntimeException("Năm học không tồn tại: " + academicYearId));
+        } else {
+            year = academicYearRepository.findAll().stream()
+                    .filter(y -> Boolean.TRUE.equals(y.getIsCurrent()))
+                    .findFirst()
+                    .orElse(null);
         }
-        BigDecimal percentage = score.multiply(BigDecimal.valueOf(100)).divide(maxScore, 2, RoundingMode.HALF_UP);
-        if (percentage.compareTo(BigDecimal.valueOf(90)) >= 0) return "A+";
-        if (percentage.compareTo(BigDecimal.valueOf(80)) >= 0) return "A";
-        if (percentage.compareTo(BigDecimal.valueOf(70)) >= 0) return "B";
-        if (percentage.compareTo(BigDecimal.valueOf(60)) >= 0) return "C";
-        if (percentage.compareTo(BigDecimal.valueOf(50)) >= 0) return "D";
-        return "F";
+
+        // Lấy tất cả điểm theo năm học
+        List<Marks> allMarks = year != null
+                ? marksRepository.findByStudentIdAndAcademicYearId(studentId, year.getId())
+                : marksRepository.findByStudentId(studentId);
+
+        // Xác định cấp học
+        EducationLevel level = EducationLevel.PRIMARY;
+        if (student.getSchoolClass() != null && student.getSchoolClass().getGrade() != null) {
+            level = EducationLevel.fromGrade(student.getSchoolClass().getGrade());
+        }
+
+        // Nhóm điểm theo môn học
+        Map<Long, List<Marks>> bySubject = allMarks.stream()
+                .filter(m -> m.getSubject() != null)
+                .collect(Collectors.groupingBy(m -> m.getSubject().getId()));
+
+        List<SubjectMarkbookDto> subjectDtos = new ArrayList<>();
+        for (Map.Entry<Long, List<Marks>> entry : bySubject.entrySet()) {
+            Long subjectId2 = entry.getKey();
+            List<Marks> subjectMarks = entry.getValue();
+            String subjectName = subjectMarks.get(0).getSubject().getName();
+
+            SubjectMarkbookDto dto = SubjectMarkbookDto.builder()
+                    .subjectId(subjectId2)
+                    .subjectName(subjectName)
+                    .semester1(buildSemesterMark(subjectMarks, 1))
+                    .semester2(buildSemesterMark(subjectMarks, 2))
+                    .build();
+
+            BigDecimal hk1Avg = dto.getSemester1() != null ? dto.getSemester1().getAvg() : null;
+            BigDecimal hk2Avg = dto.getSemester2() != null ? dto.getSemester2().getAvg() : null;
+            BigDecimal yearAvg = MarksCalculationHelper.calcYearAvg(hk1Avg, hk2Avg);
+            dto.setYearAvg(yearAvg);
+            dto.setAcademicClassification(MarksCalculationHelper.classifyAcademic(yearAvg, level));
+
+            subjectDtos.add(dto);
+        }
+
+        // Tính điểm trung bình chung
+        List<BigDecimal> yearAvgs = subjectDtos.stream()
+                .map(SubjectMarkbookDto::getYearAvg)
+                .collect(Collectors.toList());
+        BigDecimal overallAvg = MarksCalculationHelper.calcOverallAvg(yearAvgs);
+
+        String overallClass;
+        String honorTitle = null;
+
+        // NGHIỆP VỤ P1: Xếp loại học lực & danh hiệu theo chuẩn Thông tư 22/2021
+        String conduct = null; // GV chủ nhiệm sẽ nhập hạnh kiểm khi tổng kết
+        if (level == EducationLevel.SECONDARY || level == EducationLevel.HIGH_SCHOOL) {
+            // Đếm số môn đánh giá bằng nhận xét (ĐGNX) bị Chưa đạt theo Điều 9 TT 22
+            int countFailCommentSubjects = 0;
+            for (SubjectMarkbookDto sDto : subjectDtos) {
+                if (sDto.getYearAvg() == null) {
+                    boolean isFailed = false;
+                    if (sDto.getSemester1() != null && sDto.getSemester1().getComments() != null) {
+                        isFailed = sDto.getSemester1().getComments().stream()
+                                .anyMatch(c -> c != null && (c.toLowerCase().contains("chưa đạt") || c.equalsIgnoreCase("cđ")));
+                    }
+                    if (sDto.getSemester2() != null && sDto.getSemester2().getComments() != null) {
+                        isFailed = isFailed || sDto.getSemester2().getComments().stream()
+                                .anyMatch(c -> c != null && (c.toLowerCase().contains("chưa đạt") || c.equalsIgnoreCase("cđ")));
+                    }
+                    if (isFailed) {
+                        countFailCommentSubjects++;
+                    }
+                }
+            }
+
+            overallClass = MarksCalculationHelper.evaluateAcademicResultTT22(yearAvgs, countFailCommentSubjects);
+            honorTitle = MarksCalculationHelper.evaluateHonorTitleTT22(overallClass, conduct, yearAvgs);
+        } else {
+            // Tiểu học (TT 27/2020)
+            overallClass = MarksCalculationHelper.classifyAcademic(overallAvg, level);
+        }
+
+        String className = student.getSchoolClass() != null
+                ? student.getSchoolClass().getName() : null;
+
+        return StudentMarkbookResponse.builder()
+                .studentId(student.getId())
+                .studentName(student.getName())
+                .studentAdmissionNumber(student.getAdmissionNumber())
+                .academicYear(year != null ? year.getName() : null)
+                .educationLevel(level.name())
+                .educationLevelDisplayName(level.getFullName())
+                .className(className)
+                .schoolName(level.getDefaultSchoolName())
+                .subjects(subjectDtos)
+                .overallAvg(overallAvg)
+                .overallClassification(overallClass)
+                .conduct(conduct)
+                .honorTitle(honorTitle)
+                .build();
+    }
+
+    /** Xây SemesterMarkDto cho một môn và một học kỳ. */
+    private SemesterMarkDto buildSemesterMark(List<Marks> marks, int semester) {
+        List<Marks> semMarks = marks.stream()
+                .filter(m -> semester == m.getSemester())
+                .collect(Collectors.toList());
+
+        if (semMarks.isEmpty()) return null;
+
+        // TX
+        List<BigDecimal> txScores = semMarks.stream()
+                .filter(m -> m.getExamType() == ExamType.THUONG_XUYEN)
+                .sorted(Comparator.comparingInt(m -> (m.getTxIndex() != null ? m.getTxIndex() : 0)))
+                .map(Marks::getScore)
+                .collect(Collectors.toList());
+
+        // Nhận xét (cấp 1 lớp 1-3)
+        List<String> comments = semMarks.stream()
+                .filter(m -> m.getExamType() == ExamType.NHAN_XET && m.getComment() != null)
+                .map(Marks::getComment)
+                .collect(Collectors.toList());
+
+        BigDecimal gk = semMarks.stream()
+                .filter(m -> m.getExamType() == ExamType.GIUA_KY)
+                .map(Marks::getScore).findFirst().orElse(null);
+
+        BigDecimal ck = semMarks.stream()
+                .filter(m -> m.getExamType() == ExamType.CUOI_KY)
+                .map(Marks::getScore).findFirst().orElse(null);
+
+        BigDecimal avg = MarksCalculationHelper.calcSemesterAvg(txScores, gk, ck);
+
+        return SemesterMarkDto.builder()
+                .semester(semester)
+                .txScores(txScores)
+                .gkScore(gk)
+                .ckScore(ck)
+                .avg(avg)
+                .comments(comments.isEmpty() ? null : comments)
+                .build();
+    }
+
+    /** API P2: Cập nhật một con điểm lẻ */
+    @Transactional(rollbackFor = Exception.class)
+    public Marks updateSingleMark(Long markId, BigDecimal newScore, String comment, Authentication auth) {
+        Marks mark = marksRepository.findById(markId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy con điểm với ID: " + markId));
+
+        schoolAccessPolicy.verifyTeacherCanGradeSubject(auth, mark.getStudent(), mark.getSubject());
+
+        if (newScore != null) {
+            BigDecimal max = mark.getMaxScore() != null ? mark.getMaxScore() : BigDecimal.valueOf(10.00);
+            if (newScore.compareTo(BigDecimal.ZERO) < 0 || newScore.compareTo(max) > 0) {
+                throw new IllegalArgumentException("Điểm số " + newScore + " không hợp lệ (phải từ 0 đến " + max + ")");
+            }
+            mark.setScore(newScore);
+        }
+
+        if (comment != null) {
+            mark.setComment(comment);
+        }
+
+        return marksRepository.save(mark);
+    }
+
+    /** API P2: Xóa con điểm nhập nhầm */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteSingleMark(Long markId, Authentication auth) {
+        Marks mark = marksRepository.findById(markId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy con điểm với ID: " + markId));
+
+        schoolAccessPolicy.verifyTeacherCanGradeSubject(auth, mark.getStudent(), mark.getSubject());
+
+        marksRepository.delete(mark);
     }
 }

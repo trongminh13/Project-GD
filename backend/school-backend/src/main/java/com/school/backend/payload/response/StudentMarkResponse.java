@@ -21,4 +21,20 @@ public class StudentMarkResponse {
     private BigDecimal marksObtained;
     private BigDecimal maxMarks;
     private String grade;
+
+    /** Loại cột điểm: THUONG_XUYEN / GIUA_KY / CUOI_KY / NHAN_XET */
+    private String examType;
+
+    /** Học kỳ: 1 hoặc 2 */
+    private Integer semester;
+
+    /** Thứ tự cột TX trong học kỳ */
+    private Integer txIndex;
+
+    /** Năm học tên, ví dụ: "2024-2025" */
+    private String academicYear;
+
+    /** Nhận xét (Tiểu học lớp 1-3) */
+    private String comment;
 }
+

@@ -49,5 +49,106 @@ void main() {
       // Verify primary school subject is NOT present in high school
       expect(find.text('Tiếng Việt'), findsNothing);
     });
+
+    testWidgets('TC-ADAPTIVE-03: Switching to Bảng điểm shows Sổ Học Bạ Điện Tử, TT22 criteria card & formula', (tester) async {
+      tester.view.physicalSize = const Size(600, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on Bảng điểm tab (icon analytics_outlined)
+      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.pumpAndSettle();
+
+      // Check Vietnamese Academic Header
+      expect(find.textContaining('HỌC BẠ ĐIỆN TỬ'), findsWidgets);
+
+      // Check Semester dropdown default
+      expect(find.text('Học kỳ I'), findsOneWidget);
+
+      // Check TT22 Criteria Card for High School
+      expect(find.text('TIÊU CHUẨN DANH HIỆU THPT (TT 22/2021)'), findsOneWidget);
+      expect(find.textContaining('HỌC SINH GIỎI'), findsWidgets);
+    });
+
+    testWidgets('TC-ADAPTIVE-04: Toggle between Accordion View and Grid Table View', (tester) async {
+      tester.view.physicalSize = const Size(600, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Switch to Marks tab
+      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.pumpAndSettle();
+
+      // Find Table chart icon to switch to Grid Table View
+      final tableToggle = find.byIcon(Icons.table_chart_outlined);
+      expect(tableToggle, findsOneWidget);
+
+      await tester.tap(tableToggle);
+      await tester.pumpAndSettle();
+
+      // Should now show DataTable with official columns
+      expect(find.byType(DataTable), findsOneWidget);
+      expect(find.text('TX HK1'), findsOneWidget);
+      expect(find.text('ĐTB Năm'), findsOneWidget);
+
+      // Tap Card list icon to switch back
+      final cardToggle = find.byIcon(Icons.view_agenda_outlined);
+      expect(cardToggle, findsOneWidget);
+
+      await tester.tap(cardToggle);
+      await tester.pumpAndSettle();
+      expect(find.byType(DataTable), findsNothing);
+    });
+
+    testWidgets('TC-ADAPTIVE-05: Tapping In Phiếu Điểm opens A4 Print Preview BottomSheet', (tester) async {
+      tester.view.physicalSize = const Size(600, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StudentDashboardScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Switch to Marks tab
+      await tester.tap(find.byIcon(Icons.analytics_outlined));
+      await tester.pumpAndSettle();
+
+      // Find In Phiếu Điểm button
+      final printBtn = find.text('In Phiếu Điểm');
+      expect(printBtn, findsOneWidget);
+
+      await tester.tap(printBtn);
+      await tester.pumpAndSettle();
+
+      // Verify A4 Preview sheet appears with national motto
+      expect(find.textContaining('CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'), findsOneWidget);
+      expect(find.textContaining('PHIẾU BÁO ĐIỂM HỌC TẬP'), findsOneWidget);
+    });
   });
 }

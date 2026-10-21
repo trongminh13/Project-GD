@@ -3,6 +3,7 @@ package com.school.backend.controller;
 import com.school.backend.payload.dto.StudentAttendanceDto;
 import com.school.backend.payload.dto.StudentMarkDto;
 import com.school.backend.payload.dto.StudentProfileDto;
+import com.school.backend.payload.response.StudentMarkbookResponse;
 import com.school.backend.security.services.UserDetailsImpl;
 import com.school.backend.service.StudentPortalService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,11 @@ public class StudentPortalController {
         return user.getId();
     }
 
+    private String getCurrentUsername() {
+        UserDetailsImpl user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return user.getUsername();
+    }
+
     @GetMapping("/profile")
     @PreAuthorize("hasAuthority('STUDENT')")
     public ResponseEntity<StudentProfileDto> getMyProfile() {
@@ -43,5 +49,13 @@ public class StudentPortalController {
     @PreAuthorize("hasAuthority('STUDENT')")
     public ResponseEntity<List<StudentMarkDto>> getMyMarks() {
         return ResponseEntity.ok(studentPortalService.getMarksByUserId(getCurrentUserId()));
+    }
+
+    @GetMapping("/markbook")
+    @PreAuthorize("hasAuthority('STUDENT')")
+    public ResponseEntity<StudentMarkbookResponse> getMyMarkbook(
+            @RequestParam(required = false) Long academicYearId) {
+        return ResponseEntity.ok(studentPortalService.getMarkbookByUserId(
+                getCurrentUserId(), academicYearId, getCurrentUsername()));
     }
 }

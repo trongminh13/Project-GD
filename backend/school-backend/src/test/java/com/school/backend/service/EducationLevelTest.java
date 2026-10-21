@@ -90,4 +90,39 @@ public class EducationLevelTest {
         assertEquals("N/A", studentPortalService.calculateGrade(null, BigDecimal.valueOf(10), EducationLevel.HIGH_SCHOOL));
         assertEquals("N/A", studentPortalService.calculateGrade(BigDecimal.valueOf(5), BigDecimal.ZERO, EducationLevel.SECONDARY));
     }
+
+    @Test
+    @DisplayName("TC-LEVEL-07: Verify default school names for each education level")
+    public void testDefaultSchoolNames() {
+        assertEquals("Trường Tiểu học Astra", EducationLevel.PRIMARY.getDefaultSchoolName());
+        assertEquals("Trường THCS Astra", EducationLevel.SECONDARY.getDefaultSchoolName());
+        assertEquals("Trường THPT Astra", EducationLevel.HIGH_SCHOOL.getDefaultSchoolName());
+    }
+
+    @Test
+    @DisplayName("TC-LEVEL-08: Verify fullName and shortName for each education level")
+    public void testFullNameAndShortName() {
+        assertEquals("Tiểu học", EducationLevel.PRIMARY.getFullName());
+        assertEquals("Tiểu học", EducationLevel.PRIMARY.getShortName());
+
+        assertEquals("Trung học cơ sở", EducationLevel.SECONDARY.getFullName());
+        assertEquals("THCS", EducationLevel.SECONDARY.getShortName());
+
+        assertEquals("Trung học phổ thông", EducationLevel.HIGH_SCHOOL.getFullName());
+        assertEquals("THPT", EducationLevel.HIGH_SCHOOL.getShortName());
+    }
+
+    @Test
+    @DisplayName("TC-LEVEL-09: Verify StudentProfileDto @Builder.Default fallback initialization")
+    public void testStudentProfileDtoBuilderDefaults() {
+        com.school.backend.payload.dto.StudentProfileDto dto = com.school.backend.payload.dto.StudentProfileDto.builder()
+                .id(100L)
+                .name("Nguyễn Văn A")
+                .build();
+
+        assertNotNull(dto.getEducationLevel());
+        assertEquals(EducationLevel.PRIMARY, dto.getEducationLevel());
+        assertEquals("Tiểu học", dto.getEducationLevelName());
+        assertEquals("Trường Tiểu học Astra", dto.getSchoolName());
+    }
 }

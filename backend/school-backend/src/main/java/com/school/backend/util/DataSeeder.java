@@ -3,8 +3,18 @@ package com.school.backend.util;
 import com.school.backend.entity.Parent;
 import com.school.backend.entity.Teacher;
 import com.school.backend.entity.SchoolClass;
+import com.school.backend.entity.Student;
+import com.school.backend.entity.Enrollment;
+import com.school.backend.entity.GuardianStudent;
+import com.school.backend.entity.Marks;
+import com.school.backend.enums.ExamType;
 import com.school.backend.repository.TeacherRepository;
 import com.school.backend.repository.SchoolClassRepository;
+import com.school.backend.repository.EnrollmentRepository;
+import com.school.backend.repository.GuardianStudentRepository;
+import com.school.backend.repository.MarksRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import com.school.backend.entity.User;
 import com.school.backend.enums.Role;
@@ -71,6 +81,15 @@ public class DataSeeder implements CommandLineRunner {
 
     @Autowired
     com.school.backend.repository.NotificationRepository notificationRepository;
+
+    @Autowired
+    GuardianStudentRepository guardianStudentRepository;
+
+    @Autowired
+    EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    MarksRepository marksRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -248,6 +267,131 @@ public class DataSeeder implements CommandLineRunner {
         } else {
             System.out.println("Developer test parent already exists: Phone " + developerPhone);
         }
+
+        Parent devParent = parentRepository.findByPhone(developerPhone).orElse(null);
+
+        // Seed 3 lớp học chuẩn cho 3 cấp học nếu chưa có
+        SchoolClass class1A = schoolClassRepository.findByGradeAndSection("1", "A").orElseGet(() -> {
+            SchoolClass sc = new SchoolClass();
+            sc.setGrade("1");
+            sc.setSection("A");
+            sc.setHomeroomTeacher(devTeacher);
+            sc.setClassTeacher(devTeacher);
+            return schoolClassRepository.save(sc);
+        });
+
+        SchoolClass class6A = schoolClassRepository.findByGradeAndSection("6", "A").orElseGet(() -> {
+            SchoolClass sc = new SchoolClass();
+            sc.setGrade("6");
+            sc.setSection("A");
+            sc.setHomeroomTeacher(teacher2);
+            sc.setClassTeacher(teacher2);
+            return schoolClassRepository.save(sc);
+        });
+
+        SchoolClass class10A = schoolClassRepository.findByGradeAndSection("10", "A").orElseGet(() -> {
+            SchoolClass sc = new SchoolClass();
+            sc.setGrade("10");
+            sc.setSection("A");
+            sc.setHomeroomTeacher(devTeacher);
+            sc.setClassTeacher(devTeacher);
+            return schoolClassRepository.save(sc);
+        });
+
+        // 1. Học sinh Cấp 1 (Tiểu học - Lớp 1A)
+        User studentUser1 = userRepository.findByUsername("student01").orElseGet(() -> {
+            User u = new User();
+            u.setUsername("student01");
+            u.setPassword(passwordEncoder.encode("student123"));
+            u.setRole(Role.STUDENT);
+            u.setMustChangePassword(false);
+            return userRepository.save(u);
+        });
+        Student student1 = studentRepository.findByAdmissionNumber("STU001")
+                .or(() -> studentRepository.findByUserId(studentUser1.getId()))
+                .orElseGet(() -> {
+                    Student s = new Student();
+                    s.setUser(studentUser1);
+                    s.setAdmissionNumber("STU001");
+                    s.setName("Nguyễn Minh Anh");
+                    s.setRollNo("01");
+                    s.setGender("Female");
+                    s.setDob(LocalDate.of(2019, 5, 12));
+                    s.setSchoolClass(class1A);
+                    s.setParent(devParent);
+                    return studentRepository.save(s);
+                });
+        student1.setUser(studentUser1);
+        student1.setSchoolClass(class1A);
+        student1.setParent(devParent);
+        studentRepository.save(student1);
+        syncStudentRelations(student1, class1A, currentYear, devParent);
+
+        // 2. Học sinh Cấp 2 (THCS - Lớp 6A)
+        User studentUser2 = userRepository.findByUsername("student02").orElseGet(() -> {
+            User u = new User();
+            u.setUsername("student02");
+            u.setPassword(passwordEncoder.encode("student123"));
+            u.setRole(Role.STUDENT);
+            u.setMustChangePassword(false);
+            return userRepository.save(u);
+        });
+        Student student2 = studentRepository.findByAdmissionNumber("STU002")
+                .or(() -> studentRepository.findByUserId(studentUser2.getId()))
+                .orElseGet(() -> {
+                    Student s = new Student();
+                    s.setUser(studentUser2);
+                    s.setAdmissionNumber("STU002");
+                    s.setName("Trần Bảo Nam");
+                    s.setRollNo("02");
+                    s.setGender("Male");
+                    s.setDob(LocalDate.of(2014, 8, 20));
+                    s.setSchoolClass(class6A);
+                    s.setParent(devParent);
+                    return studentRepository.save(s);
+                });
+        student2.setUser(studentUser2);
+        student2.setSchoolClass(class6A);
+        student2.setParent(devParent);
+        studentRepository.save(student2);
+        syncStudentRelations(student2, class6A, currentYear, devParent);
+
+        // 3. Học sinh Cấp 3 (THPT - Lớp 10A)
+        User studentUser3 = userRepository.findByUsername("student03").orElseGet(() -> {
+            User u = new User();
+            u.setUsername("student03");
+            u.setPassword(passwordEncoder.encode("student123"));
+            u.setRole(Role.STUDENT);
+            u.setMustChangePassword(false);
+            return userRepository.save(u);
+        });
+        Student student3 = studentRepository.findByAdmissionNumber("STU003")
+                .or(() -> studentRepository.findByUserId(studentUser3.getId()))
+                .orElseGet(() -> {
+                    Student s = new Student();
+                    s.setUser(studentUser3);
+                    s.setAdmissionNumber("STU003");
+                    s.setName("Lê Hoàng Long");
+                    s.setRollNo("03");
+                    s.setGender("Male");
+                    s.setDob(LocalDate.of(2010, 10, 15));
+                    s.setSchoolClass(class10A);
+                    s.setParent(devParent);
+                    return studentRepository.save(s);
+                });
+        student3.setUser(studentUser3);
+        student3.setSchoolClass(class10A);
+        student3.setParent(devParent);
+        studentRepository.save(student3);
+        syncStudentRelations(student3, class10A, currentYear, devParent);
+
+        System.out.println("Seeded standard students for all 3 levels: student01 (1A), student02 (6A), student03 (10A)");
+
+        // Seed sample marks cho student02 (THCS) và student03 (THPT)
+        seedSubjectMarks(student2, math, currentYear, 1, new double[]{8.5, 9.0}, 8.0, 8.5);
+        seedSubjectMarks(student2, english, currentYear, 1, new double[]{8.0, 8.5}, 8.5, 9.0);
+        seedSubjectMarks(student3, math, currentYear, 1, new double[]{9.0, 9.5}, 9.0, 9.5);
+        seedSubjectMarks(student3, english, currentYear, 1, new double[]{8.5, 9.0}, 8.5, 9.0);
 
 
         // 4. Seed textbook SGK Toán 1 - Tập 1 (118 pages) if not already exists
@@ -461,6 +605,73 @@ public class DataSeeder implements CommandLineRunner {
             notificationRepository.save(n4);
 
             System.out.println("Seeded 4 sample notifications (ALL, GRADE, CLASS).");
+        }
+    }
+
+    private void syncStudentRelations(Student student, SchoolClass sc, com.school.backend.entity.AcademicYear ay, Parent parent) {
+        if (student == null || student.getId() == null) return;
+        if (ay != null && sc != null && enrollmentRepository.findByStudentIdAndAcademicYearId(student.getId(), ay.getId()).isEmpty()) {
+            Enrollment e = new Enrollment();
+            e.setStudent(student);
+            e.setSchoolClass(sc);
+            e.setAcademicYear(ay);
+            e.setEnrollmentDate(LocalDate.now());
+            e.setStatus("ENROLLED");
+            enrollmentRepository.save(e);
+        }
+        if (parent != null && guardianStudentRepository.findByGuardianIdAndStudentId(parent.getId(), student.getId()).isEmpty()) {
+            GuardianStudent gs = new GuardianStudent();
+            gs.setGuardian(parent);
+            gs.setStudent(student);
+            gs.setIsPrimary(true);
+            gs.setRelationship("PARENT");
+            guardianStudentRepository.save(gs);
+        }
+    }
+
+    private void seedSubjectMarks(Student student, com.school.backend.entity.Subject subject,
+                                  com.school.backend.entity.AcademicYear year, int semester,
+                                  double[] txScores, double gkScore, double ckScore) {
+        if (student == null || student.getId() == null || subject == null || year == null) return;
+        for (int i = 0; i < txScores.length; i++) {
+            int txIdx = i + 1;
+            if (marksRepository.findByStudentIdAndSubjectIdAndSemesterAndAcademicYearIdAndExamTypeAndTxIndex(
+                    student.getId(), subject.getId(), semester, year.getId(), ExamType.THUONG_XUYEN, txIdx).isEmpty()) {
+                Marks m = new Marks();
+                m.setStudent(student);
+                m.setSubject(subject);
+                m.setAcademicYear(year);
+                m.setSemester(semester);
+                m.setExamType(ExamType.THUONG_XUYEN);
+                m.setTxIndex(txIdx);
+                m.setScore(BigDecimal.valueOf(txScores[i]));
+                m.setMaxScore(BigDecimal.valueOf(10.0));
+                marksRepository.save(m);
+            }
+        }
+        if (marksRepository.findByStudentIdAndSubjectIdAndSemesterAndAcademicYearIdAndExamTypeAndTxIndex(
+                student.getId(), subject.getId(), semester, year.getId(), ExamType.GIUA_KY, null).isEmpty()) {
+            Marks m = new Marks();
+            m.setStudent(student);
+            m.setSubject(subject);
+            m.setAcademicYear(year);
+            m.setSemester(semester);
+            m.setExamType(ExamType.GIUA_KY);
+            m.setScore(BigDecimal.valueOf(gkScore));
+            m.setMaxScore(BigDecimal.valueOf(10.0));
+            marksRepository.save(m);
+        }
+        if (marksRepository.findByStudentIdAndSubjectIdAndSemesterAndAcademicYearIdAndExamTypeAndTxIndex(
+                student.getId(), subject.getId(), semester, year.getId(), ExamType.CUOI_KY, null).isEmpty()) {
+            Marks m = new Marks();
+            m.setStudent(student);
+            m.setSubject(subject);
+            m.setAcademicYear(year);
+            m.setSemester(semester);
+            m.setExamType(ExamType.CUOI_KY);
+            m.setScore(BigDecimal.valueOf(ckScore));
+            m.setMaxScore(BigDecimal.valueOf(10.0));
+            marksRepository.save(m);
         }
     }
 }

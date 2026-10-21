@@ -39,7 +39,8 @@ class HomeworkCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+        borderRadius: BorderRadius.zero,
         color: AppColors.cardBg,
       ),
       child: Row(

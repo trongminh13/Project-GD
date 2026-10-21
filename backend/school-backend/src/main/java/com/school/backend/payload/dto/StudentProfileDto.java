@@ -22,8 +22,14 @@ public class StudentProfileDto {
     private LocalDate dob;
     private String gender;
     private String photoUrl;
-    private EducationLevel educationLevel;
-    private String educationLevelName;
+    @Builder.Default
+    private EducationLevel educationLevel = EducationLevel.PRIMARY;
+
+    @Builder.Default
+    private String educationLevelName = "Tiểu học";
+
+    @Builder.Default
+    private String schoolName = "Trường Tiểu học Astra";
 
     public StudentProfileDto(Long id, String admissionNumber, String name, String rollNo,
                              String grade, String section, LocalDate dob, String gender, String photoUrl) {
@@ -38,5 +44,6 @@ public class StudentProfileDto {
         this.photoUrl = photoUrl;
         this.educationLevel = EducationLevel.fromGrade(grade);
         this.educationLevelName = this.educationLevel != null ? this.educationLevel.getDisplayName() : "Tiểu học";
+        this.schoolName = this.educationLevel != null ? this.educationLevel.getDefaultSchoolName() : "Trường Tiểu học Astra";
     }
 }

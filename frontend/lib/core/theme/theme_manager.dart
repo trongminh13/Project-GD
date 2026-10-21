@@ -32,8 +32,8 @@ class ThemeManager extends ChangeNotifier {
   /// Danh sách 8 hình nền học đường có sẵn trong thư mục images/
   static const List<AppBackgroundItem> availableBackgrounds = [
     AppBackgroundItem(
-      key: 'school_bg',
-      assetPath: 'images/school_bg.jpg',
+      key: 'school',
+      assetPath: 'images/school.jpg',
       nameVi: 'Cổng trường',
       descriptionVi: 'Trường học ban ngày rực rỡ',
     ),
@@ -83,7 +83,7 @@ class ThemeManager extends ChangeNotifier {
 
   ThemeMode _mode = ThemeMode.light;
   AppTextColorMode _textColorMode = AppTextColorMode.defaultBlack;
-  String _bgImagePath = 'images/school_bg.jpg';
+  String _bgImagePath = 'images/school.jpg';
 
   ThemeMode get mode => _mode;
   bool get isDark => _mode == ThemeMode.dark;

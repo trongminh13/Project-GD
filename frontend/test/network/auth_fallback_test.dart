@@ -32,6 +32,36 @@ void main() {
       expect(token, contains('mock_jwt_token_student01'));
     });
 
+    test('TC-AUTH-FB-01B: student02 (Cấp 2 THCS) logs in successfully in demo mode', () async {
+      final res = await demoAuthService.login('student02', 'student123');
+
+      expect(res['success'], isTrue);
+      expect(res['user'], isA<User>());
+      final user = res['user'] as User;
+      expect(user.role, equals(UserRole.student));
+      expect(user.name, equals('Em Trần Bảo Nam'));
+      expect(res['isDemo'], isTrue);
+
+      final token = await demoAuthService.getToken();
+      expect(token, isNotNull);
+      expect(token, contains('mock_jwt_token_student02'));
+    });
+
+    test('TC-AUTH-FB-01C: student03 (Cấp 3 THPT) logs in successfully in demo mode', () async {
+      final res = await demoAuthService.login('student03', 'student123');
+
+      expect(res['success'], isTrue);
+      expect(res['user'], isA<User>());
+      final user = res['user'] as User;
+      expect(user.role, equals(UserRole.student));
+      expect(user.name, equals('Em Lê Hoàng Long'));
+      expect(res['isDemo'], isTrue);
+
+      final token = await demoAuthService.getToken();
+      expect(token, isNotNull);
+      expect(token, contains('mock_jwt_token_student03'));
+    });
+
     test('TC-AUTH-FB-02: T001 teacher logs in successfully in demo mode', () async {
       final res = await demoAuthService.login('T001', 'teacher123');
 

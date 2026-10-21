@@ -26,6 +26,10 @@ class AppColors {
   static const Color border = Color(0xFFDADCE0);
   static const Color borderColor = border;
 
+  /// Màu viền thẻ/hộp nội dung sắc nét (High-contrast Black Card Border)
+  static const Color cardBorder = Colors.black;
+  static const double cardBorderWidth = 1.0;
+
   /// Màu nền Card / Box trắng #FFFFFF
   static const Color cardBg = Color(0xFFFFFFFF);
 

@@ -202,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Transform.scale(
                     scale: 1.02, // Giảm scale tối thiểu, tránh viền mờ màu trắng ở 4 góc cạnh
                     child: Image.asset(
-                      'images/school_bg.jpg',
+                      'images/school.jpg',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: const Color(0xFFF0F4F9),

@@ -1,4 +1,5 @@
 import 'package:ashadeep/core/network/api_client.dart';
+import 'package:ashadeep/models/markbook.dart';
 
 class StudentPortalService {
   static final StudentPortalService _instance = StudentPortalService._internal();
@@ -45,6 +46,22 @@ class StudentPortalService {
       }
     } catch (_) {}
     return [];
+  }
+
+  /// Lấy học bạ đầy đủ theo chuẩn Bộ GD&ĐT Việt Nam
+  Future<StudentMarkbook?> getMyMarkbook({String? academicYearId}) async {
+    final queryParams = <String, dynamic>{};
+    if (academicYearId != null) queryParams['academicYearId'] = academicYearId;
+    try {
+      final res = await _apiClient.get(
+        '/student-portal/markbook',
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
+      if (res is Map<String, dynamic>) {
+        return StudentMarkbook.fromJson(res);
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Lấy danh sách tài liệu học tập của lớp học sinh

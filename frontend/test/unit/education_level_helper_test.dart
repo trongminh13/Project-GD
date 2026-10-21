@@ -57,5 +57,47 @@ void main() {
       expect(highSchoolSubj.contains('Hóa học'), isTrue);
       expect(highSchoolSubj.contains('Sinh học'), isTrue);
     });
+
+    test('TC-FLUTTER-LEVEL-07: Returns correct school name by education level and supports custom school name', () {
+      expect(EducationLevelHelper.getSchoolName(EducationLevel.primary), equals('Trường Tiểu học Astra'));
+      expect(EducationLevelHelper.getSchoolName(EducationLevel.secondary), equals('Trường THCS Astra'));
+      expect(EducationLevelHelper.getSchoolName(EducationLevel.highSchool), equals('Trường THPT Astra'));
+      expect(EducationLevelHelper.getSchoolName(EducationLevel.highSchool, 'Trường Chuyên Đại Việt'), equals('Trường Chuyên Đại Việt'));
+    });
+
+    test('TC-FLUTTER-LEVEL-08: fromString accurately parses Backend API enum strings and representations', () {
+      expect(EducationLevelHelper.fromString('HIGH_SCHOOL'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromString('highSchool'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromString('THPT'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromString('Trung học phổ thông'), equals(EducationLevel.highSchool));
+
+      expect(EducationLevelHelper.fromString('SECONDARY'), equals(EducationLevel.secondary));
+      expect(EducationLevelHelper.fromString('secondary'), equals(EducationLevel.secondary));
+      expect(EducationLevelHelper.fromString('THCS'), equals(EducationLevel.secondary));
+      expect(EducationLevelHelper.fromString('Trung học cơ sở'), equals(EducationLevel.secondary));
+
+      expect(EducationLevelHelper.fromString('PRIMARY'), equals(EducationLevel.primary));
+      expect(EducationLevelHelper.fromString('primary'), equals(EducationLevel.primary));
+      expect(EducationLevelHelper.fromString('Tiểu học'), equals(EducationLevel.primary));
+
+      expect(EducationLevelHelper.fromString(null), isNull);
+      expect(EducationLevelHelper.fromString('UNKNOWN_XYZ'), isNull);
+    });
+
+    test('TC-FLUTTER-LEVEL-09: fromGrade handles levelStr parameter and string level names without falling back to primary', () {
+      // 1. Grade is string level name like "HIGH_SCHOOL"
+      expect(EducationLevelHelper.fromGrade('HIGH_SCHOOL'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromGrade('THPT'), equals(EducationLevel.highSchool));
+
+      // 2. Grade with levelStr override
+      expect(EducationLevelHelper.fromGrade(null, 'HIGH_SCHOOL'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromGrade('10', 'HIGH_SCHOOL'), equals(EducationLevel.highSchool));
+      expect(EducationLevelHelper.fromGrade('', 'SECONDARY'), equals(EducationLevel.secondary));
+
+      // 3. Normal grade parsing
+      expect(EducationLevelHelper.fromGrade('3'), equals(EducationLevel.primary));
+      expect(EducationLevelHelper.fromGrade('8'), equals(EducationLevel.secondary));
+      expect(EducationLevelHelper.fromGrade('11'), equals(EducationLevel.highSchool));
+    });
   });
 }

@@ -11,13 +11,13 @@ void main() {
   });
 
   group('ThemeManager Customization Unit Tests', () {
-    test('TC-THEME-01: Default state has black text and school_bg.jpg background', () async {
+    test('TC-THEME-01: Default state has black text and school.jpg background', () async {
       final manager = ThemeManager();
       // Allow async _loadTheme to execute
       await pumpEventQueue();
 
       expect(manager.textColorMode, equals(AppTextColorMode.defaultBlack));
-      expect(manager.bgImagePath, equals('images/school_bg.jpg'));
+      expect(manager.bgImagePath, equals('images/school.jpg'));
       expect(manager.textMain, equals(const Color(0xFF202124)));
       expect(manager.textColorModeLabel, equals('Mặc định (Đen)'));
       expect(manager.currentBackgroundLabel, equals('Cổng trường'));
@@ -27,7 +27,7 @@ void main() {
       expect(ThemeManager.availableBackgrounds.length, equals(8));
       final keys = ThemeManager.availableBackgrounds.map((b) => b.key).toList();
       expect(keys, containsAll([
-        'school_bg',
+        'school',
         'bg_classroom',
         'bg_students',
         'bg_school_yard',

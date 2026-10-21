@@ -7,24 +7,40 @@ package com.school.backend.enums;
  * - HIGH_SCHOOL: Trung học phổ thông / THPT (Lớp 10 đến Lớp 12)
  */
 public enum EducationLevel {
-    PRIMARY("Tiểu học", "Cấp 1"),
-    SECONDARY("THCS", "Cấp 2"),
-    HIGH_SCHOOL("THPT", "Cấp 3");
+    PRIMARY("Tiểu học", "Tiểu học", "Cấp 1", "Trường Tiểu học Astra"),
+    SECONDARY("Trung học cơ sở", "THCS", "Cấp 2", "Trường THCS Astra"),
+    HIGH_SCHOOL("Trung học phổ thông", "THPT", "Cấp 3", "Trường THPT Astra");
 
-    private final String displayName;
+    private final String fullName;
+    private final String shortName;
     private final String levelLabel;
+    private final String defaultSchoolName;
 
-    EducationLevel(String displayName, String levelLabel) {
-        this.displayName = displayName;
+    EducationLevel(String fullName, String shortName, String levelLabel, String defaultSchoolName) {
+        this.fullName = fullName;
+        this.shortName = shortName;
         this.levelLabel = levelLabel;
+        this.defaultSchoolName = defaultSchoolName;
     }
 
     public String getDisplayName() {
-        return displayName;
+        return shortName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getShortName() {
+        return shortName;
     }
 
     public String getLevelLabel() {
         return levelLabel;
+    }
+
+    public String getDefaultSchoolName() {
+        return defaultSchoolName;
     }
 
     /**
