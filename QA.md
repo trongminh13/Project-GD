@@ -2152,3 +2152,77 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 **3. Kết Quả Kiểm Thử & Kiểm Chứng Thực Tế:**
 - `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (13 info deprecation/print sẵn có).
 - `flutter test`: **92 / 92 tests PASSED (100% pass)**.
+
+---
+
+### GIAI ĐOẠN 27: CHUẨN HÓA KẾT QUẢ HỌC KỲ II - CẢ NĂM & TÁCH COMPONENT BẢNG ĐIỂM CHUẨN CHÍNH TẮC
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- **Giải quyết sự trùng lặp kết quả chi tiết**: Khắc phục hiện tượng người dùng chọn Học kỳ II và Cả năm thấy kết quả các môn giống nhau (ĐTB môn, xếp loại, điểm số).
+- **Kiểm tra và chuẩn hóa cấu trúc component**: Rà soát và tách toàn bộ khối mã nguồn Bảng điểm (~1,370 dòng code) trong `student_dashboard_screen.dart` thành các widget con chuyên trách độc lập theo chuẩn Clean Architecture và Single Responsibility.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- **Chuẩn hóa dữ liệu môn học theo công thức Bộ GD&ĐT (TT 22/2021)**:
+  - Công thức: $ĐTB_{mcn} = \frac{ĐTB_{mhk1} + 2 \times ĐTB_{mhk2}}{3}$.
+  - Cập nhật điểm các môn THPT (Toán, Văn, Anh, Lý, Hóa, Sinh, Sử, Địa, GDCD, Tin học) để HK2 và Cả năm có độ lệch số liệu thực tế, sinh động:
+    + Toán: HK1 = 9.4 | HK2 = 9.1 | Cả năm = 9.2 (Xuất sắc)
+    + Văn: HK1 = 8.8 | HK2 = 8.5 | Cả năm = 8.6 (Giỏi)
+    + Anh: HK1 = 9.7 | HK2 = 9.4 | Cả năm = 9.5 (Xuất sắc)
+    + Lý: HK1 = 9.4 | HK2 = 9.1 | Cả năm = 9.2 (Xuất sắc)
+    + Hóa: HK1 = 8.9 | HK2 = 8.6 | Cả năm = 8.7 (Giỏi)
+    + Sinh: HK1 = 8.6 | HK2 = 8.4 | Cả năm = 8.5 (Giỏi)
+    + Sử: HK1 = 8.6 | HK2 = 9.2 | Cả năm = 9.0 (Xuất sắc)
+    + Tin học: HK1 = 9.7 | HK2 = 9.4 | Cả năm = 9.5 (Xuất sắc)
+    + ĐTB chung: HK1 = 9.3 (Xuất sắc) | HK2 = 8.9 (Giỏi) | Cả năm = 9.1 (Xuất sắc).
+- **Thiết kế riêng giao diện mở rộng (Accordion) cho tab "Cả năm"**:
+  - Khi người dùng mở rộng card môn học ở tab "Cả năm", thay vì báo lỗi không có điểm thường xuyên, hệ thống hiển thị khối đối soát 3 cột trực quan:
+    `[ ĐTB Học kỳ I (x1) ] + [ ĐTB Học kỳ II (x2) ] => [ ĐTB Cả năm ]` kèm công thức và lời nhận xét tổng kết năm học của Giáo viên bộ môn.
+- **Sửa lỗi cột trong Sổ điểm điện tử (Grid Table View)**:
+  - Khi chọn Cả năm, các cột tự động chuyển thành: `Môn học`, `ĐTB HK1`, `ĐTB HK2 (x2)`, `ĐTB Cả năm`, `Xếp loại Cả năm` (loại bỏ các cột TX/GK/CK vô lý và khắc phục lỗi lấy nhầm dữ liệu của HK1).
+- **Tái cấu trúc Module Bảng điểm (Modularization)**:
+  - Tạo mới thư mục `frontend/lib/features/student/widgets/marks/` gồm 9 component chuyên trách:
+    1. [student_marks_tab.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart): Container quản lý State cục bộ của Tab Bảng điểm.
+    2. [marks_hero_kpi_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart): Thẻ Hero KPI ĐTB, Rank Box icon cúp vàng, các đường ngăn cách đen chuẩn phẳng.
+    3. [marks_national_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_national_header.dart): Trang bìa Sổ học bạ Quốc gia.
+    4. [marks_semester_selector.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_semester_selector.dart): Bộ chọn học kỳ phẳng vuông vức.
+    5. [marks_accordion_list.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart): Danh sách thẻ môn học mở rộng.
+    6. [marks_grid_table_view.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart): Sổ điểm điện tử `DataTable` cuộn ngang.
+    7. [marks_criteria_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart): Bảng tiêu chí danh hiệu TT22 (THPT) và TT27 (Tiểu học).
+    8. [marks_endorsement_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_endorsement_card.dart): Đánh giá rèn luyện & nhận xét GVCN.
+    9. [marks_a4_print_preview.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart): Modal xem trước và in phiếu điểm A4.
+  - Rút gọn [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) từ **5,104 dòng** xuống còn **3,720 dòng** (giảm gần **1,400 dòng code** thừa).
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings**.
+- `flutter test test/widgets/student_dashboard_nav_test.dart test/widgets/student_adaptive_dashboard_test.dart`: **22 / 22 tests PASSED (100%)**.
+- `flutter test`: **92 / 92 tests PASSED (100% test suite)**.
+
+---
+
+### GIAI ĐOẠN 28: CHUẨN HÓA CÔNG THỨC TÍNH ĐIỂM CẢ NĂM BỘ GD&ĐT (TT22/2021) TOÀN HỆ THỐNG
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Kiểm tra và đảm bảo công thức tính điểm Cả năm ($ĐTB_{mcn} = \frac{ĐTB_{mhk1} + 2 \times ĐTB_{mhk2}}{3}$) được áp dụng đồng bộ, triệt để trên toàn bộ các thành phần hiển thị của hệ thống (cả Học sinh và Phụ huynh).
+- Khắc phục triệt để lỗ hổng fallback gán nhầm điểm HK1 làm điểm Cả năm hoặc gán nhầm điểm Cả năm làm điểm HK2 khi học sinh chưa tổng kết đủ 2 học kỳ.
+
+**2. Chi Tiết Khắc Phục Kỹ Thuật:**
+- **Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+  + Thay thế biểu thức ternary lồng nhau (`final avg = _selectedSemester == 2 ? (s.semester2?.avg ?? s.yearAvg) : ...`) bằng cấu trúc kiểm tra học kỳ minh bạch.
+  + Nhánh HK1: Chỉ lấy `s.semester1?.avg`.
+  + Nhánh HK2: Chỉ lấy `s.semester2?.avg`.
+  + Nhánh Cả năm: Ưu tiên `s.yearAvg`. Nếu `s.yearAvg == null` và học sinh có đủ điểm cả 2 học kỳ, hệ thống tính động chính xác theo công thức $ĐTB_{mcn} = \frac{ĐTB_{mhk1} + 2 \times ĐTB_{mhk2}}{3}$. Nếu thiếu 1 trong 2 kỳ, trả về `null` (hiển thị `-` và xếp loại `—`), tuyệt đối không gán nhầm điểm HK1.
+- **Bản In Phiếu Báo Điểm A4 ([`marks_a4_print_preview.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart))**:
+  + Chuẩn hóa logic tính điểm từng kỳ và Cả năm tương tự, loại bỏ fallback sai lệch `s.semester1?.avg ?? s.yearAvg`.
+- **Tổng Hợp ĐTB Chung Màn Hình Học Sinh ([`student_marks_tab.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart))**:
+  + Cập nhật vòng lặp tính ĐTB chung theo kỳ: Khi chọn Cả năm, nếu `s.yearAvg == null` thì tính động theo tỷ trọng (1:2), bảo đảm ĐTB chung trên Hero KPI Card luôn chuẩn xác 100%.
+- **Danh Sách Thẻ Môn Học Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
+  + Cập nhật logic tính điểm `avg` cho từng thẻ môn học theo công thức chuẩn.
+- **Sổ Điểm Điện Tử Grid Table ([`marks_grid_table_view.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart))**:
+  + Cột `ĐTB Năm` và `Xếp loại Cả năm` trong cả bảng chi tiết và bảng tổng hợp được tính động theo công thức Bộ GD&ĐT, loại bỏ hoàn toàn fallback lấy nhầm điểm của 1 kỳ.
+- **Mô Phỏng Danh Hiệu Học Sinh Giỏi/Xuất Sắc ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+  + Đảo ngược thứ tự ưu tiên: Ưu tiên điểm Cả năm (hoặc tính Cả năm theo TT22 nếu đủ 2 kỳ) trước khi dự báo từ điểm học kỳ gần nhất.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu:**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (13 info deprecation/print tiền nhiệm không ảnh hưởng).
+- `flutter test`: **92 / 92 tests PASSED (100% test suite)**.
+

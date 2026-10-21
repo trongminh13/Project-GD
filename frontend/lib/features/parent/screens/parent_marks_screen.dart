@@ -158,9 +158,18 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                         ],
                       ),
                       ...markbook.subjects.map((s) {
-                        final avg = _selectedSemester == 2
-                            ? (s.semester2?.avg ?? s.yearAvg)
-                            : (_selectedSemester == 3 ? (s.yearAvg ?? s.semester1?.avg) : s.semester1?.avg);
+                        double? avg;
+                        if (_selectedSemester == 1) {
+                          avg = s.semester1?.avg;
+                        } else if (_selectedSemester == 2) {
+                          avg = s.semester2?.avg;
+                        } else {
+                          // Cả năm (TT22): ĐTBmcn = (ĐTBmhk1 + 2 * ĐTBmhk2) / 3
+                          avg = s.yearAvg ??
+                              (s.semester1?.avg != null && s.semester2?.avg != null
+                                  ? ((s.semester1!.avg! + 2 * s.semester2!.avg!) / 3.0)
+                                  : null);
+                        }
                         final classification = _classifyScore(avg);
                         return TableRow(
                           children: [
