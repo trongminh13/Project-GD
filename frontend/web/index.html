@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Cổng Thông Tin Giáo Dục Đại Việt - Hệ thống quản lý trường học và học liệu số thông minh.">
+  <meta name="description"
+    content="Cổng Thông Tin Giáo Dục Đại Việt - Hệ thống quản lý trường học và học liệu số thông minh.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -14,7 +16,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>Cổng Thông Tin Giáo Dục Đại Việt</title>
   <!-- Google Fonts Preconnect & Optimized Fallback -->
@@ -87,11 +89,11 @@
       width: 100%;
     }
 
-    /* Sân khấu đường chạy ngang */
+    /* Sân khấu đường chạy ngang: Tràn toàn màn hình 100vw */
     .mascot-track {
-      width: 100%;
-      max-width: 480px;
-      height: 155px;
+      width: 100vw;
+      max-width: 100%;
+      height: 175px;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -99,21 +101,38 @@
       justify-content: center;
     }
 
-    /* Đường mặt đất phẳng tĩnh dưới chân mascot */
+    /* Đường mặt đất phẳng kéo dài xuyên suốt toàn màn hình (100vw) */
     .track-ground-line {
       position: absolute;
-      bottom: 22px;
-      width: 280px;
+      left: 0;
+      right: 0;
+      width: 100vw;
       height: 2px;
       background: var(--line-color);
-      opacity: 0.5;
-      border-radius: 2px;
+      opacity: 0.55;
+      bottom: 27px;
     }
 
-    /* Nhân vật Mascot di chuyển ngang theo chu kỳ 4.5s */
+    /* Vạch gạch nền thị sai ngắt quãng dưới mặt đất (đồng bộ Flutter Pha 2) */
+    .track-ground-bricks {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100vw;
+      height: 2px;
+      bottom: 20px;
+      opacity: 0.35;
+      background: repeating-linear-gradient(90deg,
+          var(--line-color) 0px,
+          var(--line-color) 35px,
+          transparent 35px,
+          transparent 70px);
+    }
+
+    /* Nhân vật Mascot di chuyển ngang (Tỷ lệ 1.25 khớp 100% Pha 2 Flutter: 138px x 163px) */
     .mascot-runner {
-      width: 120px;
-      height: 140px;
+      width: 138px;
+      height: 163px;
       position: relative;
       animation: runnerTrackMotion 4.5s infinite ease-in-out;
       will-change: transform, opacity;
@@ -168,30 +187,39 @@
 
     /* 1. Di chuyển cả nhân vật: Giữa vẫy tay -> Ra mép phải -> Mép trái -> Về giữa */
     @keyframes runnerTrackMotion {
+
       /* 0% - 24%: Đứng chính giữa sân khấu vẫy tay chào */
-      0%, 24% {
+      0%,
+      24% {
         transform: translateX(0);
         opacity: 1;
       }
-      /* 24% - 50%: Chạy sang mép phải và khuất hẳn */
+
+      /* 24% - 50%: Chạy sang mép phải trên con đường dài 100vw */
       47% {
         opacity: 1;
       }
+
       50% {
-        transform: translateX(220px);
+        transform: translateX(min(320px, 40vw));
         opacity: 0;
       }
+
       /* 50.1% - 54%: Nhảy tức thời sang mép trái ngoài màn hình (ẩn ngầm) */
-      50.1%, 54% {
-        transform: translateX(-220px);
+      50.1%,
+      54% {
+        transform: translateX(max(-320px, -40vw));
         opacity: 0;
       }
+
       /* 54.1%: Bắt đầu xuất hiện từ mép trái */
       54.1% {
         opacity: 1;
       }
+
       /* 54.1% - 85%: Bước từ mép trái vào lại giữa sân khấu */
-      85%, 100% {
+      85%,
+      100% {
         transform: translateX(0);
         opacity: 1;
       }
@@ -199,156 +227,1133 @@
 
     /* 2. Tay phải: Vẫy chào ở giữa (0-24%), đung đưa khi chạy (24-50% & 54-85%) */
     @keyframes armRightMotion {
+
       /* 0% - 24%: Từ thế nghỉ nâng tay vẫy chào 3 nhịp vui vẻ */
-      0% { transform: rotate(0deg); }
-      4% { transform: rotate(-38deg); }
-      9% { transform: rotate(-10deg); }
-      14% { transform: rotate(-42deg); }
-      19% { transform: rotate(-10deg); }
-      24% { transform: rotate(10deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      4% {
+        transform: rotate(-38deg);
+      }
+
+      9% {
+        transform: rotate(-10deg);
+      }
+
+      14% {
+        transform: rotate(-42deg);
+      }
+
+      19% {
+        transform: rotate(-10deg);
+      }
+
+      24% {
+        transform: rotate(10deg);
+      }
 
       /* 24% - 50%: Chạy sang phải (vung tay đi bộ) */
-      28% { transform: rotate(-16deg); }
-      34% { transform: rotate(18deg); }
-      40% { transform: rotate(-16deg); }
-      46% { transform: rotate(18deg); }
-      50% { transform: rotate(0deg); }
+      28% {
+        transform: rotate(-16deg);
+      }
+
+      34% {
+        transform: rotate(18deg);
+      }
+
+      40% {
+        transform: rotate(-16deg);
+      }
+
+      46% {
+        transform: rotate(18deg);
+      }
+
+      50% {
+        transform: rotate(0deg);
+      }
 
       /* 50.1% - 54%: Ẩn ngầm */
-      50.1%, 54% { transform: rotate(0deg); }
+      50.1%,
+      54% {
+        transform: rotate(0deg);
+      }
 
       /* 54.1% - 85%: Chạy từ trái vào giữa (vung tay đi bộ) */
-      58% { transform: rotate(-16deg); }
-      64% { transform: rotate(18deg); }
-      70% { transform: rotate(-16deg); }
-      76% { transform: rotate(18deg); }
-      82% { transform: rotate(-10deg); }
-      85%, 100% { transform: rotate(0deg); }
+      58% {
+        transform: rotate(-16deg);
+      }
+
+      64% {
+        transform: rotate(18deg);
+      }
+
+      70% {
+        transform: rotate(-16deg);
+      }
+
+      76% {
+        transform: rotate(18deg);
+      }
+
+      82% {
+        transform: rotate(-10deg);
+      }
+
+      85%,
+      100% {
+        transform: rotate(0deg);
+      }
     }
 
     /* 3. Tay trái: Buông nhẹ ở giữa (0-24%), vung ngược pha khi chạy */
     @keyframes armLeftMotion {
-      0%, 24% { transform: rotate(0deg); }
+
+      0%,
+      24% {
+        transform: rotate(0deg);
+      }
 
       /* 24% - 50%: Vung tay đi bộ */
-      28% { transform: rotate(18deg); }
-      34% { transform: rotate(-16deg); }
-      40% { transform: rotate(18deg); }
-      46% { transform: rotate(-16deg); }
-      50% { transform: rotate(0deg); }
+      28% {
+        transform: rotate(18deg);
+      }
 
-      50.1%, 54% { transform: rotate(0deg); }
+      34% {
+        transform: rotate(-16deg);
+      }
+
+      40% {
+        transform: rotate(18deg);
+      }
+
+      46% {
+        transform: rotate(-16deg);
+      }
+
+      50% {
+        transform: rotate(0deg);
+      }
+
+      50.1%,
+      54% {
+        transform: rotate(0deg);
+      }
 
       /* 54.1% - 85%: Vung tay vào giữa */
-      58% { transform: rotate(18deg); }
-      64% { transform: rotate(-16deg); }
-      70% { transform: rotate(18deg); }
-      76% { transform: rotate(-16deg); }
-      82% { transform: rotate(10deg); }
-      85%, 100% { transform: rotate(0deg); }
+      58% {
+        transform: rotate(18deg);
+      }
+
+      64% {
+        transform: rotate(-16deg);
+      }
+
+      70% {
+        transform: rotate(18deg);
+      }
+
+      76% {
+        transform: rotate(-16deg);
+      }
+
+      82% {
+        transform: rotate(10deg);
+      }
+
+      85%,
+      100% {
+        transform: rotate(0deg);
+      }
     }
 
     /* 4. Chân trái: Đứng vững ở giữa, bước so le khi chạy */
     @keyframes legLeftMotion {
-      0%, 24% { transform: translateY(0); }
+
+      0%,
+      24% {
+        transform: translateY(0);
+      }
 
       /* 24% - 50%: Bước chân */
-      28% { transform: translateY(-7px) rotate(-3deg); }
-      34% { transform: translateY(0); }
-      40% { transform: translateY(-7px) rotate(-3deg); }
-      46% { transform: translateY(0); }
-      50% { transform: translateY(0); }
+      28% {
+        transform: translateY(-7px) rotate(-3deg);
+      }
 
-      50.1%, 54% { transform: translateY(0); }
+      34% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-7px) rotate(-3deg);
+      }
+
+      46% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(0);
+      }
+
+      50.1%,
+      54% {
+        transform: translateY(0);
+      }
 
       /* 54.1% - 85%: Bước chân vào giữa */
-      58% { transform: translateY(-7px) rotate(-3deg); }
-      64% { transform: translateY(0); }
-      70% { transform: translateY(-7px) rotate(-3deg); }
-      76% { transform: translateY(0); }
-      82% { transform: translateY(-3px); }
-      85%, 100% { transform: translateY(0); }
+      58% {
+        transform: translateY(-7px) rotate(-3deg);
+      }
+
+      64% {
+        transform: translateY(0);
+      }
+
+      70% {
+        transform: translateY(-7px) rotate(-3deg);
+      }
+
+      76% {
+        transform: translateY(0);
+      }
+
+      82% {
+        transform: translateY(-3px);
+      }
+
+      85%,
+      100% {
+        transform: translateY(0);
+      }
     }
 
     /* 5. Chân phải: Đứng vững ở giữa, bước so le đối xứng */
     @keyframes legRightMotion {
-      0%, 24% { transform: translateY(0); }
+
+      0%,
+      24% {
+        transform: translateY(0);
+      }
 
       /* 24% - 50%: Bước chân so le */
-      28% { transform: translateY(0); }
-      34% { transform: translateY(-7px) rotate(3deg); }
-      40% { transform: translateY(0); }
-      46% { transform: translateY(-7px) rotate(3deg); }
-      50% { transform: translateY(0); }
+      28% {
+        transform: translateY(0);
+      }
 
-      50.1%, 54% { transform: translateY(0); }
+      34% {
+        transform: translateY(-7px) rotate(3deg);
+      }
+
+      40% {
+        transform: translateY(0);
+      }
+
+      46% {
+        transform: translateY(-7px) rotate(3deg);
+      }
+
+      50% {
+        transform: translateY(0);
+      }
+
+      50.1%,
+      54% {
+        transform: translateY(0);
+      }
 
       /* 54.1% - 85%: Bước chân vào giữa */
-      58% { transform: translateY(0); }
-      64% { transform: translateY(-7px) rotate(3deg); }
-      70% { transform: translateY(0); }
-      76% { transform: translateY(-7px) rotate(3deg); }
-      82% { transform: translateY(0); }
-      85%, 100% { transform: translateY(0); }
+      58% {
+        transform: translateY(0);
+      }
+
+      64% {
+        transform: translateY(-7px) rotate(3deg);
+      }
+
+      70% {
+        transform: translateY(0);
+      }
+
+      76% {
+        transform: translateY(-7px) rotate(3deg);
+      }
+
+      82% {
+        transform: translateY(0);
+      }
+
+      85%,
+      100% {
+        transform: translateY(0);
+      }
     }
 
     /* 6. Thân sách: Thở nhẹ ở giữa, nghiêng nhẹ & nhấp nhô khi chạy */
     @keyframes bodyBounceMotion {
+
       /* 0% - 24%: Thở nhẹ */
-      0% { transform: translateY(0) rotate(0deg); }
-      12% { transform: translateY(-3px) rotate(-0.5deg); }
-      24% { transform: translateY(0) rotate(0deg); }
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      12% {
+        transform: translateY(-3px) rotate(-0.5deg);
+      }
+
+      24% {
+        transform: translateY(0) rotate(0deg);
+      }
 
       /* 24% - 50%: Nghiêng người hướng chạy và nhún nhảy */
-      28% { transform: translateY(-6px) rotate(2.5deg); }
-      34% { transform: translateY(0) rotate(1deg); }
-      40% { transform: translateY(-6px) rotate(2.5deg); }
-      46% { transform: translateY(0) rotate(1deg); }
-      50% { transform: translateY(0) rotate(0deg); }
+      28% {
+        transform: translateY(-6px) rotate(2.5deg);
+      }
 
-      50.1%, 54% { transform: translateY(0) rotate(0deg); }
+      34% {
+        transform: translateY(0) rotate(1deg);
+      }
+
+      40% {
+        transform: translateY(-6px) rotate(2.5deg);
+      }
+
+      46% {
+        transform: translateY(0) rotate(1deg);
+      }
+
+      50% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      50.1%,
+      54% {
+        transform: translateY(0) rotate(0deg);
+      }
 
       /* 54.1% - 85%: Nghiêng người hướng chạy vào giữa */
-      58% { transform: translateY(-6px) rotate(2.5deg); }
-      64% { transform: translateY(0) rotate(1deg); }
-      70% { transform: translateY(-6px) rotate(2.5deg); }
-      76% { transform: translateY(0) rotate(1deg); }
-      82% { transform: translateY(-2px) rotate(0.5deg); }
-      85%, 100% { transform: translateY(0) rotate(0deg); }
+      58% {
+        transform: translateY(-6px) rotate(2.5deg);
+      }
+
+      64% {
+        transform: translateY(0) rotate(1deg);
+      }
+
+      70% {
+        transform: translateY(-6px) rotate(2.5deg);
+      }
+
+      76% {
+        transform: translateY(0) rotate(1deg);
+      }
+
+      82% {
+        transform: translateY(-2px) rotate(0.5deg);
+      }
+
+      85%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
     }
 
     /* 7. Bóng đổ: Co giãn theo nhịp nhún nhảy và biến mất khi ra ngoài */
     @keyframes shadowMotion {
-      0%, 24% { transform: scaleX(1); opacity: 0.75; }
-      12% { transform: scaleX(0.9); opacity: 0.6; }
 
-      28%, 40% { transform: scaleX(0.82); opacity: 0.5; }
-      34%, 46% { transform: scaleX(1); opacity: 0.75; }
-      50% { transform: scaleX(1); opacity: 0; }
+      0%,
+      24% {
+        transform: scaleX(1);
+        opacity: 0.75;
+      }
 
-      50.1%, 54% { opacity: 0; }
+      12% {
+        transform: scaleX(0.9);
+        opacity: 0.6;
+      }
 
-      58%, 70% { transform: scaleX(0.82); opacity: 0.5; }
-      64%, 76% { transform: scaleX(1); opacity: 0.75; }
-      82% { transform: scaleX(0.9); opacity: 0.65; }
-      85%, 100% { transform: scaleX(1); opacity: 0.75; }
+      28%,
+      40% {
+        transform: scaleX(0.82);
+        opacity: 0.5;
+      }
+
+      34%,
+      46% {
+        transform: scaleX(1);
+        opacity: 0.75;
+      }
+
+      50% {
+        transform: scaleX(1);
+        opacity: 0;
+      }
+
+      50.1%,
+      54% {
+        opacity: 0;
+      }
+
+      58%,
+      70% {
+        transform: scaleX(0.82);
+        opacity: 0.5;
+      }
+
+      64%,
+      76% {
+        transform: scaleX(1);
+        opacity: 0.75;
+      }
+
+      82% {
+        transform: scaleX(0.9);
+        opacity: 0.65;
+      }
+
+      85%,
+      100% {
+        transform: scaleX(1);
+        opacity: 0.75;
+      }
     }
 
     /* 8. Dây bookmark đung đưa khi chạy */
     @keyframes ribbonMotion {
-      0%, 24% { transform: rotate(0deg); }
-      28%, 40%, 58%, 70% { transform: rotate(-7deg); }
-      34%, 46%, 64%, 76% { transform: rotate(7deg); }
-      85%, 100% { transform: rotate(0deg); }
+
+      0%,
+      24% {
+        transform: rotate(0deg);
+      }
+
+      28%,
+      40%,
+      58%,
+      70% {
+        transform: rotate(-7deg);
+      }
+
+      34%,
+      46%,
+      64%,
+      76% {
+        transform: rotate(7deg);
+      }
+
+      85%,
+      100% {
+        transform: rotate(0deg);
+      }
     }
 
     /* 9. Vạch sóng vẫy tay khi chào ở giữa (0% - 24%) */
     @keyframes waveLinesMotion {
-      0%, 3% { opacity: 0; }
-      4%, 22% { opacity: 1; }
-      6%, 12%, 18% { opacity: 0.25; }
-      9%, 15%, 21% { opacity: 1; }
-      24%, 100% { opacity: 0; }
+
+      0%,
+      3% {
+        opacity: 0;
+      }
+
+      4%,
+      22% {
+        opacity: 1;
+      }
+
+      6%,
+      12%,
+      18% {
+        opacity: 0.25;
+      }
+
+      9%,
+      15%,
+      21% {
+        opacity: 1;
+      }
+
+      24%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* ==========================================================
+       10. CUỐN SÁCH NHỎ (MINI-BOOK) — XOAY RA SAU, MỞ BÌA, VẪY, ĐÓNG LẠI
+       Khi mở, ruột sách (trang giấy) hướng VÀO mặt nhân vật; người xem
+       chỉ thấy 2 mặt BÌA NGOÀI: bìa sau ở bên trái, bìa trước ở bên phải,
+       gáy sách ở giữa, mép trên của xấp giấy thò lên phía trên.
+
+       Timeline 4.5s đồng bộ với tay cầm sách:
+       -  0% -  3% : Tay giơ lên, sách đóng (thấy bìa trước)
+       -  3% -  5.5%: Cả cuốn sách xoay ngang một vòng -> thấy bìa sau
+       -  5.5% -  9% : Bìa trước (đang nằm sau bìa sau) lật vòng quanh gáy sang phải,
+                      sách mở thành chữ V nhìn từ phía sau; ánh sáng ấm tỏa ra
+       -  9% - 19.5%: Sách mở, vẫy vẫy; mép giấy rung, lấp lánh
+       - 19.5% - 22% : Bìa trước lật về, sách khép lại
+       - 22% - 24.8%: Xoay ngược lại -> thấy bìa trước
+       - 24.8% - 85%: Sách đóng, lắc nhẹ khi chạy, vệt sáng lướt qua bìa
+
+       Toạ độ cục bộ của sách: gốc (0,0) = góc trên trái bìa trước đóng,
+       sách rộng 18, cao 25; tâm sách ở x = 9.
+       Khi mở: tâm gáy ở x = 9; bìa sau chiếm x ∈ [-5.8, 9];
+       bìa trước chiếm x ∈ [9, 23.8] (đã thu hẹp 0.82 để có chiều sâu).
+       ========================================================== */
+
+    /* Sách đung đưa theo cổ tay: gốc xoay ở chỗ bàn tay nắm (góc dưới trái) */
+    .book-sway {
+      animation: bookSwayMotion 4.5s infinite ease-in-out;
+      transform-origin: 4px 22px;
+    }
+
+    @keyframes bookSwayMotion {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      4% {
+        transform: rotate(-4deg);
+      }
+
+      9% {
+        transform: rotate(6deg);
+      }
+
+      14% {
+        transform: rotate(-8deg);
+      }
+
+      19% {
+        transform: rotate(6deg);
+      }
+
+      24% {
+        transform: rotate(0deg);
+      }
+
+      28% {
+        transform: rotate(4deg);
+      }
+
+      34% {
+        transform: rotate(-3deg);
+      }
+
+      40% {
+        transform: rotate(4deg);
+      }
+
+      46% {
+        transform: rotate(-3deg);
+      }
+
+      50%,
+      50.1%,
+      54% {
+        transform: rotate(0deg);
+      }
+
+      58% {
+        transform: rotate(4deg);
+      }
+
+      64% {
+        transform: rotate(-3deg);
+      }
+
+      70% {
+        transform: rotate(4deg);
+      }
+
+      76% {
+        transform: rotate(-3deg);
+      }
+
+      82% {
+        transform: rotate(2deg);
+      }
+
+      85%,
+      100% {
+        transform: rotate(0deg);
+      }
+    }
+
+    /* --- Bìa trước đóng (thấy khi chưa mở / đã đóng) --- */
+    .book-closed-front {
+      transform-origin: 0 0;
+      animation: bookClosedFrontMotion 4.5s infinite ease-in-out,
+        bookClosedFrontFade 4.5s infinite linear;
+    }
+
+    @keyframes bookClosedFrontMotion {
+
+      0%,
+      3% {
+        transform: translateX(0) scaleX(1);
+      }
+
+      4.2% {
+        transform: translateX(9px) scaleX(0);
+      }
+
+      23% {
+        transform: translateX(9px) scaleX(0);
+      }
+
+      24% {
+        transform: translateX(-0.45px) scaleX(1.05);
+      }
+
+      24.8%,
+      100% {
+        transform: translateX(0) scaleX(1);
+      }
+    }
+
+    @keyframes bookClosedFrontFade {
+
+      0%,
+      4.2% {
+        opacity: 1;
+      }
+
+      4.3%,
+      22.9% {
+        opacity: 0;
+      }
+
+      23%,
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* --- Bìa sau: lộ ra khi sách xoay, trở thành nửa TRÁI của sách mở --- */
+    .book-panel-back {
+      opacity: 0;
+      transform-origin: 0 0;
+      animation: bookPanelBackMotion 4.5s infinite ease-in-out,
+        bookPanelBackFade 4.5s infinite linear;
+    }
+
+    @keyframes bookPanelBackMotion {
+
+      0%,
+      4.2% {
+        transform: translateX(9px) scaleX(0);
+      }
+
+      5.5% {
+        transform: translateX(0) scaleX(1);
+      }
+
+      8.3% {
+        transform: translateX(-6.1px) scaleX(0.79);
+      }
+
+      9%,
+      19.5% {
+        transform: translateX(-5.76px) scaleX(0.82);
+      }
+
+      22% {
+        transform: translateX(0) scaleX(1);
+      }
+
+      23%,
+      100% {
+        transform: translateX(9px) scaleX(0);
+      }
+    }
+
+    @keyframes bookPanelBackFade {
+
+      0%,
+      4.1% {
+        opacity: 0;
+      }
+
+      4.2%,
+      23% {
+        opacity: 1;
+      }
+
+      23.1%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* --- Bìa trước lật vòng quanh gáy sang phải: nửa PHẢI của sách mở ---
+       Ban đầu nằm khuất sau bìa sau (đối xứng gương), rồi quay 180° quanh gáy. */
+    .book-panel-front {
+      opacity: 0;
+      transform-origin: 0 0;
+      animation: bookPanelFrontMotion 4.5s infinite ease-in-out,
+        bookPanelFrontFade 4.5s infinite linear;
+    }
+
+    @keyframes bookPanelFrontMotion {
+
+      0%,
+      5.5% {
+        transform: translateX(18px) scaleX(-1);
+      }
+
+      7% {
+        transform: translateX(13px) scaleX(0);
+      }
+
+      8.3% {
+        transform: translateX(9.5px) scaleX(0.9);
+      }
+
+      9%,
+      19.5% {
+        transform: translateX(9px) scaleX(0.82);
+      }
+
+      20.8% {
+        transform: translateX(13px) scaleX(0);
+      }
+
+      22%,
+      100% {
+        transform: translateX(18px) scaleX(-1);
+      }
+    }
+
+    @keyframes bookPanelFrontFade {
+
+      0%,
+      5.4% {
+        opacity: 0;
+      }
+
+      5.5%,
+      22% {
+        opacity: 1;
+      }
+
+      22.1%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* --- Mép trên xấp giấy thò lên sau 2 bìa + bóng đổ rộng khi mở --- */
+    .book-pagetop,
+    .book-open-shadow {
+      opacity: 0;
+      animation: bookOpenFade 4.5s infinite ease-in-out;
+    }
+
+    @keyframes bookOpenFade {
+
+      0%,
+      6% {
+        opacity: 0;
+      }
+
+      9%,
+      19.5% {
+        opacity: 1;
+      }
+
+      22%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* Các lớp giấy phía trên rung nhẹ khi vẫy */
+    .book-pagetop-a {
+      animation: bookPageTopA 4.5s infinite ease-in-out;
+    }
+
+    .book-pagetop-b {
+      animation: bookPageTopB 4.5s infinite ease-in-out;
+    }
+
+    .book-pagetop-c {
+      animation: bookPageTopC 4.5s infinite ease-in-out;
+    }
+
+    @keyframes bookPageTopA {
+
+      0%,
+      9% {
+        transform: translateY(0);
+      }
+
+      11% {
+        transform: translateY(-1.1px);
+      }
+
+      13% {
+        transform: translateY(0);
+      }
+
+      15% {
+        transform: translateY(-1.1px);
+      }
+
+      17% {
+        transform: translateY(0);
+      }
+
+      19% {
+        transform: translateY(-1.1px);
+      }
+
+      20.5%,
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bookPageTopB {
+
+      0%,
+      10% {
+        transform: translateY(0);
+      }
+
+      12% {
+        transform: translateY(-1.1px);
+      }
+
+      14% {
+        transform: translateY(0);
+      }
+
+      16% {
+        transform: translateY(-1.1px);
+      }
+
+      18% {
+        transform: translateY(0);
+      }
+
+      20% {
+        transform: translateY(-1.1px);
+      }
+
+      21.5%,
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bookPageTopC {
+
+      0%,
+      11% {
+        transform: translateY(0);
+      }
+
+      13% {
+        transform: translateY(-1.1px);
+      }
+
+      15% {
+        transform: translateY(0);
+      }
+
+      17% {
+        transform: translateY(-1.1px);
+      }
+
+      19% {
+        transform: translateY(0);
+      }
+
+      20.5%,
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    /* Dây đánh dấu trang đung đưa như con lắc ngay dưới gáy sách */
+    .book-bookmark {
+      animation: bookBookmarkMotion 4.5s infinite ease-in-out;
+      transform-origin: 9.6px 22px;
+    }
+
+    @keyframes bookBookmarkMotion {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      4% {
+        transform: rotate(-12deg);
+      }
+
+      9% {
+        transform: rotate(14deg);
+      }
+
+      14% {
+        transform: rotate(-12deg);
+      }
+
+      19% {
+        transform: rotate(14deg);
+      }
+
+      24% {
+        transform: rotate(0deg);
+      }
+
+      28% {
+        transform: rotate(9deg);
+      }
+
+      34% {
+        transform: rotate(-9deg);
+      }
+
+      40% {
+        transform: rotate(9deg);
+      }
+
+      46% {
+        transform: rotate(-9deg);
+      }
+
+      50%,
+      50.1%,
+      54% {
+        transform: rotate(0deg);
+      }
+
+      58% {
+        transform: rotate(9deg);
+      }
+
+      64% {
+        transform: rotate(-9deg);
+      }
+
+      70% {
+        transform: rotate(9deg);
+      }
+
+      76% {
+        transform: rotate(-9deg);
+      }
+
+      82% {
+        transform: rotate(4deg);
+      }
+
+      85%,
+      100% {
+        transform: rotate(0deg);
+      }
+    }
+
+    /* Ánh sáng ấm tỏa ra phía sau sách khi mở */
+    .book-glow {
+      opacity: 0;
+      animation: bookGlowPulse 4.5s infinite ease-in-out;
+    }
+
+    @keyframes bookGlowPulse {
+
+      0%,
+      6% {
+        opacity: 0;
+      }
+
+      9% {
+        opacity: 0.5;
+      }
+
+      14% {
+        opacity: 0.3;
+      }
+
+      19% {
+        opacity: 0.5;
+      }
+
+      22%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* Vệt sáng quét chéo qua bìa sách đóng (lúc chạy và lúc vừa chạy tới nơi) */
+    .book-shine {
+      animation: bookShineSweep 4.5s infinite ease-in-out;
+      opacity: 0;
+    }
+
+    @keyframes bookShineSweep {
+
+      0%,
+      25% {
+        transform: translateX(-10px);
+        opacity: 0;
+      }
+
+      27% {
+        opacity: 0.85;
+      }
+
+      34% {
+        transform: translateX(32px);
+        opacity: 0.85;
+      }
+
+      36%,
+      86% {
+        transform: translateX(32px);
+        opacity: 0;
+      }
+
+      87% {
+        transform: translateX(-10px);
+        opacity: 0;
+      }
+
+      89% {
+        opacity: 0.85;
+      }
+
+      95% {
+        transform: translateX(32px);
+        opacity: 0.85;
+      }
+
+      97%,
+      100% {
+        transform: translateX(32px);
+        opacity: 0;
+      }
+    }
+
+    /* Các tia lấp lánh bay quanh cuốn sách khi mở và vẫy */
+    .book-spark-a,
+    .book-spark-b,
+    .book-spark-c {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .book-spark-a {
+      animation: bookSparkA 4.5s infinite ease-in-out;
+    }
+
+    .book-spark-b {
+      animation: bookSparkB 4.5s infinite ease-in-out;
+    }
+
+    .book-spark-c {
+      animation: bookSparkC 4.5s infinite ease-in-out;
+    }
+
+    @keyframes bookSparkA {
+
+      0%,
+      6% {
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+      }
+
+      9% {
+        opacity: 1;
+        transform: scale(1.2) rotate(45deg);
+      }
+
+      12% {
+        opacity: 0.2;
+        transform: scale(0.5) rotate(90deg);
+      }
+
+      15% {
+        opacity: 1;
+        transform: scale(1.1) rotate(135deg);
+      }
+
+      18% {
+        opacity: 0.2;
+        transform: scale(0.5) rotate(180deg);
+      }
+
+      21%,
+      100% {
+        opacity: 0;
+        transform: scale(0) rotate(225deg);
+      }
+    }
+
+    @keyframes bookSparkB {
+
+      0%,
+      8% {
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+      }
+
+      11% {
+        opacity: 1;
+        transform: scale(1) rotate(-45deg);
+      }
+
+      14% {
+        opacity: 0.2;
+        transform: scale(0.4) rotate(-90deg);
+      }
+
+      17% {
+        opacity: 1;
+        transform: scale(1.2) rotate(-135deg);
+      }
+
+      20% {
+        opacity: 0.2;
+        transform: scale(0.4) rotate(-180deg);
+      }
+
+      22%,
+      100% {
+        opacity: 0;
+        transform: scale(0) rotate(-225deg);
+      }
+    }
+
+    @keyframes bookSparkC {
+
+      0%,
+      9% {
+        opacity: 0;
+        transform: scale(0);
+      }
+
+      12% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      15% {
+        opacity: 0.2;
+        transform: scale(0.4);
+      }
+
+      18% {
+        opacity: 1;
+        transform: scale(0.9);
+      }
+
+      21%,
+      100% {
+        opacity: 0;
+        transform: scale(0);
+      }
     }
 
     /* Text & Transition Layout */
@@ -382,13 +1387,31 @@
       font-weight: 700;
     }
 
-    .dot-1 { animation-delay: 0s; }
-    .dot-2 { animation-delay: 0.22s; }
-    .dot-3 { animation-delay: 0.44s; }
+    .dot-1 {
+      animation-delay: 0s;
+    }
+
+    .dot-2 {
+      animation-delay: 0.22s;
+    }
+
+    .dot-3 {
+      animation-delay: 0.44s;
+    }
 
     @keyframes dotPulse {
-      0%, 80%, 100% { opacity: 0.2; transform: translateY(0px); }
-      40% { opacity: 1; transform: translateY(-2px); }
+
+      0%,
+      80%,
+      100% {
+        opacity: 0.2;
+        transform: translateY(0px);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateY(-2px);
+      }
     }
 
     /* Phase 2: Brand Reveal */
@@ -437,6 +1460,7 @@
 
     /* Tôn trọng cài đặt giảm chuyển động của hệ điều hành */
     @media (prefers-reduced-motion: reduce) {
+
       .mascot-runner,
       .mascot-body-group,
       .shadow-shape,
@@ -446,124 +1470,300 @@
       .arm-r,
       .ribbon-shape,
       .wave-lines,
+      .book-sway,
+      .book-closed-front,
+      .book-panel-back,
+      .book-panel-front,
+      .book-pagetop,
+      .book-open-shadow,
+      .book-pagetop-a,
+      .book-pagetop-b,
+      .book-pagetop-c,
+      .book-bookmark,
+      .book-glow,
+      .book-shine,
+      .book-spark-a,
+      .book-spark-b,
+      .book-spark-c,
       .dot {
         animation: none !important;
       }
+
       .mascot-runner {
         transform: translateX(0) !important;
         opacity: 1 !important;
       }
+
       .wave-lines {
         opacity: 0 !important;
       }
     }
   </style>
 </head>
+
 <body>
   <div id="loading-screen">
     <div class="loader-stage">
       <!-- Sân khấu đường chạy ngang: Chú sách chạy Loop tuần hoàn -->
       <div class="mascot-track">
         <div class="track-ground-line"></div>
+        <div class="track-ground-bricks"></div>
         <div class="mascot-runner">
           <svg class="mascot-svg" viewBox="0 0 110 130" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Bìa cuốn sách nhỏ: chuyển màu hổ phách 3 tầng tạo khối -->
+              <linearGradient id="miniBookCoverGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#FBBF24" />
+                <stop offset="45%" stop-color="#E88A0C" />
+                <stop offset="100%" stop-color="#B45309" />
+              </linearGradient>
+              <!-- Gáy sách (gáy nằm bên trái): tối ở mép ngoài -> sáng dần vào trong -->
+              <linearGradient id="miniBookSpineGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#92400E" />
+                <stop offset="100%" stop-color="#B45309" />
+              </linearGradient>
+              <!-- Gáy sách của bìa sau (gáy nằm bên phải): ngược chiều -->
+              <linearGradient id="miniBookSpineGradR" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#B45309" />
+                <stop offset="100%" stop-color="#92400E" />
+              </linearGradient>
+              <!-- Khung cắt để vệt sáng chỉ chạy trong phạm vi bìa -->
+              <clipPath id="miniBookCoverClip">
+                <rect x="0" y="0" width="18" height="25" rx="2" />
+              </clipPath>
+              <!-- Ánh sáng ấm tỏa ra khi sách mở -->
+              <radialGradient id="miniBookGlow" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.95" />
+                <stop offset="100%" stop-color="#FDE68A" stop-opacity="0" />
+              </radialGradient>
+
+              <!-- Hình vẽ MẶT NGOÀI BÌA TRƯỚC (dùng cho cả sách đóng lẫn nửa phải của sách mở) -->
+              <g id="miniFrontCoverArt">
+                <!-- Bìa trước -->
+                <rect x="0" y="0" width="18" height="25" rx="2" fill="url(#miniBookCoverGrad)" />
+
+                <!-- Gáy sách có đường chỉ khâu -->
+                <rect x="0" y="0" width="4.2" height="25" rx="2" fill="url(#miniBookSpineGrad)" />
+                <rect x="4.2" y="0" width="0.8" height="25" fill="#78350F" opacity="0.45" />
+                <rect x="1.5" y="4" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+                <rect x="1.5" y="10.8" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+                <rect x="1.5" y="17.6" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+
+                <!-- Viền nổi trang trí trên bìa -->
+                <rect x="6.6" y="2.6" width="9.6" height="19.8" rx="1.2" fill="none" stroke="#FEF3C7" stroke-width="0.6"
+                  opacity="0.7" />
+
+                <!-- Huy hiệu ngôi sao 4 cánh trên bìa -->
+                <circle cx="11.4" cy="9.4" r="3.6" fill="#FEF3C7" opacity="0.95" />
+                <path d="M11.4 6.2 L12.3 8.5 L14.6 9.4 L12.3 10.3 L11.4 12.6 L10.5 10.3 L8.2 9.4 L10.5 8.5 Z"
+                  fill="#D97706" />
+
+                <!-- Dòng chữ tiêu đề giả lập trên bìa -->
+                <rect x="7.8" y="15" width="7.2" height="1.4" rx="0.7" fill="#FFFBEB" />
+                <rect x="9" y="17.6" width="4.8" height="1.1" rx="0.55" fill="#FEF3C7" opacity="0.75" />
+
+                <!-- Bọc góc sách bằng kim loại vàng -->
+                <path d="M18 0 L18 3.6 L14.4 0 Z" fill="#FDE68A" opacity="0.9" />
+                <path d="M18 25 L18 21.4 L14.4 25 Z" fill="#FDE68A" opacity="0.9" />
+              </g>
+            </defs>
+
             <!-- 1. Bóng đổ phẳng di chuyển đồng bộ dưới chân chú sách -->
-            <rect class="shadow-shape" x="24" y="115" width="62" height="4" rx="2" fill="var(--line-color)"/>
+            <rect class="shadow-shape" x="24" y="115" width="62" height="4" rx="2" fill="var(--line-color)" />
 
             <!-- 2. Chân trái (so le bước) -->
             <g class="leg-l">
-              <rect x="29" y="84" width="8" height="18" fill="var(--limb-color)"/>
-              <rect x="29" y="96" width="8" height="3" fill="#FFFFFF"/>
-              <rect x="25" y="102" width="18" height="6" fill="var(--limb-color)"/>
-              <rect x="25" y="106" width="18" height="2" fill="var(--paper-color)"/>
+              <rect x="29" y="84" width="8" height="18" fill="var(--limb-color)" />
+              <rect x="29" y="96" width="8" height="3" fill="#FFFFFF" />
+              <rect x="25" y="102" width="18" height="6" fill="var(--limb-color)" />
+              <rect x="25" y="106" width="18" height="2" fill="var(--paper-color)" />
             </g>
 
             <!-- 3. Chân phải (so le bước) -->
             <g class="leg-r">
-              <rect x="57" y="84" width="8" height="18" fill="var(--limb-color)"/>
-              <rect x="57" y="96" width="8" height="3" fill="#FFFFFF"/>
-              <rect x="53" y="102" width="18" height="6" fill="var(--limb-color)"/>
-              <rect x="53" y="106" width="18" height="2" fill="var(--paper-color)"/>
+              <rect x="57" y="84" width="8" height="18" fill="var(--limb-color)" />
+              <rect x="57" y="96" width="8" height="3" fill="#FFFFFF" />
+              <rect x="53" y="102" width="18" height="6" fill="var(--limb-color)" />
+              <rect x="53" y="106" width="18" height="2" fill="var(--paper-color)" />
             </g>
 
             <!-- 4. Thân sách & Tay -->
             <g class="mascot-body-group">
               <!-- Tay trái phía sau -->
               <g class="arm-l">
-                <rect x="3" y="30" width="10" height="6" fill="var(--primary-dark)"/>
-                <rect x="4" y="34" width="8" height="22" fill="var(--limb-color)"/>
-                <rect x="3" y="54" width="10" height="3" fill="#FFFFFF"/>
-                <rect x="2" y="57" width="12" height="9" fill="var(--limb-color)"/>
-                <rect x="12" y="58" width="3" height="5" fill="var(--limb-color)"/>
+                <rect x="3" y="30" width="10" height="6" fill="var(--primary-dark)" />
+                <rect x="4" y="34" width="8" height="22" fill="var(--limb-color)" />
+                <rect x="3" y="54" width="10" height="3" fill="#FFFFFF" />
+                <rect x="2" y="57" width="12" height="9" fill="var(--limb-color)" />
+                <rect x="12" y="58" width="3" height="5" fill="var(--limb-color)" />
               </g>
 
               <!-- Dây Bookmark đung đưa -->
               <g class="ribbon-shape">
-                <rect x="46" y="84" width="6" height="9" fill="var(--primary-dark)"/>
-                <rect x="46" y="91" width="2" height="4" fill="var(--primary-color)"/>
-                <rect x="50" y="91" width="2" height="4" fill="var(--primary-color)"/>
+                <rect x="46" y="84" width="6" height="9" fill="var(--primary-dark)" />
+                <rect x="46" y="91" width="2" height="4" fill="var(--primary-color)" />
+                <rect x="50" y="91" width="2" height="4" fill="var(--primary-color)" />
               </g>
 
               <!-- Bìa sau & Khối trang giấy dày 2.5D -->
-              <rect x="16" y="6" width="70" height="78" fill="var(--primary-dark)"/>
-              <rect x="80" y="9" width="5" height="73" fill="var(--paper-color)"/>
-              <rect x="82" y="12" width="1" height="68" fill="var(--line-color)"/>
+              <rect x="16" y="6" width="70" height="78" fill="var(--primary-dark)" />
+              <rect x="80" y="9" width="5" height="73" fill="var(--paper-color)" />
+              <rect x="82" y="12" width="1" height="68" fill="var(--line-color)" />
 
-              <rect x="14" y="78" width="68" height="8" fill="var(--paper-color)"/>
-              <rect x="22" y="81" width="58" height="2" fill="var(--line-color)"/>
-              <rect x="24" y="84" width="54" height="1" fill="var(--line-color)"/>
+              <rect x="14" y="78" width="68" height="8" fill="var(--paper-color)" />
+              <rect x="22" y="81" width="58" height="2" fill="var(--line-color)" />
+              <rect x="24" y="84" width="54" height="1" fill="var(--line-color)" />
 
               <!-- Bìa chính mặt trước & Gáy sách -->
-              <rect x="12" y="8" width="68" height="72" fill="var(--primary-color)"/>
-              <rect x="12" y="8" width="12" height="72" fill="var(--primary-dark)"/>
-              <rect x="24" y="8" width="2" height="72" fill="var(--line-color)"/>
+              <rect x="12" y="8" width="68" height="72" fill="var(--primary-color)" />
+              <rect x="12" y="8" width="12" height="72" fill="var(--primary-dark)" />
+              <rect x="24" y="8" width="2" height="72" fill="var(--line-color)" />
 
               <!-- Đai gáy sách trang trí -->
-              <rect x="14" y="18" width="8" height="3" fill="#FFFFFF"/>
-              <rect x="14" y="24" width="8" height="2" fill="#FFFFFF"/>
-              <rect x="14" y="66" width="8" height="3" fill="#FFFFFF"/>
+              <rect x="14" y="18" width="8" height="3" fill="#FFFFFF" />
+              <rect x="14" y="24" width="8" height="2" fill="#FFFFFF" />
+              <rect x="14" y="66" width="8" height="3" fill="#FFFFFF" />
 
               <!-- Họa tiết bìa -->
-              <rect x="32" y="16" width="38" height="6" fill="#FFFFFF"/>
-              <rect x="32" y="25" width="24" height="4" fill="var(--paper-color)"/>
-              <rect x="72" y="12" width="4" height="12" fill="#FFFFFF"/>
+              <rect x="32" y="16" width="38" height="6" fill="#FFFFFF" />
+              <rect x="32" y="25" width="24" height="4" fill="var(--paper-color)" />
+              <rect x="72" y="12" width="4" height="12" fill="#FFFFFF" />
 
               <!-- Lông mày nhướng vui vẻ -->
-              <rect x="33" y="38" width="14" height="3" fill="var(--primary-dark)"/>
-              <rect x="57" y="38" width="14" height="3" fill="var(--primary-dark)"/>
+              <rect x="33" y="38" width="14" height="3" fill="var(--primary-dark)" />
+              <rect x="57" y="38" width="14" height="3" fill="var(--primary-dark)" />
 
               <!-- Mắt trái -->
-              <rect x="33" y="44" width="14" height="15" fill="#FFFFFF"/>
-              <rect x="40" y="48" width="7" height="9" fill="var(--pupil-color)"/>
-              <rect x="41" y="49" width="3" height="3" fill="#FFFFFF"/>
+              <rect x="33" y="44" width="14" height="15" fill="#FFFFFF" />
+              <rect x="40" y="48" width="7" height="9" fill="var(--pupil-color)" />
+              <rect x="41" y="49" width="3" height="3" fill="#FFFFFF" />
 
               <!-- Mắt phải -->
-              <rect x="57" y="44" width="14" height="15" fill="#FFFFFF"/>
-              <rect x="64" y="48" width="7" height="9" fill="var(--pupil-color)"/>
-              <rect x="65" y="49" width="3" height="3" fill="#FFFFFF"/>
+              <rect x="57" y="44" width="14" height="15" fill="#FFFFFF" />
+              <rect x="64" y="48" width="7" height="9" fill="var(--pupil-color)" />
+              <rect x="65" y="49" width="3" height="3" fill="#FFFFFF" />
 
               <!-- Má hồng phẳng -->
-              <rect x="29" y="59" width="6" height="3" fill="var(--primary-dark)"/>
-              <rect x="69" y="59" width="6" height="3" fill="var(--primary-dark)"/>
+              <rect x="29" y="59" width="6" height="3" fill="var(--primary-dark)" />
+              <rect x="69" y="59" width="6" height="3" fill="var(--primary-dark)" />
 
               <!-- Khuôn miệng cười mỉm thân thiện -->
-              <rect x="45" y="65" width="14" height="4" fill="#FFFFFF"/>
-              <rect x="43" y="63" width="2" height="3" fill="#FFFFFF"/>
-              <rect x="59" y="63" width="2" height="3" fill="#FFFFFF"/>
+              <rect x="45" y="65" width="14" height="4" fill="#FFFFFF" />
+              <rect x="43" y="63" width="2" height="3" fill="#FFFFFF" />
+              <rect x="59" y="63" width="2" height="3" fill="#FFFFFF" />
 
               <!-- Vạch sóng vẫy tay khi vẫy chào ở giữa -->
               <g class="wave-lines">
-                <path d="M 98 22 Q 105 27 98 32" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" fill="none"/>
-                <path d="M 102 18 Q 110 27 102 36" stroke="var(--primary-dark)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M 98 22 Q 105 27 98 32" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round"
+                  fill="none" />
+                <path d="M 102 18 Q 110 27 102 36" stroke="var(--primary-dark)" stroke-width="2" stroke-linecap="round"
+                  fill="none" />
               </g>
 
               <!-- Tay phải phía trước: Vẫy chào khi ở giữa và vung tay khi chạy -->
               <g class="arm-r">
-                <rect x="79" y="30" width="10" height="6" fill="var(--primary-dark)"/>
-                <rect x="80" y="34" width="8" height="22" fill="var(--limb-color)"/>
-                <rect x="79" y="54" width="10" height="3" fill="#FFFFFF"/>
-                <rect x="78" y="57" width="12" height="9" fill="var(--limb-color)"/>
-                <rect x="75" y="58" width="3" height="5" fill="var(--limb-color)"/>
+                <rect x="79" y="30" width="10" height="6" fill="var(--primary-dark)" />
+                <rect x="80" y="34" width="8" height="22" fill="var(--limb-color)" />
+                <rect x="79" y="54" width="10" height="3" fill="#FFFFFF" />
+                <rect x="78" y="57" width="12" height="9" fill="var(--limb-color)" />
+
+                <!-- ====== CUỐN SÁCH NHỎ: XOAY RA SAU - MỞ BÌA - VẪY - ĐÓNG LẠI ====== -->
+                <g class="mini-book" transform="translate(80, 38) rotate(-8)">
+                  <!-- Ánh sáng ấm tỏa ra khi sách mở -->
+                  <ellipse class="book-glow" cx="9" cy="12.5" rx="22" ry="17" fill="url(#miniBookGlow)" />
+
+                  <g class="book-sway">
+                    <!-- Bóng đổ dưới sách đóng + bóng rộng hơn khi sách mở -->
+                    <rect x="1.8" y="1.8" width="18" height="25" rx="2" fill="#78350F" opacity="0.35" />
+                    <rect class="book-open-shadow" x="-4" y="2" width="29" height="25" rx="2" fill="#78350F"
+                      opacity="0.28" />
+
+                    <!-- Dây đánh dấu trang đỏ lòi ra dưới gáy sách, đung đưa -->
+                    <g class="book-bookmark">
+                      <path d="M8 22 L8 31.5 L9.6 29.8 L11.2 31.5 L11.2 22 Z" fill="#DC2626" />
+                      <rect x="8" y="22" width="1" height="9" fill="#EF4444" opacity="0.7" />
+                    </g>
+
+                    <!-- MÉP TRÊN XẤP GIẤY: thò lên phía sau 2 bìa khi sách mở
+                         (ruột sách hướng vào mặt nhân vật, người xem chỉ thấy mép giấy) -->
+                    <g class="book-pagetop">
+                      <rect x="-3.6" y="-2.2" width="25.2" height="6" rx="2" fill="#FEF3C7" />
+                      <rect x="-3.6" y="-0.6" width="25.2" height="0.7" fill="#E7CFA3" opacity="0.7" />
+                      <rect class="book-pagetop-a" x="-2.4" y="-3.6" width="8.8" height="2.2" rx="1.1" fill="#FFFBEB" />
+                      <rect class="book-pagetop-b" x="6.2" y="-3.9" width="8.6" height="2.4" rx="1.2" fill="#FFFFFF" />
+                      <rect class="book-pagetop-c" x="14.4" y="-3.6" width="8.4" height="2.2" rx="1.1" fill="#FDE68A" />
+                    </g>
+
+                    <!-- NỬA PHẢI khi mở: MẶT NGOÀI BÌA TRƯỚC, lật quanh gáy từ phía sau ra -->
+                    <g class="book-panel-front">
+                      <use href="#miniFrontCoverArt" />
+                    </g>
+
+                    <!-- NỬA TRÁI khi mở: MẶT NGOÀI BÌA SAU (gáy nằm bên phải, sát giữa sách) -->
+                    <g class="book-panel-back">
+                      <rect x="0" y="0" width="18" height="25" rx="2" fill="url(#miniBookCoverGrad)" />
+
+                      <!-- Gáy sách có đường chỉ khâu -->
+                      <rect x="13.8" y="0" width="4.2" height="25" rx="2" fill="url(#miniBookSpineGradR)" />
+                      <rect x="13" y="0" width="0.8" height="25" fill="#78350F" opacity="0.45" />
+                      <rect x="15.3" y="4" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+                      <rect x="15.3" y="10.8" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+                      <rect x="15.3" y="17.6" width="1.2" height="2.2" rx="0.5" fill="#FDE68A" />
+
+                      <!-- Viền nổi trang trí -->
+                      <rect x="1.8" y="2.6" width="9.6" height="19.8" rx="1.2" fill="none" stroke="#FEF3C7"
+                        stroke-width="0.6" opacity="0.7" />
+
+                      <!-- Huy hiệu nhỏ phía trên -->
+                      <circle cx="6.6" cy="8.2" r="3" fill="#FEF3C7" opacity="0.95" />
+                      <path d="M6.6 5.6 L7.3 7.5 L9.2 8.2 L7.3 8.9 L6.6 10.8 L5.9 8.9 L4 8.2 L5.9 7.5 Z"
+                        fill="#D97706" />
+
+                      <!-- Nhãn mã vạch dán ở bìa sau -->
+                      <rect x="3" y="14.2" width="7.2" height="5.6" rx="0.8" fill="#FFFBEB" />
+                      <rect x="4.1" y="15.2" width="0.5" height="3.6" fill="#92400E" opacity="0.75" />
+                      <rect x="5.1" y="15.2" width="0.9" height="3.6" fill="#92400E" opacity="0.75" />
+                      <rect x="6.5" y="15.2" width="0.5" height="3.6" fill="#92400E" opacity="0.75" />
+                      <rect x="7.4" y="15.2" width="0.8" height="3.6" fill="#92400E" opacity="0.75" />
+                      <rect x="8.6" y="15.2" width="0.5" height="3.6" fill="#92400E" opacity="0.75" />
+
+                      <!-- Bọc góc sách bằng kim loại vàng -->
+                      <path d="M0 0 L0 3.6 L3.6 0 Z" fill="#FDE68A" opacity="0.9" />
+                      <path d="M0 25 L0 21.4 L3.6 25 Z" fill="#FDE68A" opacity="0.9" />
+                    </g>
+
+                    <!-- SÁCH ĐÓNG: bìa trước + độ dày xấp giấy ở mép phải/đáy -->
+                    <g class="book-closed-front">
+                      <rect x="0.6" y="1.2" width="18.9" height="24.3" rx="1.2" fill="#FEF3C7" />
+                      <rect x="2" y="24" width="16" height="1.4" fill="#FCD9A0" />
+                      <rect x="17" y="3" width="2.6" height="21" rx="0.7" fill="#FFFBEB" />
+                      <rect x="17" y="3.8" width="2.4" height="19.6" rx="0.7" fill="#FDE68A" />
+                      <rect x="17" y="4.6" width="2.2" height="18.2" rx="0.7" fill="#FFFFFF" />
+
+                      <use href="#miniFrontCoverArt" />
+
+                      <!-- Vệt sáng quét chéo qua bìa -->
+                      <g clip-path="url(#miniBookCoverClip)">
+                        <polygon class="book-shine" points="-6,-1 -1,-1 8,26 3,26" fill="#FFFFFF" />
+                      </g>
+                    </g>
+                  </g>
+
+                  <!-- Tia lấp lánh bay quanh sách lúc mở và vẫy -->
+                  <path class="book-spark-a"
+                    d="M27 2 L27.9 4.6 L30.5 5.5 L27.9 6.4 L27 9 L26.1 6.4 L23.5 5.5 L26.1 4.6 Z" fill="#FDE68A" />
+                  <path class="book-spark-b"
+                    d="M9 -9 L9.7 -7.2 L11.5 -6.5 L9.7 -5.8 L9 -4 L8.3 -5.8 L6.5 -6.5 L8.3 -7.2 Z" fill="#FFFFFF" />
+                  <path class="book-spark-c"
+                    d="M28 17 L28.6 18.6 L30.2 19.2 L28.6 19.8 L28 21.4 L27.4 19.8 L25.8 19.2 L27.4 18.6 Z"
+                    fill="#FCD34D" />
+                </g>
+
+                <!-- Bàn tay nắm chắc phần gáy/đáy cuốn sách: các ngón & ngón cái ôm đè lên -->
+                <rect x="78" y="58" width="12" height="8" rx="2" fill="var(--limb-color)" />
+                <rect x="84.5" y="54.5" width="5" height="7.5" rx="2.5" fill="var(--limb-color)" />
+                <rect x="81.4" y="61.2" width="0.8" height="3.6" rx="0.4" fill="var(--paper-color)" opacity="0.28" />
+                <rect x="85" y="61.2" width="0.8" height="3.6" rx="0.4" fill="var(--paper-color)" opacity="0.28" />
               </g>
             </g>
           </svg>
@@ -575,7 +1775,8 @@
         <!-- Pha 1: Đang nạp - "Đợi một tí nhé..." -->
         <div class="loading-status-wrap">
           <span>Đợi một tí nhé</span>
-          <span class="dot-pulse"><span class="dot dot-1">.</span><span class="dot dot-2">.</span><span class="dot dot-3">.</span></span>
+          <span class="dot-pulse"><span class="dot dot-1">.</span><span class="dot dot-2">.</span><span
+              class="dot dot-3">.</span></span>
         </div>
 
         <!-- Pha 2: Chuyển giao Thương hiệu khi nạp xong -->
@@ -594,7 +1795,7 @@
         // Khi Flutter nạp xong khung hình đầu tiên, Web loader mờ dần ngay
         // để chuyển giao trọn vẹn màn hình cho chú sách vẫy tay chào của Flutter
         screen.classList.add('fade-out');
-        setTimeout(function() {
+        setTimeout(function () {
           if (screen.parentNode) {
             screen.parentNode.removeChild(screen);
           }
@@ -604,4 +1805,5 @@
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>

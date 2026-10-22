@@ -2502,11 +2502,17 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - Đồng bộ `tagline` của `IntroGate` trong `main.dart` thành *“Luôn đi cùng con đến trường”*.
   + **Tùy biến người dùng ([`intro_setting_tile.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_setting_tile.dart))**: Tích hợp công tắc "Hiệu ứng mở app" trực tiếp vào trang Cài đặt / Thông tin cá nhân ([`profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/profile_screen.dart)).
 
+  + **Đồng Bộ Hình Học 100% (Geometry & Visual Parity) & Phụ Kiện Cuốn Sách Nhỏ (Mini-Book)**:
+    - **Đồng bộ kích thước nhân vật ($1:1$)**: Nâng container `.mascot-runner` từ `120px x 140px` lên chuẩn `138px x 163px` ($110 \times 1.25 = 137.5 \approx 138\text{px}$). Bìa sách ở Pha 1 đạt đúng chính xác **$85\text{px} \times 90\text{px}$**, trùng khít $100\%$ với kích thước hiển thị của chú sách trong Flutter `IntroGate`, xóa bỏ hoàn toàn hiện tượng nhảy tỷ lệ (scale pop).
+    - **Kéo dài con đường mặt đất ($100vw$)**: Mở rộng `.mascot-track` thành `100vw; max-width: 100%` và `.track-ground-line` thành dải đường toàn màn hình `width: 100vw; left: 0; right: 0;`. Bổ sung dải vạch gạch nền thị sai `.track-ground-bricks` với họa tiết $35\text{px}$ gạch, $35\text{px}$ khoảng trống (mô phỏng logic `brickW = 28 * s = 35px` của Flutter) nằm dưới đường chính $7\text{px}$.
+    - **Khớp cao độ mặt đất ($Y$-Parity)**: Căn chỉnh vị trí $Y$ của đường mặt đất trùng khít với `groundY` của Flutter tại `calc(50vh + 18px)`, giúp con đường đứng yên tuyệt đối khi chuyển tiếp giữa hai pha.
+    - **Phụ kiện Cuốn Sách Nhỏ (Mini-Book)**: Bổ sung cuốn sách nhỏ xinh xắn với bìa cam hổ phách `#D97706`, gáy sách đậm `#B45309`, khối trang giấy trắng `#FFFFFF`, ngôi sao 4 cánh, hiệu ứng lật mở bìa, lật trang, dây bookmark đung đưa và các tia sao lấp lánh; loại bỏ vệt sáng quét chéo thừa; tinh chỉnh góc xoay `rotate(4deg)` và tọa độ `translate(76, 36)` ngả tự nhiên vào thân người chú sách; đặt ngón cái về bên trái bàn tay ($x=74.5..79$) ôm chắc lấy gáy sách chuẩn xác theo giải phẫu học.
+
 **3. Kết Quả Kiểm Thử Thực Tế (Rule 5):**
 - **Kiểm thử Vector Mascot & Hình học Bước chuyển ([`book_mascot_painter_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/book_mascot_painter_test.dart))**:
   + ✅ **11 / 11 tests PASSED**: Kiểm tra góc tay `waveAngle` đúng các mốc, nội suy tuyến tính chính xác, hàm co giãn `scaleFor` giới hạn trong [80, 120] đơn vị, kiểm thử vẽ an toàn trên cả bảng màu Light (`standard`) và Dark Mode (`IntroPalette.dark`).
 - **Kiểm thử Vòng đời & Tương tác IntroGate ([`intro_gate_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_gate_test.dart))**:
-  + ✅ **9 / 9 tests PASSED**: Xác thực tự động chuyển màn khi chạy hết thời lượng 2.0s, bỏ qua intro khi policy từ chối, chạm bất kỳ đâu bỏ qua tức thì không lặp lại, chế độ giảm chuyển động (Reduced Motion), cơ chế giữ tư thế khi khởi động chậm, tự phục hồi khi khởi động lỗi, tự động nhận diện theme tối khi hệ thống là Dark Mode, và **tự động vào thẳng màn hình đích trên Web (`skipOnWeb = true`)**.
+  + ✅ **10 / 10 tests PASSED**: Xác thực tự động chuyển màn khi chạy hết thời lượng 2.0s, bỏ qua intro khi policy từ chối, chạm bất kỳ đâu bỏ qua tức thì không lặp lại, chế độ giảm chuyển động (Reduced Motion), cơ chế giữ tư thế khi khởi động chậm, tự phục hồi khi khởi động lỗi, tự động nhận diện theme tối khi hệ thống là Dark Mode, và **tự động vào thẳng màn hình đích trên Web (`skipOnWeb = true`)**.
 - **Kiểm thử Quy tắc Tần suất ([`intro_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_policy_test.dart))**:
   + ✅ **6 / 6 tests PASSED**: Xác thực lần đầu cài app thì hiển thị, trong vòng 6 giờ không hiển thị lại (Production), sau 6 giờ hiển thị lại (Production), chế độ Demo/Dev luôn hiển thị dù chưa đủ 6 giờ, tôn trọng tùy chọn tắt của người dùng trong Cài đặt, tự động phát hiện và xử lý an toàn khi đồng hồ hệ thống bị chỉnh lùi.
 - **Kiểm thử Khởi động Song song ([`app_bootstrap_service_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/services/app_bootstrap_service_test.dart))**:
@@ -2515,5 +2521,6 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + ✅ **132 / 132 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
 - **Kiểm tra cú pháp & tĩnh ([`flutter analyze`])**:
   + ✅ **No issues found (0 warnings, 0 errors)** trên toàn bộ các file mới và các module liên quan.
+
 
 
