@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ashadeep/core/widgets/app_section_header.dart';
+import 'package:ashadeep/core/theme/app_colors.dart';
 
 void main() {
   group('AppSectionHeader Widget Tests', () {
@@ -50,7 +51,7 @@ void main() {
       final decoration = container.decoration as BoxDecoration;
 
       expect(decoration.color, equals(Colors.white));
-      expect(decoration.borderRadius, equals(BorderRadius.circular(6)));
+      expect(decoration.borderRadius, equals(AppColors.cardBorderRadius));
       expect(decoration.border?.top.color, equals(Colors.black));
       expect(decoration.border?.top.width, equals(1.0));
     });
@@ -107,7 +108,7 @@ void main() {
       final decoration = container.decoration as BoxDecoration;
 
       expect(decoration.color, equals(Colors.white));
-      expect(decoration.borderRadius, equals(BorderRadius.circular(6)));
+      expect(decoration.borderRadius, equals(AppColors.cardBorderRadius));
       expect(decoration.border?.top.color, equals(Colors.black));
 
       await tester.tap(linkFinder);

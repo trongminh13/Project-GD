@@ -36,7 +36,7 @@ class MarksSemesterSelector extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.white,
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                   border: Border.all(
                     color: isSelected ? AppColors.primary : AppColors.cardBorder,
                     width: AppColors.cardBorderWidth,

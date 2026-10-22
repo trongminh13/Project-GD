@@ -44,7 +44,7 @@ class MarksCriteriaCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
       ),
       child: Column(
@@ -68,7 +68,7 @@ class MarksCriteriaCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFF26A69A).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                 ),
                 child: const Text(
                   'Tiểu học',
@@ -91,7 +91,7 @@ class MarksCriteriaCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE0F2F1),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                   border: Border.all(color: const Color(0xFF80CBC4)),
                 ),
                 child: Row(
@@ -142,7 +142,7 @@ class MarksCriteriaCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: c['level']!.contains('Tốt') ? const Color(0xFFE8F0FE) : AppColors.surfaceAlt,
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppColors.cardBorderRadius,
                         border: Border.all(color: AppColors.cardBorder, width: 0.8),
                       ),
                       child: Text(
@@ -183,7 +183,7 @@ class MarksCriteriaCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
       ),
       child: Column(
@@ -207,7 +207,7 @@ class MarksCriteriaCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF5350).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                 ),
                 child: const Text(
                   'THPT Cấp 3',
@@ -282,7 +282,7 @@ class MarksCriteriaCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: isDone ? const Color(0xFFE8F5E9) : AppColors.surfaceAlt,
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppColors.cardBorderRadius,
           ),
           child: Text(
             statusText,

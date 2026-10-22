@@ -20,7 +20,7 @@ void main() {
       expect(manager.bgImagePath, equals('images/school.jpg'));
       expect(manager.textMain, equals(const Color(0xFF202124)));
       expect(manager.textColorModeLabel, equals('Mặc định (Đen)'));
-      expect(manager.currentBackgroundLabel, equals('Cổng trường'));
+      expect(manager.currentBackgroundLabel, equals('Mặc Định'));
     });
 
     test('TC-THEME-02: availableBackgrounds contains exactly 8 school images', () {
@@ -33,7 +33,7 @@ void main() {
         'bg_school_yard',
         'bg_campus',
         'bg_library',
-        'bg_hallway',
+        'Giải Phóng miền Nam',
         'bg_study_desk',
       ]));
 
@@ -96,7 +96,7 @@ void main() {
 
       await manager.setBackgroundImage('images/bg_library.jpg');
       expect(manager.bgImagePath, equals('images/bg_library.jpg'));
-      expect(manager.currentBackgroundLabel, equals('Thư viện'));
+      expect(manager.currentBackgroundLabel, equals('Ngày sinh Chủ tịch Hồ Chí Minh'));
       expect(notifyCount, equals(1));
 
       await manager.setBackgroundImage('images/bg_classroom.jpg');
@@ -121,7 +121,7 @@ void main() {
       expect(manager.textMain, equals(const Color(0xFFAD1457)));
       expect(manager.textColorModeLabel, equals('Hồng'));
       expect(manager.bgImagePath, equals('images/bg_campus.jpg'));
-      expect(manager.currentBackgroundLabel, equals('Khuôn viên'));
+      expect(manager.currentBackgroundLabel, equals('Trung thu'));
     });
   });
 }

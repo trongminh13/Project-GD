@@ -1720,7 +1720,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(color: AppColors.warning),
-                borderRadius: BorderRadius.zero,
+                borderRadius: AppColors.cardBorderRadius,
               ),
               child: const Row(
                 children: [
@@ -1740,7 +1740,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
               border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
               boxShadow: [
                 BoxShadow(
@@ -1798,7 +1798,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     border: Border.all(color: AppColors.primary),
-                                    borderRadius: BorderRadius.zero,
+                                    borderRadius: AppColors.cardBorderRadius,
                                   ),
                                   child: Text(
                                     levelShortTitle,
@@ -1847,7 +1847,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.surfaceAlt,
                             border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-                            borderRadius: BorderRadius.zero,
+                            borderRadius: AppColors.cardBorderRadius,
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1870,7 +1870,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.error.withValues(alpha: 0.06),
                             border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                            borderRadius: BorderRadius.zero,
+                            borderRadius: AppColors.cardBorderRadius,
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1959,9 +1959,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             )
           else
             Container(
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.zero,
+                borderRadius: AppColors.cardBorderRadius,
                 border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
               ),
               child: Column(
@@ -1993,7 +1994,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
               border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
             ),
             child: Column(
@@ -2006,7 +2007,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.06),
                       border: Border.all(color: AppColors.error, width: 1.0),
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppColors.cardBorderRadius,
                     ),
                     alignment: Alignment.center,
                     child: const Row(
@@ -2081,10 +2082,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: Colors.white,
           child: Container(
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppColors.surfaceAlt,
               border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
             ),
             child: Row(
               children: [
@@ -2209,9 +2211,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   )
                 else
                   Container(
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppColors.cardBorderRadius,
                       border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                     ),
                     child: Column(
@@ -2272,9 +2275,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppColors.cardBorderRadius,
             border: Border.all(
               color: isToday ? AppColors.primary : AppColors.cardBorder,
               width: isToday ? 1.5 : AppColors.cardBorderWidth,
@@ -2295,7 +2299,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isToday ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.zero,
                   border: const Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),
                 ),
                 child: Row(
@@ -2405,7 +2408,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppColors.cardBorderRadius,
             color: Colors.white,
           ),
           child: Text(
@@ -2435,7 +2438,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                     fontSize: 13,
                   ),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
                   side: BorderSide(color: isSel ? AppColors.primary : AppColors.cardBorder, width: AppColors.cardBorderWidth),
                   backgroundColor: Colors.white,
                 ),
@@ -2477,7 +2480,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
               color: Colors.white,
             ),
             child: const Text(
@@ -2644,7 +2647,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                     fontSize: 13,
                   ),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
                   side: BorderSide(color: isSel ? AppColors.primary : AppColors.cardBorder, width: AppColors.cardBorderWidth),
                   backgroundColor: Colors.white,
                 ),
@@ -2674,7 +2677,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     color: isRead ? AppColors.cardBorder : AppColors.primary.withValues(alpha: 0.5),
                     width: isRead ? AppColors.cardBorderWidth : 1.5,
                   ),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                   color: Colors.white,
                 ),
                 child: Row(
@@ -2686,7 +2689,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.zero,
+                        borderRadius: AppColors.cardBorderRadius,
                         border: Border.all(color: isRead ? AppColors.cardBorder : AppColors.primary.withValues(alpha: 0.3), width: AppColors.cardBorderWidth),
                       ),
                       child: Icon(
@@ -3631,7 +3634,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
                                                 color: AppColors.primary,
-                                                borderRadius: BorderRadius.zero,
+                                                borderRadius: AppColors.cardBorderRadius,
                                               ),
                                               child: const Row(
                                                 mainAxisSize: MainAxisSize.min,

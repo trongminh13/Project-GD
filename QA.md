@@ -2318,6 +2318,52 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - `flutter test`: **99 / 99 tests PASSED (100% test suite)**.
 - Ứng dụng khởi động và hiển thị typography sắc nét ngay cả khi thiết bị tắt hoàn toàn kết nối Internet.
 
+---
 
+### GIAI ĐOẠN 32: CHUẨN HÓA TOÀN DIỆN HỆ THỐNG KHUNG BOX BO GÓC 4PX (MODERN CLEAN / SUBTLE ROUNDED GEOMETRY)
 
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Chuẩn hóa toàn bộ hệ thống khung box hình chữ nhật và các khung card bo góc cũ (6px, 12px, 20px) sang chuẩn bo góc nhẹ 4px (`BorderRadius.circular(4.0)` / `cardBorderRadius`), đồng thời giữ nét viền đen 1px tương phản cao (`AppColors.cardBorder: Colors.black`).
+- Giữ nguyên các thành phần chuyên biệt không nên bo góc:
+  + Lưới bảng điểm học bạ (`marks_grid_table_view.dart`): Giữ nguyên các ô `TableCell` vuông góc 90° để đường kẻ lưới không bị đứt đoạn.
+  + Đỉnh modal bottom sheet (`marks_a4_print_preview.dart`, `parent_marks_screen.dart`): Giữ bo đỉnh 16px tạo điểm tựa vuốt đóng mở tự nhiên.
+  + Drag handle của bottom sheet: Giữ bo 2px.
+  + Avatar người dùng: Giữ hình tròn (`CircleAvatar`).
 
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- **Thiết lập Token & Hằng số Tập trung ([`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart), [`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+  + Bổ sung `cardRadius = 4.0;` và `cardBorderRadius = BorderRadius.all(Radius.circular(cardRadius));` vào cả hai hệ thống theme hằng số.
+- **Chuẩn hóa Shared Core Widgets**:
+  + [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Bo góc 4px cho khung card ngoài và icon container.
+  + [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Bo góc 4px cho toàn bộ card, badge nộp bài và các nút hành động (Xem chi tiết, Làm bài, Xem kết quả).
+  + [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_empty_card.dart) & [`app_card_error_with_retry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_card_error_with_retry.dart): Bo góc 4px kèm viền đen chuẩn.
+  + [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Nút "Xem tất cả" hạ từ 6px về 4px.
+- **Chuẩn hóa Màn hình Dashboard Học Sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+  + Thẻ Hero profile học sinh, badge cấp học, nút Settings / Logout, thẻ Demo mode banner bo góc 4px.
+  + Thẻ "Lịch học hôm nay" (`todayLessons`): Bo 4px kèm `clipBehavior: Clip.antiAlias` ngăn chặn tràn màu nền ở góc bo.
+  + Thẻ Đăng xuất footer: Bo 4px.
+  + Tab Thời khóa biểu: Bộ chuyển Ngày/Tuần (bo 4px), thẻ lịch ngày và 5 thẻ ngày trong tuần (bo 4px kèm `Clip.antiAlias`).
+  + Tab Sách học: Banner giới thiệu và ChoiceChips môn học bo 4px.
+  + Tab Bài tập: Banner hướng dẫn bo 4px.
+  + Tab Thông báo: ChoiceChips phân loại, Notice cards và icon container bo 4px.
+- **Chuẩn hóa Module Học bạ & Bảng điểm ([`marks/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/))**:
+  + `marks_national_header.dart`: Khung Quốc hiệu, icon trường, badge cấp học, nút In phiếu điểm bo 4px.
+  + `marks_hero_kpi_card.dart`: Thẻ Hero KPI và Rank Box cúp vàng bo 4px kèm `Clip.antiAlias`.
+  + `marks_semester_selector.dart`: Bộ 3 nút chọn kỳ bo 4px.
+  + `marks_accordion_list.dart`: Thẻ môn học, icon, badge xếp loại, badge chưa có điểm, subcell điểm bo 4px kèm `Clip.antiAlias`.
+  + `marks_criteria_card.dart`: Khung tiêu chí phẩm chất tiểu học & tiêu chuẩn xếp loại THPT bo 4px.
+  + `marks_endorsement_card.dart`: Khung nhận xét, badge rèn luyện và khung con dấu BGH bo 4px.
+  + `marks_a4_print_preview.dart`: Giữ bo đỉnh 16px cho bottom sheet, nút tải PDF bo 4px.
+  + `student_marks_tab.dart`: Banner demo mode bo 4px.
+  + [`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart): Chuẩn hóa từ 12px/20px/10px/8px về `AppColors.cardBorderRadius` (4px).
+- **Chuẩn hóa Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+  + Nút In phiếu điểm và bộ 3 nút chọn kỳ chuyển sang bo 4px, modal xem trước A4 bo đỉnh 16px.
+- **Cập nhật & Đồng bộ Bộ Test Widget**:
+  + [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật TC-NAV-15 xác nhận nút Đăng xuất bo góc 4px (`BorderRadius.circular(4)`).
+  + [`app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_section_header_test.dart): Cập nhật TC-HEADER-02 và TC-HEADER-04 xác nhận nút "Xem tất cả" bo góc 4px.
+  + [`theme_manager_customization_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Đồng bộ các nhãn font family tiếng Việt theo cập nhật typography.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (Clean 100%).
+- `flutter test`: **99 / 99 tests PASSED (100% test suite)**.
+- Giao diện đạt độ đồng bộ thị giác cao, hiện đại, sắc sảo (Modern Clean Subtle Rounded Geometry) trên toàn bộ các phân hệ học sinh và phụ huynh.

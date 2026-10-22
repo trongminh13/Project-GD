@@ -88,9 +88,10 @@ class MarksAccordionList extends StatelessWidget {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.zero,
+            borderRadius: AppColors.cardBorderRadius,
             border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
           ),
           child: InkWell(
@@ -106,7 +107,7 @@ class MarksAccordionList extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           color: scoreColor.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.zero,
+                          borderRadius: AppColors.cardBorderRadius,
                         ),
                         child: Icon(_getSubjectIcon(sub.subjectName), color: scoreColor, size: 22),
                       ),
@@ -155,7 +156,7 @@ class MarksAccordionList extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
                                 color: scoreColor.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.zero,
+                                borderRadius: AppColors.cardBorderRadius,
                               ),
                               child: Text(
                                 classification,
@@ -181,7 +182,7 @@ class MarksAccordionList extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
                                 color: AppColors.surfaceAlt,
-                                borderRadius: BorderRadius.zero,
+                                borderRadius: AppColors.cardBorderRadius,
                                 border: Border.all(color: AppColors.cardBorder, width: 0.8),
                               ),
                               child: const Text(
@@ -196,7 +197,7 @@ class MarksAccordionList extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE8F5E9),
-                            borderRadius: BorderRadius.zero,
+                            borderRadius: AppColors.cardBorderRadius,
                             border: Border.all(color: const Color(0xFFA5D6A7)),
                           ),
                           child: Text(
@@ -350,7 +351,7 @@ class MarksAccordionList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         decoration: BoxDecoration(
           color: isHighlight ? const Color(0xFFE8F0FE) : Colors.white,
-          borderRadius: BorderRadius.zero,
+          borderRadius: AppColors.cardBorderRadius,
           border: Border.all(
             color: isHighlight ? AppColors.primary : AppColors.cardBorder,
             width: isHighlight ? 1.0 : 0.8,

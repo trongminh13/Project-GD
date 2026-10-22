@@ -21,6 +21,7 @@ class AppCardErrorWithRetry extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: AppColors.border),
+        borderRadius: AppColors.cardBorderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

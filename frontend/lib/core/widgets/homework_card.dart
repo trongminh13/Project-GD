@@ -40,7 +40,7 @@ class HomeworkCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         color: AppColors.cardBg,
       ),
       child: Row(
@@ -88,6 +88,7 @@ class HomeworkCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 border: Border.all(color: AppColors.success),
+                borderRadius: AppColors.cardBorderRadius,
                 color: Colors.white,
               ),
               child: Text(
@@ -108,7 +109,7 @@ class HomeworkCard extends StatelessWidget {
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
             ),
             child: const Text('Làm bài', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           );
@@ -122,7 +123,7 @@ class HomeworkCard extends StatelessWidget {
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
           ),
           child: const Text('Chấm bài', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
         );
@@ -134,6 +135,7 @@ class HomeworkCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               border: Border.all(color: _isSubmitted ? AppColors.success : AppColors.warning),
+              borderRadius: AppColors.cardBorderRadius,
               color: Colors.white,
             ),
             child: Text(

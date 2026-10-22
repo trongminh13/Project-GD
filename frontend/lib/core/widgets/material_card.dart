@@ -38,7 +38,7 @@ class MaterialCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-          borderRadius: BorderRadius.zero,
+          borderRadius: AppColors.cardBorderRadius,
           color: AppColors.cardBg,
         ),
         child: Row(
@@ -49,7 +49,7 @@ class MaterialCard extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-                borderRadius: BorderRadius.zero,
+                borderRadius: AppColors.cardBorderRadius,
                 color: AppColors.surfaceAlt,
               ),
               child: Icon(

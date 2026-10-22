@@ -12,7 +12,9 @@ void showReportCardPreviewModal(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
     builder: (ctx) {
       return DraggableScrollableSheet(
         expand: false,
@@ -130,7 +132,7 @@ void showReportCardPreviewModal(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                    shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
                   ),
                 ),
               ],

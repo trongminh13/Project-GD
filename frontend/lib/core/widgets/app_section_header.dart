@@ -31,13 +31,13 @@ class AppSectionHeader extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onLink,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: AppColors.cardBorderRadius,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.black, width: 1.0),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: AppColors.cardBorderRadius,
                 ),
                 child: Text(
                   linkLabel!,

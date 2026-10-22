@@ -34,9 +34,10 @@ class MarksHeroKpiCard extends StatelessWidget {
         : (selectedSemester == 2 ? 'HỌC KỲ II' : 'CẢ NĂM');
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: Colors.black, width: 1.0),
         boxShadow: [
           BoxShadow(
@@ -103,7 +104,7 @@ class MarksHeroKpiCard extends StatelessWidget {
                     constraints: const BoxConstraints(minWidth: 84),
                     decoration: BoxDecoration(
                       color: rankBg,
-                      borderRadius: BorderRadius.zero,
+                      borderRadius: AppColors.cardBorderRadius,
                       border: Border.all(color: Colors.black, width: 1.0),
                     ),
                     child: Column(

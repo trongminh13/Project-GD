@@ -139,7 +139,7 @@ class _StudentMarksTabState extends State<StudentMarksTab> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.zero,
+                borderRadius: AppColors.cardBorderRadius,
                 border: Border.all(color: AppColors.warning, width: 1.0),
               ),
               child: const Row(

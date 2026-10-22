@@ -40,6 +40,10 @@ class AppColors {
   static const Color splashBackground = Color(0xFF0D1454);
   static const Color splashText = Color(0xFFC0C0C0);
 
+  // Card & Box Radius
+  static const double cardRadius = 4.0;
+  static const BorderRadius cardBorderRadius = BorderRadius.all(Radius.circular(cardRadius));
+
   // Backward Compatibility (light mode defaults)
   static const Color primary = lightPrimary;
   static const Color secondary = lightSecondary;

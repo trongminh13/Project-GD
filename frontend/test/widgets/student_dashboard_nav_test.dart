@@ -4,6 +4,7 @@ import 'package:ashadeep/features/student/screens/student_dashboard_screen.dart'
 import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/core/widgets/material_card.dart';
 import 'package:ashadeep/core/widgets/homework_card.dart';
+import 'package:ashadeep/core/theme/app_colors.dart';
 
 void main() {
   setUp(() {
@@ -411,9 +412,9 @@ void main() {
       final matDeco = materialCardContainer.decoration as BoxDecoration;
       expect(matDeco.border?.top.color, Colors.black);
       expect(matDeco.border?.top.width, 1.0);
-      expect(matDeco.borderRadius, BorderRadius.zero);
+      expect(matDeco.borderRadius, AppColors.cardBorderRadius);
 
-      // Verify HomeworkCard has black border and zero radius
+      // Verify HomeworkCard has black border and 4px radius
       final homeworkCardFinder = find.byType(HomeworkCard).first;
       expect(homeworkCardFinder, findsOneWidget);
       final homeworkCardContainer = tester.widget<Container>(
@@ -422,7 +423,7 @@ void main() {
       final hwDeco = homeworkCardContainer.decoration as BoxDecoration;
       expect(hwDeco.border?.top.color, Colors.black);
       expect(hwDeco.border?.top.width, 1.0);
-      expect(hwDeco.borderRadius, BorderRadius.zero);
+      expect(hwDeco.borderRadius, AppColors.cardBorderRadius);
     });
 
     testWidgets('TC-NAV-16: Marks tab features Hero KPI Card with prominent Rank Box, solid black grid dividers, and no progress bars', (tester) async {

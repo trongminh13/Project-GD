@@ -87,7 +87,9 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) {
         return DraggableScrollableSheet(
           expand: false,
@@ -425,8 +427,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: BorderSide(color: AppColors.borderOf(context)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppColors.cardBorderRadius,
                   ),
                 ),
               ),
@@ -443,7 +445,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: AppColors.borderOf(context)),
       ),
       child: Row(
@@ -465,14 +467,14 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
             _selectedSemester = index;
           });
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppColors.cardBorderRadius,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.12)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppColors.cardBorderRadius,
           ),
           child: Text(
             title,

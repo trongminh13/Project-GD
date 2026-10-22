@@ -21,7 +21,7 @@ class AppEmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

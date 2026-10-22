@@ -29,6 +29,8 @@ class AppColors {
   /// Màu viền thẻ/hộp nội dung sắc nét (High-contrast Black Card Border)
   static const Color cardBorder = Colors.black;
   static const double cardBorderWidth = 1.0;
+  static const double cardRadius = 4.0;
+  static const BorderRadius cardBorderRadius = BorderRadius.all(Radius.circular(cardRadius));
 
   /// Màu nền Card / Box trắng #FFFFFF
   static const Color cardBg = Color(0xFFFFFFFF);

@@ -19,7 +19,7 @@ class MarksEndorsementCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
       ),
       child: Column(
@@ -54,7 +54,7 @@ class MarksEndorsementCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F0FE),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                   border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                 ),
                 child: const Text(
@@ -71,9 +71,9 @@ class MarksEndorsementCard extends StatelessWidget {
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surfaceAlt,
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +101,7 @@ class MarksEndorsementCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFF9FBE7),
               border: Border.all(color: const Color(0xFFDCE775)),
-              borderRadius: BorderRadius.zero,
+              borderRadius: AppColors.cardBorderRadius,
             ),
             child: const Row(
               children: [

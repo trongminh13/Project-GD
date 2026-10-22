@@ -26,7 +26,7 @@ class MarksNationalHeader extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.zero,
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
         boxShadow: [
           BoxShadow(
@@ -46,7 +46,7 @@ class MarksNationalHeader extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                 ),
                 child: const Icon(Icons.school, color: AppColors.primary, size: 22),
               ),
@@ -82,7 +82,7 @@ class MarksNationalHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.zero,
+                  borderRadius: AppColors.cardBorderRadius,
                   border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
@@ -131,7 +131,7 @@ class MarksNationalHeader extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.white,
                   side: const BorderSide(color: AppColors.cardBorder, width: 1.0),
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   visualDensity: VisualDensity.compact,
                 ),

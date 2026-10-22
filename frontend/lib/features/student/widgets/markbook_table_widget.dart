@@ -45,7 +45,7 @@ class MarkbookTableWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.primaryOf(context).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(
           color: AppColors.primaryOf(context).withValues(alpha: 0.2),
         ),
@@ -111,7 +111,7 @@ class MarkbookTableWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppColors.cardBorderRadius,
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
@@ -143,7 +143,7 @@ class MarkbookTableWidget extends StatelessWidget {
   Widget _buildScoreTable(BuildContext context, Color borderColor,
       Color bgColor, Color headerBg, EducationLevel level) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppColors.cardBorderRadius,
       child: Table(
         border: TableBorder.all(color: borderColor, width: 0.8),
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -241,7 +241,7 @@ class MarkbookTableWidget extends StatelessWidget {
       color: AppColors.textSecondaryOf(context),
     );
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppColors.cardBorderRadius,
       child: Table(
         border: TableBorder.all(color: borderColor, width: 0.8),
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -292,7 +292,7 @@ class MarkbookTableWidget extends StatelessWidget {
               gradient: const LinearGradient(
                 colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)],
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppColors.cardBorderRadius,
               border: Border.all(color: const Color(0xFFFFB300)),
             ),
             child: Row(
@@ -366,7 +366,7 @@ class MarkbookTableWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppColors.cardBorderRadius,
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Column(
@@ -416,7 +416,7 @@ class MarkbookTableWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppColors.cardBorderRadius,
           ),
           child: Text(
             classification ?? '—',
