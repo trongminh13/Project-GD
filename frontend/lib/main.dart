@@ -199,7 +199,7 @@ class _AdminAppState extends State<AdminApp> {
             home: IntroGate(
               ready: _bootstrapFuture,
               appName: 'Giáo Dục Đại Việt',
-              tagline: 'Cổng thông tin nhà trường',
+              tagline: 'Luôn đi cùng con đến trường',
               semanticsLabel: 'Ứng dụng nhà trường. Chạm để bỏ qua phần giới thiệu',
               skipHint: 'Chạm để bỏ qua',
               builder: (context) {

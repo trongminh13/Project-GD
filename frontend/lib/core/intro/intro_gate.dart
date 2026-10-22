@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/intro/book_mascot_painter.dart';
 import 'package:ashadeep/core/intro/intro_policy.dart';
@@ -31,6 +32,8 @@ class IntroGate extends StatefulWidget {
     this.palette,
     this.holdLimit = const Duration(seconds: 1),
     this.reducedMotionDuration = const Duration(milliseconds: 700),
+    this.skipOnWeb = false,
+    this.isWebOverride,
   })  : policy = policy ?? SharedPrefsIntroPolicy(),
         duration = duration ?? const Duration(milliseconds: 2000);
 
@@ -61,6 +64,12 @@ class IntroGate extends StatefulWidget {
 
   /// Thời gian hiện hình tĩnh khi người dùng bật "giảm chuyển động".
   final Duration reducedMotionDuration;
+
+  /// Bỏ qua intro trong Flutter trên Web vì Web Loader (HTML/SVG) đã đảm nhiệm trọn vẹn màn nạp và chào thương hiệu.
+  final bool skipOnWeb;
+
+  /// Tham số phục vụ kiểm thử đơn vị mô phỏng môi trường Web.
+  final bool? isWebOverride;
 
   @override
   State<IntroGate> createState() => _IntroGateState();
@@ -95,6 +104,16 @@ class _IntroGateState extends State<IntroGate>
   }
 
   Future<void> _start() async {
+    final isWeb = widget.isWebOverride ?? kIsWeb;
+    if (widget.skipOnWeb && isWeb) {
+      if (!mounted) return;
+      setState(() {
+        _deciding = false;
+        _finished = true;
+      });
+      return;
+    }
+
     final show = await widget.policy.shouldShow();
     if (!mounted) return;
     if (!show) {

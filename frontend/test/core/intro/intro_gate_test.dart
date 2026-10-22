@@ -156,4 +156,24 @@ void main() {
     expect(find.text('Giáo Dục Đại Việt'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('trên Web khi cấu hình skipOnWeb = true: tự động vào thẳng màn hình đích', (tester) async {
+    final policy = _FakePolicy(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: IntroGate(
+          policy: policy,
+          ready: Future<void>.value(),
+          appName: 'Giáo Dục Đại Việt',
+          semanticsLabel: 'Ứng dụng nhà trường',
+          skipOnWeb: true,
+          isWebOverride: true,
+          builder: (_) => const Text('HOME'),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('HOME'), findsOneWidget);
+    expect(find.text('Giáo Dục Đại Việt'), findsNothing);
+  });
 }

@@ -11,6 +11,7 @@ class ParentAttendanceScreen extends StatefulWidget {
   @override
   State<ParentAttendanceScreen> createState() => _ParentAttendanceScreenState();
 }
+// check điểm thi cũng như là thông tin học tập của học sinh ra sao
 
 class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
   final CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -129,7 +130,9 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                       calendarStyle: CalendarStyle(
                         outsideDaysVisible: false,
                         todayDecoration: BoxDecoration(
-                          color: AppColors.primaryOf(context).withValues(alpha: 0.3),
+                          color: AppColors.primaryOf(
+                            context,
+                          ).withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
                         selectedDecoration: BoxDecoration(
@@ -256,16 +259,8 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildLegendItem(
-                "Present",
-                "$totalPresent",
-                AppColors.success,
-              ),
-              _buildLegendItem(
-                "Absent",
-                "$totalAbsent",
-                AppColors.error,
-              ),
+              _buildLegendItem("Present", "$totalPresent", AppColors.success),
+              _buildLegendItem("Absent", "$totalAbsent", AppColors.error),
               _buildLegendItem("Late", "1", const Color(0xFF42A5F5)),
             ],
           ),
@@ -314,10 +309,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Needs Attention",
-            style: AppTextStyles.heading2(context),
-          ),
+          Text("Needs Attention", style: AppTextStyles.heading2(context)),
           const SizedBox(height: 12),
           ListView.builder(
             shrinkWrap: true,
@@ -338,7 +330,9 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry.value).withValues(alpha: 0.1),
+                        color: _getStatusColor(
+                          entry.value,
+                        ).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -377,7 +371,9 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(entry.value).withValues(alpha: 0.1),
+                        color: _getStatusColor(
+                          entry.value,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

@@ -22,12 +22,42 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <style>
+    :root {
+      --bg-color: #FFFFFF;
+      --primary-color: #2457C5;
+      --primary-dark: #1D479F;
+      --limb-color: #202124;
+      --pupil-color: #202124;
+      --paper-color: #F5F6F7;
+      --line-color: #DADCE0;
+      --text-main: #202124;
+      --text-muted: #5F6368;
+      --slogan-color: #4A5568;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #202124;
+        --primary-color: #8AB4F8;
+        --primary-dark: #669DF6;
+        --limb-color: #E8EAED;
+        --pupil-color: #202124;
+        --paper-color: #303134;
+        --line-color: #3C4043;
+        --text-main: #F1F3F4;
+        --text-muted: #9AA0A6;
+        --slogan-color: #BDC1C6;
+      }
+    }
+
     body {
       margin: 0;
       padding: 0;
-      background: #FFFFFF;
+      background: var(--bg-color);
       font-family: "Plus Jakarta Sans", "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
     }
+
     #loading-screen {
       position: fixed;
       top: 0;
@@ -38,116 +68,537 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #FFFFFF;
+      background: var(--bg-color);
       z-index: 99999;
-      transition: opacity 0.3s ease-out;
+      transition: opacity 0.35s ease-out;
     }
-    .loading-card {
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-stage {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 28px 32px;
-      border-radius: 4px;
-      background: #FFFFFF;
-      border: 1px solid #DADCE0;
-      max-width: 340px;
-      width: 85%;
-      text-align: center;
+      justify-content: center;
+      user-select: none;
+      width: 100%;
     }
-    .loading-logo-box {
-      width: 48px;
-      height: 48px;
-      border-radius: 4px;
-      background: rgba(36, 87, 197, 0.08);
+
+    /* Sân khấu đường chạy ngang */
+    .mascot-track {
+      width: 100%;
+      max-width: 480px;
+      height: 155px;
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
     }
-    .loading-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #202124;
-      margin-bottom: 4px;
-      letter-spacing: -0.2px;
+
+    /* Đường mặt đất phẳng tĩnh dưới chân mascot */
+    .track-ground-line {
+      position: absolute;
+      bottom: 22px;
+      width: 280px;
+      height: 2px;
+      background: var(--line-color);
+      opacity: 0.5;
+      border-radius: 2px;
     }
-    .loading-subtitle {
-      font-size: 12.5px;
-      color: #5F6368;
-      margin-bottom: 20px;
+
+    /* Nhân vật Mascot di chuyển ngang theo chu kỳ 4.5s */
+    .mascot-runner {
+      width: 120px;
+      height: 140px;
+      position: relative;
+      animation: runnerTrackMotion 4.5s infinite ease-in-out;
+      will-change: transform, opacity;
     }
-    .loading-spinner {
-      width: 32px;
-      height: 32px;
-      border: 2.5px solid #E8F0FE;
-      border-top-color: #2457C5;
-      border-radius: 50%;
-      animation: spin 0.8s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
-      margin-bottom: 14px;
+
+    .mascot-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
     }
-    .loading-status {
-      font-size: 12px;
-      color: #2457C5;
-      font-weight: 600;
-      letter-spacing: 0.2px;
+
+    /* Mascot Animations Đồng Bộ Theo Timeline 4.5s */
+    .mascot-body-group {
+      animation: bodyBounceMotion 4.5s infinite ease-in-out;
+      transform-origin: 55px 84px;
     }
-    @keyframes spin {
+
+    .shadow-shape {
+      animation: shadowMotion 4.5s infinite ease-in-out;
+      transform-origin: 55px 115px;
+    }
+
+    .leg-l {
+      animation: legLeftMotion 4.5s infinite ease-in-out;
+      transform-origin: 33px 84px;
+    }
+
+    .leg-r {
+      animation: legRightMotion 4.5s infinite ease-in-out;
+      transform-origin: 61px 84px;
+    }
+
+    .arm-l {
+      animation: armLeftMotion 4.5s infinite ease-in-out;
+      transform-origin: 8px 34px;
+    }
+
+    .arm-r {
+      animation: armRightMotion 4.5s infinite ease-in-out;
+      transform-origin: 84px 34px;
+    }
+
+    .ribbon-shape {
+      animation: ribbonMotion 4.5s infinite ease-in-out;
+      transform-origin: 49px 84px;
+    }
+
+    .wave-lines {
+      animation: waveLinesMotion 4.5s infinite ease-in-out;
+      transform-origin: 84px 34px;
+    }
+
+    /* 1. Di chuyển cả nhân vật: Giữa vẫy tay -> Ra mép phải -> Mép trái -> Về giữa */
+    @keyframes runnerTrackMotion {
+      /* 0% - 24%: Đứng chính giữa sân khấu vẫy tay chào */
+      0%, 24% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      /* 24% - 50%: Chạy sang mép phải và khuất hẳn */
+      47% {
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(220px);
+        opacity: 0;
+      }
+      /* 50.1% - 54%: Nhảy tức thời sang mép trái ngoài màn hình (ẩn ngầm) */
+      50.1%, 54% {
+        transform: translateX(-220px);
+        opacity: 0;
+      }
+      /* 54.1%: Bắt đầu xuất hiện từ mép trái */
+      54.1% {
+        opacity: 1;
+      }
+      /* 54.1% - 85%: Bước từ mép trái vào lại giữa sân khấu */
+      85%, 100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* 2. Tay phải: Vẫy chào ở giữa (0-24%), đung đưa khi chạy (24-50% & 54-85%) */
+    @keyframes armRightMotion {
+      /* 0% - 24%: Từ thế nghỉ nâng tay vẫy chào 3 nhịp vui vẻ */
       0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      4% { transform: rotate(-38deg); }
+      9% { transform: rotate(-10deg); }
+      14% { transform: rotate(-42deg); }
+      19% { transform: rotate(-10deg); }
+      24% { transform: rotate(10deg); }
+
+      /* 24% - 50%: Chạy sang phải (vung tay đi bộ) */
+      28% { transform: rotate(-16deg); }
+      34% { transform: rotate(18deg); }
+      40% { transform: rotate(-16deg); }
+      46% { transform: rotate(18deg); }
+      50% { transform: rotate(0deg); }
+
+      /* 50.1% - 54%: Ẩn ngầm */
+      50.1%, 54% { transform: rotate(0deg); }
+
+      /* 54.1% - 85%: Chạy từ trái vào giữa (vung tay đi bộ) */
+      58% { transform: rotate(-16deg); }
+      64% { transform: rotate(18deg); }
+      70% { transform: rotate(-16deg); }
+      76% { transform: rotate(18deg); }
+      82% { transform: rotate(-10deg); }
+      85%, 100% { transform: rotate(0deg); }
     }
-    @media (prefers-color-scheme: dark) {
-      body, #loading-screen {
-        background: #202124;
+
+    /* 3. Tay trái: Buông nhẹ ở giữa (0-24%), vung ngược pha khi chạy */
+    @keyframes armLeftMotion {
+      0%, 24% { transform: rotate(0deg); }
+
+      /* 24% - 50%: Vung tay đi bộ */
+      28% { transform: rotate(18deg); }
+      34% { transform: rotate(-16deg); }
+      40% { transform: rotate(18deg); }
+      46% { transform: rotate(-16deg); }
+      50% { transform: rotate(0deg); }
+
+      50.1%, 54% { transform: rotate(0deg); }
+
+      /* 54.1% - 85%: Vung tay vào giữa */
+      58% { transform: rotate(18deg); }
+      64% { transform: rotate(-16deg); }
+      70% { transform: rotate(18deg); }
+      76% { transform: rotate(-16deg); }
+      82% { transform: rotate(10deg); }
+      85%, 100% { transform: rotate(0deg); }
+    }
+
+    /* 4. Chân trái: Đứng vững ở giữa, bước so le khi chạy */
+    @keyframes legLeftMotion {
+      0%, 24% { transform: translateY(0); }
+
+      /* 24% - 50%: Bước chân */
+      28% { transform: translateY(-7px) rotate(-3deg); }
+      34% { transform: translateY(0); }
+      40% { transform: translateY(-7px) rotate(-3deg); }
+      46% { transform: translateY(0); }
+      50% { transform: translateY(0); }
+
+      50.1%, 54% { transform: translateY(0); }
+
+      /* 54.1% - 85%: Bước chân vào giữa */
+      58% { transform: translateY(-7px) rotate(-3deg); }
+      64% { transform: translateY(0); }
+      70% { transform: translateY(-7px) rotate(-3deg); }
+      76% { transform: translateY(0); }
+      82% { transform: translateY(-3px); }
+      85%, 100% { transform: translateY(0); }
+    }
+
+    /* 5. Chân phải: Đứng vững ở giữa, bước so le đối xứng */
+    @keyframes legRightMotion {
+      0%, 24% { transform: translateY(0); }
+
+      /* 24% - 50%: Bước chân so le */
+      28% { transform: translateY(0); }
+      34% { transform: translateY(-7px) rotate(3deg); }
+      40% { transform: translateY(0); }
+      46% { transform: translateY(-7px) rotate(3deg); }
+      50% { transform: translateY(0); }
+
+      50.1%, 54% { transform: translateY(0); }
+
+      /* 54.1% - 85%: Bước chân vào giữa */
+      58% { transform: translateY(0); }
+      64% { transform: translateY(-7px) rotate(3deg); }
+      70% { transform: translateY(0); }
+      76% { transform: translateY(-7px) rotate(3deg); }
+      82% { transform: translateY(0); }
+      85%, 100% { transform: translateY(0); }
+    }
+
+    /* 6. Thân sách: Thở nhẹ ở giữa, nghiêng nhẹ & nhấp nhô khi chạy */
+    @keyframes bodyBounceMotion {
+      /* 0% - 24%: Thở nhẹ */
+      0% { transform: translateY(0) rotate(0deg); }
+      12% { transform: translateY(-3px) rotate(-0.5deg); }
+      24% { transform: translateY(0) rotate(0deg); }
+
+      /* 24% - 50%: Nghiêng người hướng chạy và nhún nhảy */
+      28% { transform: translateY(-6px) rotate(2.5deg); }
+      34% { transform: translateY(0) rotate(1deg); }
+      40% { transform: translateY(-6px) rotate(2.5deg); }
+      46% { transform: translateY(0) rotate(1deg); }
+      50% { transform: translateY(0) rotate(0deg); }
+
+      50.1%, 54% { transform: translateY(0) rotate(0deg); }
+
+      /* 54.1% - 85%: Nghiêng người hướng chạy vào giữa */
+      58% { transform: translateY(-6px) rotate(2.5deg); }
+      64% { transform: translateY(0) rotate(1deg); }
+      70% { transform: translateY(-6px) rotate(2.5deg); }
+      76% { transform: translateY(0) rotate(1deg); }
+      82% { transform: translateY(-2px) rotate(0.5deg); }
+      85%, 100% { transform: translateY(0) rotate(0deg); }
+    }
+
+    /* 7. Bóng đổ: Co giãn theo nhịp nhún nhảy và biến mất khi ra ngoài */
+    @keyframes shadowMotion {
+      0%, 24% { transform: scaleX(1); opacity: 0.75; }
+      12% { transform: scaleX(0.9); opacity: 0.6; }
+
+      28%, 40% { transform: scaleX(0.82); opacity: 0.5; }
+      34%, 46% { transform: scaleX(1); opacity: 0.75; }
+      50% { transform: scaleX(1); opacity: 0; }
+
+      50.1%, 54% { opacity: 0; }
+
+      58%, 70% { transform: scaleX(0.82); opacity: 0.5; }
+      64%, 76% { transform: scaleX(1); opacity: 0.75; }
+      82% { transform: scaleX(0.9); opacity: 0.65; }
+      85%, 100% { transform: scaleX(1); opacity: 0.75; }
+    }
+
+    /* 8. Dây bookmark đung đưa khi chạy */
+    @keyframes ribbonMotion {
+      0%, 24% { transform: rotate(0deg); }
+      28%, 40%, 58%, 70% { transform: rotate(-7deg); }
+      34%, 46%, 64%, 76% { transform: rotate(7deg); }
+      85%, 100% { transform: rotate(0deg); }
+    }
+
+    /* 9. Vạch sóng vẫy tay khi chào ở giữa (0% - 24%) */
+    @keyframes waveLinesMotion {
+      0%, 3% { opacity: 0; }
+      4%, 22% { opacity: 1; }
+      6%, 12%, 18% { opacity: 0.25; }
+      9%, 15%, 21% { opacity: 1; }
+      24%, 100% { opacity: 0; }
+    }
+
+    /* Text & Transition Layout */
+    .text-stage-wrap {
+      margin-top: 14px;
+      height: 54px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 280px;
+    }
+
+    /* Phase 1: Loading Info */
+    .loading-status-wrap {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: -0.1px;
+      transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+      position: absolute;
+    }
+
+    .dot {
+      display: inline-block;
+      animation: dotPulse 1.2s infinite ease-in-out;
+      font-weight: 700;
+    }
+
+    .dot-1 { animation-delay: 0s; }
+    .dot-2 { animation-delay: 0.22s; }
+    .dot-3 { animation-delay: 0.44s; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.2; transform: translateY(0px); }
+      40% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    /* Phase 2: Brand Reveal */
+    .brand-reveal-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: 0.6px;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+
+    .brand-slogan {
+      font-size: 13.5px;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--slogan-color);
+      letter-spacing: -0.1px;
+      margin-top: 5px;
+    }
+
+    /* State Switch khi Flutter đã sẵn sàng */
+    #loading-screen.ready .loading-status-wrap {
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+    }
+
+    #loading-screen.ready .brand-reveal-wrap {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Tôn trọng cài đặt giảm chuyển động của hệ điều hành */
+    @media (prefers-reduced-motion: reduce) {
+      .mascot-runner,
+      .mascot-body-group,
+      .shadow-shape,
+      .leg-l,
+      .leg-r,
+      .arm-l,
+      .arm-r,
+      .ribbon-shape,
+      .wave-lines,
+      .dot {
+        animation: none !important;
       }
-      .loading-card {
-        background: #202124;
-        border-color: #3C4043;
+      .mascot-runner {
+        transform: translateX(0) !important;
+        opacity: 1 !important;
       }
-      .loading-logo-box {
-        background: rgba(138, 180, 248, 0.12);
-      }
-      .loading-logo-box svg {
-        fill: #8AB4F8;
-      }
-      .loading-title {
-        color: #F1F3F4;
-      }
-      .loading-subtitle {
-        color: #9AA0A6;
-      }
-      .loading-spinner {
-        border-color: #3C4043;
-        border-top-color: #8AB4F8;
-      }
-      .loading-status {
-        color: #8AB4F8;
+      .wave-lines {
+        opacity: 0 !important;
       }
     }
   </style>
 </head>
 <body>
   <div id="loading-screen">
-    <div class="loading-card">
-      <div class="loading-logo-box">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="#2457C5">
-          <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-        </svg>
+    <div class="loader-stage">
+      <!-- Sân khấu đường chạy ngang: Chú sách chạy Loop tuần hoàn -->
+      <div class="mascot-track">
+        <div class="track-ground-line"></div>
+        <div class="mascot-runner">
+          <svg class="mascot-svg" viewBox="0 0 110 130" xmlns="http://www.w3.org/2000/svg">
+            <!-- 1. Bóng đổ phẳng di chuyển đồng bộ dưới chân chú sách -->
+            <rect class="shadow-shape" x="24" y="115" width="62" height="4" rx="2" fill="var(--line-color)"/>
+
+            <!-- 2. Chân trái (so le bước) -->
+            <g class="leg-l">
+              <rect x="29" y="84" width="8" height="18" fill="var(--limb-color)"/>
+              <rect x="29" y="96" width="8" height="3" fill="#FFFFFF"/>
+              <rect x="25" y="102" width="18" height="6" fill="var(--limb-color)"/>
+              <rect x="25" y="106" width="18" height="2" fill="var(--paper-color)"/>
+            </g>
+
+            <!-- 3. Chân phải (so le bước) -->
+            <g class="leg-r">
+              <rect x="57" y="84" width="8" height="18" fill="var(--limb-color)"/>
+              <rect x="57" y="96" width="8" height="3" fill="#FFFFFF"/>
+              <rect x="53" y="102" width="18" height="6" fill="var(--limb-color)"/>
+              <rect x="53" y="106" width="18" height="2" fill="var(--paper-color)"/>
+            </g>
+
+            <!-- 4. Thân sách & Tay -->
+            <g class="mascot-body-group">
+              <!-- Tay trái phía sau -->
+              <g class="arm-l">
+                <rect x="3" y="30" width="10" height="6" fill="var(--primary-dark)"/>
+                <rect x="4" y="34" width="8" height="22" fill="var(--limb-color)"/>
+                <rect x="3" y="54" width="10" height="3" fill="#FFFFFF"/>
+                <rect x="2" y="57" width="12" height="9" fill="var(--limb-color)"/>
+                <rect x="12" y="58" width="3" height="5" fill="var(--limb-color)"/>
+              </g>
+
+              <!-- Dây Bookmark đung đưa -->
+              <g class="ribbon-shape">
+                <rect x="46" y="84" width="6" height="9" fill="var(--primary-dark)"/>
+                <rect x="46" y="91" width="2" height="4" fill="var(--primary-color)"/>
+                <rect x="50" y="91" width="2" height="4" fill="var(--primary-color)"/>
+              </g>
+
+              <!-- Bìa sau & Khối trang giấy dày 2.5D -->
+              <rect x="16" y="6" width="70" height="78" fill="var(--primary-dark)"/>
+              <rect x="80" y="9" width="5" height="73" fill="var(--paper-color)"/>
+              <rect x="82" y="12" width="1" height="68" fill="var(--line-color)"/>
+
+              <rect x="14" y="78" width="68" height="8" fill="var(--paper-color)"/>
+              <rect x="22" y="81" width="58" height="2" fill="var(--line-color)"/>
+              <rect x="24" y="84" width="54" height="1" fill="var(--line-color)"/>
+
+              <!-- Bìa chính mặt trước & Gáy sách -->
+              <rect x="12" y="8" width="68" height="72" fill="var(--primary-color)"/>
+              <rect x="12" y="8" width="12" height="72" fill="var(--primary-dark)"/>
+              <rect x="24" y="8" width="2" height="72" fill="var(--line-color)"/>
+
+              <!-- Đai gáy sách trang trí -->
+              <rect x="14" y="18" width="8" height="3" fill="#FFFFFF"/>
+              <rect x="14" y="24" width="8" height="2" fill="#FFFFFF"/>
+              <rect x="14" y="66" width="8" height="3" fill="#FFFFFF"/>
+
+              <!-- Họa tiết bìa -->
+              <rect x="32" y="16" width="38" height="6" fill="#FFFFFF"/>
+              <rect x="32" y="25" width="24" height="4" fill="var(--paper-color)"/>
+              <rect x="72" y="12" width="4" height="12" fill="#FFFFFF"/>
+
+              <!-- Lông mày nhướng vui vẻ -->
+              <rect x="33" y="38" width="14" height="3" fill="var(--primary-dark)"/>
+              <rect x="57" y="38" width="14" height="3" fill="var(--primary-dark)"/>
+
+              <!-- Mắt trái -->
+              <rect x="33" y="44" width="14" height="15" fill="#FFFFFF"/>
+              <rect x="40" y="48" width="7" height="9" fill="var(--pupil-color)"/>
+              <rect x="41" y="49" width="3" height="3" fill="#FFFFFF"/>
+
+              <!-- Mắt phải -->
+              <rect x="57" y="44" width="14" height="15" fill="#FFFFFF"/>
+              <rect x="64" y="48" width="7" height="9" fill="var(--pupil-color)"/>
+              <rect x="65" y="49" width="3" height="3" fill="#FFFFFF"/>
+
+              <!-- Má hồng phẳng -->
+              <rect x="29" y="59" width="6" height="3" fill="var(--primary-dark)"/>
+              <rect x="69" y="59" width="6" height="3" fill="var(--primary-dark)"/>
+
+              <!-- Khuôn miệng cười mỉm thân thiện -->
+              <rect x="45" y="65" width="14" height="4" fill="#FFFFFF"/>
+              <rect x="43" y="63" width="2" height="3" fill="#FFFFFF"/>
+              <rect x="59" y="63" width="2" height="3" fill="#FFFFFF"/>
+
+              <!-- Vạch sóng vẫy tay khi vẫy chào ở giữa -->
+              <g class="wave-lines">
+                <path d="M 98 22 Q 105 27 98 32" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M 102 18 Q 110 27 102 36" stroke="var(--primary-dark)" stroke-width="2" stroke-linecap="round" fill="none"/>
+              </g>
+
+              <!-- Tay phải phía trước: Vẫy chào khi ở giữa và vung tay khi chạy -->
+              <g class="arm-r">
+                <rect x="79" y="30" width="10" height="6" fill="var(--primary-dark)"/>
+                <rect x="80" y="34" width="8" height="22" fill="var(--limb-color)"/>
+                <rect x="79" y="54" width="10" height="3" fill="#FFFFFF"/>
+                <rect x="78" y="57" width="12" height="9" fill="var(--limb-color)"/>
+                <rect x="75" y="58" width="3" height="5" fill="var(--limb-color)"/>
+              </g>
+            </g>
+          </svg>
+        </div>
       </div>
-      <div class="loading-title">Cổng Thông Tin Giáo Dục Đại Việt</div>
-      <div class="loading-subtitle">Hệ thống quản lý học tập & học liệu số</div>
-      <div class="loading-spinner"></div>
-      <div class="loading-status">Đang nạp ứng dụng...</div>
+
+      <!-- Layout chữ 2 pha -->
+      <div class="text-stage-wrap">
+        <!-- Pha 1: Đang nạp - "Đợi một tí nhé..." -->
+        <div class="loading-status-wrap">
+          <span>Đợi một tí nhé</span>
+          <span class="dot-pulse"><span class="dot dot-1">.</span><span class="dot dot-2">.</span><span class="dot dot-3">.</span></span>
+        </div>
+
+        <!-- Pha 2: Chuyển giao Thương hiệu khi nạp xong -->
+        <div class="brand-reveal-wrap">
+          <div class="brand-title">GIÁO DỤC ĐẠI VIỆT</div>
+          <div class="brand-slogan">Luôn đi cùng con đến trường</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     window.addEventListener('flutter-first-frame', function () {
-      var loader = document.getElementById('loading-screen');
-      if (loader) {
-        loader.style.opacity = '0';
+      var screen = document.getElementById('loading-screen');
+      if (screen) {
+        // Khi Flutter nạp xong khung hình đầu tiên, Web loader mờ dần ngay
+        // để chuyển giao trọn vẹn màn hình cho chú sách vẫy tay chào của Flutter
+        screen.classList.add('fade-out');
         setTimeout(function() {
-          loader.remove();
-        }, 400);
+          if (screen.parentNode) {
+            screen.parentNode.removeChild(screen);
+          }
+        }, 350);
       }
     });
   </script>
