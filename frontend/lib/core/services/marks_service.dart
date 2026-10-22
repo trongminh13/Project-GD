@@ -1,35 +1,25 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:ashadeep/utils/constants.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_client.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/models/markbook.dart';
 
 class MarksService {
   static final MarksService _instance = MarksService._internal();
   factory MarksService() => _instance;
-  MarksService._internal();
+  MarksService._internal() : _apiClient = ApiClient.instance;
+
+  final ApiClient _apiClient;
 
   /// Fetches published marks for a specific student id
   Future<List<Map<String, dynamic>>> getStudentMarks(String studentId) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/marks/$studentId');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/marks/$studentId',
+        policy: ApiTimeoutPolicy.fastRead,
       );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data);
+      if (res is List) {
+        return List<Map<String, dynamic>>.from(res);
       }
-    } catch (_) {
-      // Return empty on failure
-    }
+    } catch (_) {}
     return [];
   }
 
@@ -39,29 +29,21 @@ class MarksService {
     String studentId, {
     String? academicYearId,
   }) async {
-    final token = await AuthService().getToken();
-    String path = '${ApiConstants.baseUrl}/marks/student/$studentId/markbook';
+    final queryParams = <String, dynamic>{};
     if (academicYearId != null) {
-      path += '?academicYearId=$academicYearId';
+      queryParams['academicYearId'] = academicYearId;
     }
-    final url = Uri.parse(path);
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/marks/student/$studentId/markbook',
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+        policy: ApiTimeoutPolicy.fastRead,
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return StudentMarkbook.fromJson(data);
+      if (res is Map<String, dynamic>) {
+        return StudentMarkbook.fromJson(res);
       }
-    } catch (_) {
-      // Return null on failure – caller shows empty state
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -73,33 +55,26 @@ class MarksService {
     String? subject,
     int? maxMarks,
   }) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/marks/bulk');
-
-    List<Map<String, dynamic>> payload = [];
+    final List<Map<String, dynamic>> payload = [];
     studentMarks.forEach((studentId, marks) {
       payload.add({'studentId': studentId, 'marksObtained': marks});
     });
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      await _apiClient.post(
+        '/marks/bulk',
+        body: {
           'className': className,
           'assessmentId': assessmentId,
           'subject': subject,
           'maxMarks': maxMarks,
           'records': payload,
-        }),
+        },
+        policy: ApiTimeoutPolicy.mutation,
       );
-
-      return response.statusCode == 200 || response.statusCode == 201;
+      return true;
     } catch (_) {
-      return false; // Correct failure indicator, no mock success
+      return false;
     }
   }
 }

@@ -1,12 +1,12 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:ashadeep/utils/constants.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_client.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 
 class LeaveRequestService {
   static final LeaveRequestService _instance = LeaveRequestService._internal();
   factory LeaveRequestService() => _instance;
-  LeaveRequestService._internal();
+  LeaveRequestService._internal() : _apiClient = ApiClient.instance;
+
+  final ApiClient _apiClient;
 
   /// Phụ huynh nộp đơn xin nghỉ phép
   Future<Map<String, dynamic>> submitLeaveRequest({
@@ -15,30 +15,18 @@ class LeaveRequestService {
     required String endDate,
     required String reason,
   }) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/leave-requests');
-
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      final data = await _apiClient.post(
+        '/leave-requests',
+        body: {
           'studentId': studentId,
           'startDate': startDate,
           'endDate': endDate,
           'reason': reason,
-        }),
+        },
+        policy: ApiTimeoutPolicy.mutation,
       );
-
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': data};
-      } else {
-        return {'success': false, 'message': data['message'] ?? 'Lỗi khi gửi đơn'};
-      }
+      return {'success': true, 'data': data};
     } catch (e) {
       return {'success': false, 'message': 'Không thể kết nối đến máy chủ: $e'};
     }
@@ -46,42 +34,24 @@ class LeaveRequestService {
 
   /// Phụ huynh xem danh sách đơn đã nộp
   Future<List<dynamic>> getMyRequests() async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/leave-requests/my-requests');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/leave-requests/my-requests',
+        policy: ApiTimeoutPolicy.fastRead,
       );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
-      }
+      if (res is List) return res;
     } catch (_) {}
     return [];
   }
 
   /// Giáo viên xem các đơn chờ duyệt của lớp chủ nhiệm
   Future<List<dynamic>> getPendingRequestsForTeacher() async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/leave-requests/pending');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/leave-requests/pending',
+        policy: ApiTimeoutPolicy.fastRead,
       );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
-      }
+      if (res is List) return res;
     } catch (_) {}
     return [];
   }
@@ -92,30 +62,30 @@ class LeaveRequestService {
     required String decision, // APPROVED hoặc REJECTED
     String? teacherNote,
   }) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/leave-requests/$requestId/review');
-
     try {
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      final data = await _apiClient.put(
+        '/leave-requests/$requestId/review',
+        body: {
           'decision': decision,
-          'teacherNote': teacherNote ?? '',
-        }),
+          'teacherNote': teacherNote,
+        },
+        policy: ApiTimeoutPolicy.mutation,
       );
-
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data};
-      } else {
-        return {'success': false, 'message': data['message'] ?? 'Lỗi khi xử lý đơn'};
-      }
+      return {'success': true, 'data': data};
     } catch (e) {
-      return {'success': false, 'message': 'Không thể kết nối đến máy chủ: $e'};
+      return {'success': false, 'message': 'Không thể kết nối máy chủ: $e'};
     }
+  }
+
+  /// Lấy lịch sử nghỉ phép của một học sinh cụ thể
+  Future<List<dynamic>> getStudentLeaveHistory(int studentId) async {
+    try {
+      final res = await _apiClient.get(
+        '/leave-requests/student/$studentId',
+        policy: ApiTimeoutPolicy.fastRead,
+      );
+      if (res is List) return res;
+    } catch (_) {}
+    return [];
   }
 }

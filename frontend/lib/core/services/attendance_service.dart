@@ -1,40 +1,33 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:ashadeep/utils/constants.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/core/network/api_client.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 
 class AttendanceService {
   static final AttendanceService _instance = AttendanceService._internal();
   factory AttendanceService() => _instance;
-  AttendanceService._internal();
+  AttendanceService._internal() : _apiClient = ApiClient.instance;
+
+  final ApiClient _apiClient;
 
   /// Fetches attendance records for a specific student
   Future<Map<DateTime, String>> getStudentAttendance(String studentId) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/attendance/student/$studentId');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/attendance/student/$studentId',
+        policy: ApiTimeoutPolicy.fastRead,
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        Map<DateTime, String> attendanceMap = {};
-        for (var record in data) {
-          DateTime date = DateTime.parse(record['date']);
-          attendanceMap[DateTime.utc(date.year, date.month, date.day)] =
-              record['status'];
+      if (res is List) {
+        final Map<DateTime, String> attendanceMap = {};
+        for (final record in res) {
+          if (record is Map && record['date'] != null) {
+            final DateTime date = DateTime.parse(record['date']);
+            attendanceMap[DateTime.utc(date.year, date.month, date.day)] =
+                record['status']?.toString() ?? 'PRESENT';
+          }
         }
         return attendanceMap;
       }
-    } catch (_) {
-      // Empty on failure
-    }
+    } catch (_) {}
     return {};
   }
 
@@ -44,10 +37,7 @@ class AttendanceService {
     String dateISO,
     Map<String, bool> attendanceData,
   ) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/attendance/bulk');
-
-    List<Map<String, dynamic>> payload = [];
+    final List<Map<String, dynamic>> payload = [];
     attendanceData.forEach((studentId, isPresent) {
       payload.add({
         'studentId': int.tryParse(studentId) ?? studentId,
@@ -56,20 +46,16 @@ class AttendanceService {
     });
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      await _apiClient.post(
+        '/attendance/bulk',
+        body: {
           'className': className,
           'date': dateISO,
           'records': payload,
-        }),
+        },
+        policy: ApiTimeoutPolicy.mutation,
       );
-
-      return response.statusCode == 200 || response.statusCode == 201;
+      return true;
     } catch (_) {
       return false;
     }

@@ -1,8 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:ashadeep/core/network/api_client.dart';
+import 'package:ashadeep/core/network/api_timeout_policy.dart';
 import 'package:ashadeep/models/school_class.dart';
-import 'package:ashadeep/utils/constants.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
 
 class ClassService {
   static final ClassService _instance = ClassService._internal();
@@ -11,8 +9,9 @@ class ClassService {
     return _instance;
   }
 
-  ClassService._internal();
+  ClassService._internal() : _apiClient = ApiClient.instance;
 
+  final ApiClient _apiClient;
   final List<SchoolClass> _classes = [];
 
   List<SchoolClass> getAllClasses() {
@@ -21,23 +20,18 @@ class ClassService {
 
   /// Fetches classes from backend API and updates local cache
   Future<List<SchoolClass>> fetchClassesFromBackend() async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/classes');
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final res = await _apiClient.get(
+        '/classes',
+        policy: ApiTimeoutPolicy.fastRead,
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+      if (res is List) {
         _classes.clear();
-        for (var item in data) {
-          _classes.add(SchoolClass.fromJson(item));
+        for (var item in res) {
+          if (item is Map<String, dynamic>) {
+            _classes.add(SchoolClass.fromJson(item));
+          }
         }
       }
     } catch (_) {}
@@ -46,25 +40,18 @@ class ClassService {
   }
 
   Future<bool> createClassBackend(String grade, String section) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/classes');
-
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      final res = await _apiClient.post(
+        '/classes',
+        body: {
           'grade': grade,
           'section': section.isNotEmpty ? section : 'A',
-        }),
+        },
+        policy: ApiTimeoutPolicy.mutation,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final newClass = SchoolClass.fromJson(data);
+      if (res is Map<String, dynamic>) {
+        final newClass = SchoolClass.fromJson(res);
         _classes.add(newClass);
         return true;
       }

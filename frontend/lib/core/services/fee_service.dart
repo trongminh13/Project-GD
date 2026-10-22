@@ -1,14 +1,13 @@
-import 'dart:convert';
 import 'dart:math' as math;
-import 'package:http/http.dart' as http;
-import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/network/api_client.dart';
 import 'package:ashadeep/core/network/api_timeout_policy.dart';
-import 'package:ashadeep/core/services/auth_service.dart';
 
 class FeeService {
   static final FeeService _instance = FeeService._internal();
   factory FeeService() => _instance;
-  FeeService._internal();
+  FeeService._internal() : _apiClient = ApiClient.instance;
+
+  final ApiClient _apiClient;
 
   /// Sinh mã Idempotency-Key chuẩn UUIDv4 chống trừ tiền 2 lần khi mạng chập chờn
   static String generateIdempotencyKey() {
@@ -22,21 +21,13 @@ class FeeService {
 
   /// Fetches raw fee statement map containing pendingFees, paidFees, totalPending
   Future<Map<String, dynamic>> getFeeStatementRaw(String studentId) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/fees/statement/$studentId');
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(ApiTimeoutPolicy.fastRead.duration);
-      if (response.statusCode == 200) {
-        final dynamic decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic>) {
-          return decoded;
-        }
+      final res = await _apiClient.get(
+        '/fees/statement/$studentId',
+        policy: ApiTimeoutPolicy.fastRead,
+      );
+      if (res is Map<String, dynamic>) {
+        return res;
       }
     } catch (_) {}
     return {'pendingFees': [], 'paidFees': [], 'totalPending': 0};
@@ -45,7 +36,7 @@ class FeeService {
   /// Normalized fee statement for UI presentation
   Future<List<Map<String, dynamic>>> getFeeStatement(String studentId) async {
     final raw = await getFeeStatementRaw(studentId);
-    List<Map<String, dynamic>> result = [];
+    final List<Map<String, dynamic>> result = [];
 
     final pending = raw['pendingFees'] as List? ?? [];
     for (var f in pending) {
@@ -86,26 +77,20 @@ class FeeService {
     int? feeStructureId,
     String? idempotencyKey,
   }) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/fees/create-order');
     final key = idempotencyKey ?? generateIdempotencyKey();
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Idempotency-Key': key,
-        },
-        body: jsonEncode({
+      final res = await _apiClient.post(
+        '/fees/create-order',
+        headers: {'Idempotency-Key': key},
+        body: {
           'studentId': int.tryParse(studentId) ?? studentId,
           'feeStructureId': feeStructureId,
           'amount': amount,
-        }),
-      ).timeout(ApiTimeoutPolicy.transactional.duration);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['orderId'];
+        },
+        policy: ApiTimeoutPolicy.transactional,
+      );
+      if (res is Map<String, dynamic>) {
+        return res['orderId']?.toString();
       }
     } catch (_) {}
     return null;
@@ -120,50 +105,40 @@ class FeeService {
     int? feeStructureId,
     String? idempotencyKey,
   }) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/fees/verify-payment');
     final key = idempotencyKey ?? generateIdempotencyKey();
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Idempotency-Key': key,
-        },
-        body: jsonEncode(() {
-          final map = <String, dynamic>{
-            'orderId': orderId,
-            'razorpayOrderId': orderId,
-            'paymentId': paymentId,
-            'razorpayPaymentId': paymentId,
-            'signature': signature,
-            'razorpaySignature': signature,
-          };
-          if (studentId != null) map['studentId'] = int.tryParse(studentId) ?? studentId;
-          if (feeStructureId != null) map['feeStructureId'] = feeStructureId;
-          return map;
-        }()),
-      ).timeout(ApiTimeoutPolicy.transactional.duration);
-      return response.statusCode == 200;
-    } catch (_) {}
-    return false;
+      final map = <String, dynamic>{
+        'orderId': orderId,
+        'razorpayOrderId': orderId,
+        'paymentId': paymentId,
+        'razorpayPaymentId': paymentId,
+        'signature': signature,
+        'razorpaySignature': signature,
+      };
+      if (studentId != null) map['studentId'] = int.tryParse(studentId) ?? studentId;
+      if (feeStructureId != null) map['feeStructureId'] = feeStructureId;
+
+      await _apiClient.post(
+        '/fees/verify-payment',
+        headers: {'Idempotency-Key': key},
+        body: map,
+        policy: ApiTimeoutPolicy.transactional,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Đối soát trạng thái giao dịch thanh toán khi gặp sự cố mạng/timeout
   Future<Map<String, dynamic>?> checkPaymentStatus(String orderId) async {
-    final token = await AuthService().getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/fees/order-status/$orderId');
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(ApiTimeoutPolicy.fastRead.duration);
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>?;
+      final res = await _apiClient.get(
+        '/fees/order-status/$orderId',
+        policy: ApiTimeoutPolicy.fastRead,
+      );
+      if (res is Map<String, dynamic>) {
+        return res;
       }
     } catch (_) {}
     return null;

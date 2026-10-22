@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/theme/theme_manager.dart';
 import 'package:ashadeep/core/theme/app_typography.dart';
-import 'package:ashadeep/screens/splash_screen.dart';
+import 'package:ashadeep/core/intro/intro_gate.dart';
+import 'package:ashadeep/core/services/app_bootstrap_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
@@ -27,8 +28,29 @@ void main() async {
   runApp(const AdminApp());
 }
 
-class AdminApp extends StatelessWidget {
+class AdminApp extends StatefulWidget {
   const AdminApp({super.key});
+
+  @override
+  State<AdminApp> createState() => _AdminAppState();
+}
+
+class _AdminAppState extends State<AdminApp> {
+  late final Future<Widget> _bootstrapFuture;
+  Widget? _resolvedScreen;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapFuture = AppBootstrapService.resolveInitialScreen().then((screen) {
+      if (mounted) {
+        setState(() {
+          _resolvedScreen = screen;
+        });
+      }
+      return screen;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +196,39 @@ class AdminApp extends StatelessWidget {
                 },
               ),
             ),
-            home: const SplashScreen(),
+            home: IntroGate(
+              ready: _bootstrapFuture,
+              appName: 'Giáo Dục Đại Việt',
+              tagline: 'Cổng thông tin nhà trường',
+              semanticsLabel: 'Ứng dụng nhà trường. Chạm để bỏ qua phần giới thiệu',
+              skipHint: 'Chạm để bỏ qua',
+              builder: (context) {
+                if (_resolvedScreen != null) {
+                  return _resolvedScreen!;
+                }
+                return FutureBuilder<Widget>(
+                  future: _bootstrapFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return snapshot.data!;
+                    }
+                    return const Scaffold(
+                      backgroundColor: Colors.white,
+                      body: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF2457C5),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           );
         },
       ),

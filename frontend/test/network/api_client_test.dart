@@ -135,5 +135,66 @@ void main() {
         ),
       );
     });
+
+    test('ApiClient.instance returns singleton instance', () {
+      final a = ApiClient();
+      final b = ApiClient.instance;
+      expect(identical(a, b), isTrue);
+    });
+
+    test('ETag 304 returns cached data without re-decoding payload', () async {
+      int serverCalls = 0;
+      final mockClient = MockClient((request) async {
+        serverCalls++;
+        if (request.headers['If-None-Match'] == '"etag_v1"') {
+          return http.Response('', 304);
+        }
+        return http.Response.bytes(
+          utf8.encode(jsonEncode({'data': 'phiên_bản_1'})),
+          200,
+          headers: {'etag': '"etag_v1"', 'content-type': 'application/json'},
+        );
+      });
+
+      final apiClient = ApiClient(client: mockClient, authService: MockAuthService());
+
+      // Lần 1: Nhận 200 OK và ETag
+      final res1 = await apiClient.get('/api/cached-resource');
+      expect(res1['data'], 'phiên_bản_1');
+      expect(serverCalls, 1);
+
+      // Lần 2: Server trả về 304 Not Modified, client tự lấy data từ cache
+      final res2 = await apiClient.get('/api/cached-resource');
+      expect(res2['data'], 'phiên_bản_1');
+      expect(serverCalls, 2);
+    });
+
+    test('Request Deduplication merges concurrent identical GET requests', () async {
+      int requestCount = 0;
+      final mockClient = MockClient((request) async {
+        requestCount++;
+        await Future.delayed(const Duration(milliseconds: 50));
+        return http.Response.bytes(
+          utf8.encode(jsonEncode({'count': requestCount})),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final apiClient = ApiClient(client: mockClient, authService: MockAuthService());
+
+      // Bắn 3 requests đồng thời
+      final futures = await Future.wait([
+        apiClient.get('/api/duplicate-test'),
+        apiClient.get('/api/duplicate-test'),
+        apiClient.get('/api/duplicate-test'),
+      ]);
+
+      // Server chỉ nhận duy nhất 1 cuộc gọi mạng thực sự
+      expect(requestCount, 1);
+      expect(futures[0]['count'], 1);
+      expect(futures[1]['count'], 1);
+      expect(futures[2]['count'], 1);
+    });
   });
 }

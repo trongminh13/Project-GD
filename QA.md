@@ -2421,3 +2421,94 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + `test/widgets/student_adaptive_dashboard_test.dart`: **PASSED**.
   + `test/widgets/student_dashboard_nav_test.dart`: **PASSED**.
 - Giao diện bảng điểm hiển thị cực kỳ gọn gàng, dữ liệu phân cấp rõ ràng, dễ nhìn, tối ưu hoàn hảo cho cả thiết bị di động bề ngang hẹp và tablet/desktop.
+
+---
+
+### GIAI ĐOẠN 34: TỐI ƯU HÓA TOÀN DIỆN HIỆU NĂNG MẠNG (NETWORK PERFORMANCE), KIẾN TRÚC CLIENT & TRẢI NGHIỆM RESILIENT SWR
+
+**1. Mục Tiêu & Yêu Cầu Kỹ Thuật (Senior Network, Senior Dev & Senior Design):**
+- **Senior Network**:
+  + Triệt tiêu chi phí bắt tay TLS lặp lại (150ms – 250ms) bằng **Persistent Connection Pool (HTTP Keep-Alive)** trên toàn bộ ứng dụng di động.
+  + Kích hoạt **ETag Caching (HTTP 304 Not Modified)** phía Spring Boot qua `ShallowEtagHeaderFilter` để tiết kiệm đến 90% băng thông cho dữ liệu không thay đổi.
+  + Cấu hình Embedded Tomcat Keep-Alive (`keep-alive-timeout=60000`, `max-keep-alive-requests=100`) và tắt console SQL logging `spring.jpa.show-sql=false` để giải phóng I/O CPU server.
+  + Bổ sung cơ chế **Exponential Backoff Retry** (tự động thử lại 2 lần với giãn cách 500ms, 1000ms) cho các lỗi rớt mạng/timeout gián đoạn.
+- **Senior Dev**:
+  + Thống nhất kiến trúc: Chuyển đổi `ApiClient` thành **Singleton duy nhất** nắm giữ persistent `http.Client`.
+  + Tích hợp **Request Deduplication**: Gộp các cuộc gọi GET trùng URL gửi đồng thời từ nhiều widget thành một `Future` duy nhất.
+  + Triệt tiêu hiện tượng drop frame UI (UI Jank) bằng cơ chế **Background Isolate JSON Parsing (`compute`)** cho các payload lớn (>20KB).
+  + Di chuyển toàn bộ 8 service phân mảnh (`MarksService`, `HomeworkService`, `StudentService`, `AttendanceService`, `TeacherService`, `FeeService`, `LeaveRequestService`, `ClassService`) từ các lệnh `http.get/post` thô sang dùng `ApiClient.instance`.
+- **Senior Design**:
+  + Xây dựng mô hình **Stale-While-Revalidate (SWR)**: Mở màn hình hiển thị ngay lập tức (0ms latency) từ local cache trong khi kiểm tra cập nhật ngầm.
+  + Thiết kế bộ widget **`AppShimmer` / `AppShimmerCard`** mô phỏng khung xương skeleton chuẩn bo góc 4px phẳng đồng bộ toàn hệ thống.
+  + Xây dựng **`NetworkStatusBanner`** hiển thị trạng thái đồng bộ ngầm và cảnh báo mất mạng mềm mại kèm nút "Thử lại", loại bỏ các popup dialog đỏ gián đoạn người dùng.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+- **Backend (Spring Boot)**:
+  + [`WebNetworkConfig.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/config/WebNetworkConfig.java): Đăng ký `ShallowEtagHeaderFilter` Bean cho các đường dẫn `/api/*`.
+  + [`application.properties`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/application.properties): Đổi `spring.jpa.show-sql=false`, bổ sung cấu hình Tomcat keep-alive và thread pool.
+  + [`WebNetworkEtagTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/WebNetworkEtagTest.java): Kiểm thử tự động chứng thực ETag header được sinh và phản hồi `304 Not Modified` khi gửi `If-None-Match`.
+- **Frontend Core Network**:
+  + [`network_cache_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/network_cache_manager.dart): Quản lý In-Memory Cache, ETag entries, timestamp và hỗ trợ `invalidate` theo tiền tố URL.
+  + [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart): Singleton `_sharedHttpClient`, Request Deduplication qua `_inFlightGets`, ETag 304 resolution, Isolate decoding (`compute(_parseJsonInBackground, bytes)`), Exponential Backoff Retry và tự động invalidate cache khi mutation (`post`/`put`/`delete`).
+- **Frontend Services Migration**:
+  + Chuẩn hóa 100% các service: [`marks_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/marks_service.dart), [`homework_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_service.dart), [`student_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_service.dart), [`attendance_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/attendance_service.dart), [`teacher_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/teacher_service.dart), [`fee_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/fee_service.dart), [`leave_request_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/leave_request_service.dart), [`school_class_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/school_class_service.dart).
+- **Frontend UI/UX**:
+  + [`app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Widget Skeleton Shimmer bo góc 4px phẳng không phụ thuộc thư viện ngoài.
+  + [`network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Banner nổi thông báo trạng thái mạng mềm mại, hỗ trợ nút "Thử lại".
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- **Backend Test (`./mvnw test -Dtest=WebNetworkEtagTest`)**:
+  + ✅ `testEtagAndNotModifiedResponse`: **PASSED (1/1 tests, 0 failures, 0 errors)**. Xác thực thành công cơ chế sinh ETag tự động và trả lời `304 Not Modified` khi gửi `If-None-Match`.
+- **Frontend ApiClient Test (`flutter test test/network/api_client_test.dart`)**:
+  + ✅ **9 / 9 tests PASSED**: Xác thực Singleton, UTF-8 parsing, ETag 304 resolution, Request Deduplication (gộp 3 requests đồng thời thành 1 cuộc gọi mạng), các ngoại lệ HTTP 401, 403, 404, 500.
+- **Frontend UI Component Test (`flutter test test/widgets/network_ui_components_test.dart`)**:
+  + ✅ **4 / 4 tests PASSED**: Xác thực `NetworkStatusBanner` ở trạng thái nhàn rỗi, đồng bộ ngầm và mất mạng có nút thử lại; xác thực `AppShimmerCard` render bo góc 4px.
+- **Toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **106 / 106 tests PASSED (100% test suite)**. Không có bất kỳ lỗi hồi quy nào.
+- **Phân tích tĩnh (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** trên toàn bộ các module `network`, `services` và `widgets`.
+
+---
+
+### GIAI ĐOẠN 35: HOẠT ẢNH MASCOT "SÁCH ĐI BỘ", KHỞI ĐỘNG SONG SONG (PARALLEL BOOTSTRAP) & ĐỒNG BỘ PHẲNG LOADER
+
+**1. Bối Cảnh & Vấn Đề Trải Nghiệm Mở Ứng Dụng:**
+- **Hiện tượng chớp giật màu sắc (FOUC)**: Trước đây khi mở app trên nền tảng Web hoặc Mobile, người dùng phải trải qua 3 màn hình chuyển đổi màu sắc đột ngột: Box HTML Loader nền trắng $\rightarrow$ `SplashScreen` màu xanh navy đậm (`#1E3A8A`) trong ~100ms – 400ms $\rightarrow$ Màn hình đăng nhập `LoginScreen` nền trắng sáng. Sự thay đổi đột ngột này gây nhức mắt và tạo cảm giác app bị giật lag.
+- **Trải nghiệm khởi động đơn điệu**: Không có yếu tố nhận diện thương hiệu giáo dục sinh động; màn hình chờ cứng nhắc gây cảm giác chờ đợi lâu.
+- **Nguy cơ nghẽn giao diện (UI Blocking)**: Luồng khởi động cũ đợi tuần tự từng tác vụ I/O khiến thời gian tải ban đầu bị kéo dài không cần thiết.
+
+**2. Giải Pháp Kiến Trúc & Thiết Kế (Senior Dev, Senior Network & Senior Design):**
+- **Đồng bộ hóa giao diện chờ Web Loader ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+  + Chuyển toàn bộ CSS loader sang tone màu nền trắng `#FFFFFF`, chữ xám đen `#202124`.
+  + Chuẩn hóa hộp thông báo tải "Cổng Thông Tin Giáo Dục Đại Việt" với viền mỏng phẳng `1px solid #DADCE0`, bo góc chuẩn hệ thống `4px`, loại bỏ hoàn toàn đổ bóng mờ, spinner xoay xanh `#2457C5`.
+- **Hoạt ảnh Mascot "Sách đi bộ" vẽ thuần Vector bằng code ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart))**:
+  + Sử dụng `CustomPainter` vẽ 100% bằng hình chữ nhật phẳng (`canvas.drawRect`), không cần bất kỳ tệp hình ảnh PNG hay tài nguyên ngoài nào, tối ưu kích thước bundle và 0ms độ trễ giải mã ảnh.
+  + Chu trình chuyển động mượt mà: (1) Sách bước vào từ lề trái kèm nhún chân và đung đưa tay (0.0 – 0.4) $\rightarrow$ (2) Đứng giữa màn hình vẫy tay chào thân thiện kèm tên thương hiệu và tagline (0.4 – 0.7) $\rightarrow$ (3) Bước ra lề phải (0.7 – 1.0).
+  + Tự động thích ứng tỷ lệ co giãn (`scaleFor`) theo độ rộng màn hình (từ điện thoại màn hình nhỏ đến màn hình máy tính lớn).
+- **Luồng khởi động song song tối ưu hiệu năng ([`app_bootstrap_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/app_bootstrap_service.dart) & [`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_gate.dart))**:
+  + `_bootstrapFuture` được kích hoạt ngay lập tức từ `initState` của `AdminApp` trong [`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart), chạy song song cùng lúc với hoạt ảnh Mascot.
+  + Kiểm tra đọc `SharedPreferences`, validate JWT token với timeout ngắn 1.5s, nhận diện quyền vai trò (`Student`, `Teacher`, `Admin`, `Parent`, `ForceChangePassword`).
+  + Cơ chế `holdLimit` thông minh: Nếu animation kết thúc trước khi bootstrap xong, ứng dụng giữ tư thế vẫy tay tối đa 1.0 giây rồi tự động chuyển tiếp, không bao giờ làm treo hoặc khóa app của người dùng.
+- **Trợ năng và tôn trọng người dùng**:
+  + **Chạm bỏ qua (Instant Skip)**: Người dùng chạm bất kỳ đâu trên màn hình để ngay lập tức vào màn hình đích.
+  + **Tôn trọng chế độ giảm chuyển động (Reduced Motion)**: Nhận diện cài đặt OS qua `MediaQuery.disableAnimations`, hiển thị hình tĩnh Mascot đứng yên trong 700ms thay vì ép người dùng xem chuyển động.
+  + **Quy tắc tần suất thông minh & Chế độ Demo/Dev ([`intro_policy.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_policy.dart))**: Trong môi trường Demo/Dev (`kDebugMode` hoặc `ApiConstants.isDemoMode`), Mascot luôn hiển thị mỗi lần mở để phục vụ kiểm thử và nghiệm thu trực quan; trên Production áp dụng quy tắc 6 giờ/lần.
+  + **Thích ứng Dark Mode cao cấp ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart) & [`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**: Tự động chuyển sang `IntroPalette.dark` với nền tối `#202124`, bìa sách xanh dạ quang `#8AB4F8` phát sáng, chân tay `#E8EAED`, con ngươi mắt `#202124`; Web Loader đồng bộ `@media (prefers-color-scheme: dark)`.
+  + **Đồng bộ thời lượng Web lên 2.0s ([`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_gate.dart))**: Nâng thời lượng Web từ 1.0s lên 2.0s đồng bộ với Mobile giúp người dùng ngắm trọn hoạt ảnh vẫy tay thư thái và đọc rõ tên thương hiệu.
+  + **Tùy biến người dùng ([`intro_setting_tile.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_setting_tile.dart))**: Tích hợp công tắc "Hiệu ứng mở app" trực tiếp vào trang Cài đặt / Thông tin cá nhân ([`profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/profile_screen.dart)).
+
+**3. Kết Quả Kiểm Thử Thực Tế (Rule 5):**
+- **Kiểm thử Vector Mascot & Hình học Bước chuyển ([`book_mascot_painter_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/book_mascot_painter_test.dart))**:
+  + ✅ **11 / 11 tests PASSED**: Kiểm tra góc tay `waveAngle` đúng các mốc, nội suy tuyến tính chính xác, hàm co giãn `scaleFor` giới hạn trong [80, 120] đơn vị, kiểm thử vẽ an toàn trên cả bảng màu Light (`standard`) và Dark Mode (`IntroPalette.dark`).
+- **Kiểm thử Vòng đời & Tương tác IntroGate ([`intro_gate_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_gate_test.dart))**:
+  + ✅ **8 / 8 tests PASSED**: Xác thực tự động chuyển màn khi chạy hết thời lượng 2.0s, bỏ qua intro khi policy từ chối, chạm bất kỳ đâu bỏ qua tức thì không lặp lại, chế độ giảm chuyển động (Reduced Motion), cơ chế giữ tư thế khi khởi động chậm, tự phục hồi khi khởi động lỗi và tự động nhận diện theme tối khi hệ thống là Dark Mode.
+- **Kiểm thử Quy tắc Tần suất ([`intro_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_policy_test.dart))**:
+  + ✅ **6 / 6 tests PASSED**: Xác thực lần đầu cài app thì hiển thị, trong vòng 6 giờ không hiển thị lại (Production), sau 6 giờ hiển thị lại (Production), chế độ Demo/Dev luôn hiển thị dù chưa đủ 6 giờ, tôn trọng tùy chọn tắt của người dùng trong Cài đặt, tự động phát hiện và xử lý an toàn khi đồng hồ hệ thống bị chỉnh lùi.
+- **Kiểm thử Khởi động Song song ([`app_bootstrap_service_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/services/app_bootstrap_service_test.dart))**:
+  + ✅ **5 / 5 tests PASSED**: Xác thực chưa đăng nhập $\rightarrow$ `LoginScreen`; session hỏng thiếu roles $\rightarrow$ dọn dẹp và điều hướng `LoginScreen`; cờ `mustChangePassword` $\rightarrow$ `ForceChangePasswordScreen`; định tuyến chính xác theo quyền Student $\rightarrow$ `StudentDashboardScreen`, Admin $\rightarrow$ `DashboardScreen`.
+- **Tổng số ca kiểm thử toàn bộ dự án ([`flutter test`])**:
+  + ✅ **131 / 131 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
+- **Kiểm tra cú pháp & tĩnh ([`flutter analyze`])**:
+  + ✅ **No issues found (0 warnings, 0 errors)** trên toàn bộ các file mới và các module liên quan.
+
+

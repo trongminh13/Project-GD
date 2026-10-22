@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/core/theme/theme_manager.dart';
+import 'package:ashadeep/core/intro/intro_setting_tile.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -189,6 +190,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           );
                         },
+                      ),
+                    ),
+
+                    // Intro Mascot Animation Toggle
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.borderOf(context)),
+                      ),
+                      child: IntroSettingTile(
+                        title: 'Hiệu ứng mở app',
+                        subtitle: 'Hiển thị hoạt ảnh Mascot chào mừng khi mở ứng dụng',
                       ),
                     ),
 
