@@ -119,6 +119,8 @@ class ApiConstants {
 
 class AppTextStyles {
   static const List<String> _fontFallback = [
+    'Be Vietnam Pro',
+    'Nunito',
     '-apple-system',
     'BlinkMacSystemFont',
     'Segoe UI',
@@ -127,49 +129,73 @@ class AppTextStyles {
   ];
 
   // Theme-aware (use these when you have context)
-  static TextStyle heading1(BuildContext context) => GoogleFonts.outfit(
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimaryOf(context),
-    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
-  );
-  static TextStyle heading2(BuildContext context) => GoogleFonts.outfit(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryOf(context),
-    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
-  );
-  static TextStyle body(BuildContext context) => GoogleFonts.outfit(
-    fontSize: 16,
-    color: AppColors.textSecondaryOf(context),
-    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
-  );
-  static TextStyle button(BuildContext context) => GoogleFonts.outfit(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
-  );
+  static TextStyle heading1(BuildContext context) {
+    return Theme.of(context).textTheme.displayMedium?.copyWith(
+          color: AppColors.textPrimaryOf(context),
+        ) ??
+        GoogleFonts.plusJakartaSans(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimaryOf(context),
+          textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
+        );
+  }
+
+  static TextStyle heading2(BuildContext context) {
+    return Theme.of(context).textTheme.headlineLarge?.copyWith(
+          color: AppColors.textPrimaryOf(context),
+        ) ??
+        GoogleFonts.plusJakartaSans(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryOf(context),
+          textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
+        );
+  }
+
+  static TextStyle body(BuildContext context) {
+    return Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: AppColors.textSecondaryOf(context),
+        ) ??
+        GoogleFonts.beVietnamPro(
+          fontSize: 16,
+          color: AppColors.textSecondaryOf(context),
+          textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
+        );
+  }
+
+  static TextStyle button(BuildContext context) {
+    return Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ) ??
+        GoogleFonts.plusJakartaSans(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
+        );
+  }
 
   // Backward-compatible statics (light mode defaults)
-  static TextStyle get heading1Static => GoogleFonts.outfit(
+  static TextStyle get heading1Static => GoogleFonts.plusJakartaSans(
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: AppColors.lightTextPrimary,
     textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
-  static TextStyle get heading2Static => GoogleFonts.outfit(
+  static TextStyle get heading2Static => GoogleFonts.plusJakartaSans(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.lightTextPrimary,
     textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
-  static TextStyle get bodyStatic => GoogleFonts.outfit(
+  static TextStyle get bodyStatic => GoogleFonts.beVietnamPro(
     fontSize: 16,
     color: AppColors.lightTextSecondary,
     textStyle: const TextStyle(fontFamilyFallback: _fontFallback),
   );
-  static TextStyle get buttonStatic => GoogleFonts.outfit(
+  static TextStyle get buttonStatic => GoogleFonts.plusJakartaSans(
     fontSize: 16,
     fontWeight: FontWeight.bold,
     color: Colors.white,

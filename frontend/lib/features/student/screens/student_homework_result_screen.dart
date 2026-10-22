@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:provider/provider.dart';
+import 'package:ashadeep/core/theme/theme_manager.dart';
+import 'package:ashadeep/core/theme/app_typography.dart';
+import 'package:ashadeep/core/enums/education_level.dart';
 
 class StudentHomeworkResultScreen extends StatefulWidget {
   final int assignmentId;
@@ -339,11 +343,20 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
     );
   }
 
+  EducationLevel _getEducationLevel(BuildContext context) {
+    try {
+      return Provider.of<ThemeManager>(context).educationLevel;
+    } catch (_) {
+      return EducationLevel.highSchool;
+    }
+  }
+
   Widget _buildQuestionResultCard(
     Map<String, dynamic> q,
     int order,
     Map<String, dynamic>? studentAns,
   ) {
+    final level = _getEducationLevel(context);
     final qType = q['questionType'] as String;
     final content = q['content'] ?? '';
     final points = q['points'] ?? 1.0;
@@ -376,7 +389,7 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
             children: [
               Text(
                 'Câu $order',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _kTextMain),
+                style: AppTypography.title(level, fontWeight: FontWeight.bold, fontSize: 13, color: _kTextMain),
               ),
               if (scoreAchieved != null)
                 Container(
@@ -384,7 +397,8 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
                   color: (isCorrect ? _kOkGreen : _kDangerRed).withValues(alpha: 0.1),
                   child: Text(
                     '$scoreAchieved / $points đ',
-                    style: TextStyle(
+                    style: AppTypography.title(
+                      level,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                       color: isCorrect ? _kOkGreen : _kDangerRed,
@@ -394,14 +408,14 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
               else
                 Text(
                   '$points đ (Chờ chấm)',
-                  style: const TextStyle(fontSize: 12, color: _kTextMuted, fontWeight: FontWeight.w600),
+                  style: AppTypography.body(level, fontSize: 12, color: _kTextMuted, fontWeight: FontWeight.w600),
                 ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             content,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, height: 1.4, color: _kTextMain),
+            style: AppTypography.question(level, fontWeight: FontWeight.w600, fontSize: 14.5, color: _kTextMain),
           ),
           const SizedBox(height: 12),
 
@@ -486,7 +500,7 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
                   Expanded(
                     child: Text(
                       'Giải thích: $explanation',
-                      style: const TextStyle(fontSize: 12, color: _kPrimaryBlue),
+                      style: AppTypography.body(level, fontSize: 12.5, color: _kPrimaryBlue),
                     ),
                   ),
                 ],
@@ -530,7 +544,8 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
           Expanded(
             child: Text(
               opt['content'] ?? '',
-              style: TextStyle(
+              style: AppTypography.body(
+                _getEducationLevel(context),
                 fontSize: 13,
                 fontWeight: isStudentSelected || isCorrect ? FontWeight.bold : FontWeight.normal,
                 color: isCorrect ? _kOkGreen : (isStudentSelected ? _kDangerRed : _kTextMain),

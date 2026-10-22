@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ashadeep/utils/constants.dart';
 import 'package:ashadeep/core/theme/theme_manager.dart';
+import 'package:ashadeep/core/theme/app_typography.dart';
 import 'package:ashadeep/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppTypography.initialize();
   if (!kIsWeb) {
     try {
     await Firebase.initializeApp();
@@ -42,7 +44,11 @@ class AdminApp extends StatelessWidget {
               brightness: Brightness.light,
               primaryColor: AppColors.lightPrimary,
               scaffoldBackgroundColor: AppColors.lightBackground,
-              fontFamily: 'Roboto',
+              fontFamily: AppTypography.getBodyFontFamily(themeManager.educationLevel),
+              textTheme: AppTypography.buildTextTheme(
+                themeManager.educationLevel,
+                isDark: false,
+              ),
               colorScheme: const ColorScheme.light(
                 primary: AppColors.lightPrimary,
                 secondary: AppColors.lightSecondary,
@@ -105,7 +111,11 @@ class AdminApp extends StatelessWidget {
               brightness: Brightness.dark,
               primaryColor: AppColors.darkPrimary,
               scaffoldBackgroundColor: AppColors.darkBackground,
-              fontFamily: 'Roboto',
+              fontFamily: AppTypography.getBodyFontFamily(themeManager.educationLevel),
+              textTheme: AppTypography.buildTextTheme(
+                themeManager.educationLevel,
+                isDark: true,
+              ),
               colorScheme: const ColorScheme.dark(
                 primary: AppColors.darkPrimary,
                 secondary: AppColors.darkSecondary,

@@ -91,6 +91,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           _notices = _getMockNotices();
           _isLoading = false;
         });
+        final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+        try {
+          Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
+        } catch (_) {}
       }
       return;
     }
@@ -118,6 +122,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           _profile = p;
           _isLoading = false; // Có profile là hiển thị khung trang chủ ngay
         });
+        final level = EducationLevelHelper.fromGrade(p?['grade'], p?['educationLevel']);
+        try {
+          Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
+        } catch (_) {}
       }
     } catch (_) {}
   }

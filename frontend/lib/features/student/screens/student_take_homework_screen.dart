@@ -6,6 +6,10 @@ import 'package:ashadeep/core/config/feature_flags.dart';
 import 'package:ashadeep/core/widgets/app_loading_button.dart';
 
 import 'package:ashadeep/core/theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import 'package:ashadeep/core/theme/theme_manager.dart';
+import 'package:ashadeep/core/theme/app_typography.dart';
+import 'package:ashadeep/core/enums/education_level.dart';
 
 class StudentTakeHomeworkScreen extends StatefulWidget {
   final int assignmentId;
@@ -644,7 +648,16 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
     );
   }
 
+  EducationLevel _getEducationLevel(BuildContext context) {
+    try {
+      return Provider.of<ThemeManager>(context).educationLevel;
+    } catch (_) {
+      return EducationLevel.highSchool;
+    }
+  }
+
   Widget _buildQuestionCard(Map<String, dynamic> q, int order) {
+    final level = _getEducationLevel(context);
     final qId = q['id'] as int;
     final qType = q['questionType'] as String;
     final content = q['content'] ?? '';
@@ -673,7 +686,8 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
                 color: _kPrimaryBlue.withValues(alpha: 0.08),
                 child: Text(
                   'Câu $order · $typeLabel',
-                  style: const TextStyle(
+                  style: AppTypography.title(
+                    level,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     color: _kPrimaryBlue,
@@ -682,14 +696,24 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
               ),
               Text(
                 '$points điểm',
-                style: const TextStyle(fontWeight: FontWeight.w600, color: _kTextMuted, fontSize: 12),
+                style: AppTypography.body(
+                  level,
+                  fontWeight: FontWeight.w600,
+                  color: _kTextMuted,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             content,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, height: 1.4, color: _kTextMain),
+            style: AppTypography.question(
+              level,
+              fontWeight: FontWeight.w600,
+              fontSize: 14.5,
+              color: _kTextMain,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -765,7 +789,8 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
             Expanded(
               child: Text(
                 content,
-                style: TextStyle(
+                style: AppTypography.body(
+                  _getEducationLevel(context),
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? _kPrimaryBlue : _kTextMain,
@@ -827,7 +852,8 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
             Expanded(
               child: Text(
                 content,
-                style: TextStyle(
+                style: AppTypography.body(
+                  _getEducationLevel(context),
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? _kPrimaryBlue : _kTextMain,

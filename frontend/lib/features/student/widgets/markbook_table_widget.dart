@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/models/markbook.dart';
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/enums/education_level.dart';
+import 'package:ashadeep/core/theme/app_typography.dart';
 
 /// Widget bảng điểm học bạ theo chuẩn Bộ GD&ĐT Việt Nam.
 /// Hỗ trợ cả 3 cấp: Tiểu học, THCS, THPT.
@@ -13,6 +15,8 @@ class MarkbookTableWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final level = EducationLevelHelper.fromString(markbook.educationLevel) ??
+        EducationLevel.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
     final borderColor =
@@ -23,20 +27,20 @@ class MarkbookTableWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeader(context),
+        _buildHeader(context, level),
         const SizedBox(height: 16),
         if (markbook.isNarrativeOnly)
-          _buildNarrativeTable(context, borderColor, bgColor, headerBg)
+          _buildNarrativeTable(context, borderColor, bgColor, headerBg, level)
         else
-          _buildScoreTable(context, borderColor, bgColor, headerBg),
+          _buildScoreTable(context, borderColor, bgColor, headerBg, level),
         const SizedBox(height: 20),
-        _buildSummaryRow(context),
+        _buildSummaryRow(context, level),
       ],
     );
   }
 
   /// Header: tên học sinh, lớp, trường, năm học.
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, EducationLevel level) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -54,29 +58,31 @@ class MarkbookTableWidget extends StatelessWidget {
               Expanded(
                 child: Text(
                   markbook.studentName,
-                  style: TextStyle(
+                  style: AppTypography.title(
+                    level,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryOf(context),
                   ),
                 ),
               ),
-              _buildLevelBadge(context),
+              _buildLevelBadge(context, level),
             ],
           ),
           const SizedBox(height: 6),
-          _infoRow(context, Icons.class_outlined,
+          _infoRow(context, level, Icons.class_outlined,
               'Lớp: ${markbook.className ?? "—"}'),
-          _infoRow(context, Icons.school_outlined,
+          _infoRow(context, level, Icons.school_outlined,
               markbook.schoolName ?? ''),
-          _infoRow(context, Icons.calendar_today_outlined,
+          _infoRow(context, level, Icons.calendar_today_outlined,
               'Năm học: ${markbook.academicYear ?? "—"}'),
         ],
       ),
     );
   }
 
-  Widget _infoRow(BuildContext context, IconData icon, String text) {
+  Widget _infoRow(
+      BuildContext context, EducationLevel level, IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Row(
@@ -86,7 +92,8 @@ class MarkbookTableWidget extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: AppTypography.body(
+                level,
                 fontSize: 13,
                 color: AppColors.textSecondaryOf(context),
               ),
@@ -97,7 +104,7 @@ class MarkbookTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLevelBadge(BuildContext context) {
+  Widget _buildLevelBadge(BuildContext context, EducationLevel level) {
     final label = markbook.educationLevelDisplayName;
     final color = _levelColor(markbook.educationLevel);
     return Container(
@@ -109,7 +116,8 @@ class MarkbookTableWidget extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: AppTypography.button(
+          level,
           fontSize: 12,
           color: color,
           fontWeight: FontWeight.w600,
@@ -133,7 +141,7 @@ class MarkbookTableWidget extends StatelessWidget {
 
   /// Bảng điểm chuẩn TX/GK/CK (Cấp 1 lớp 4-5, THCS, THPT).
   Widget _buildScoreTable(BuildContext context, Color borderColor,
-      Color bgColor, Color headerBg) {
+      Color bgColor, Color headerBg, EducationLevel level) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Table(
@@ -153,15 +161,16 @@ class MarkbookTableWidget extends StatelessWidget {
           10: FlexColumnWidth(1.8),// Xếp loại
         },
         children: [
-          _headerRow(headerBg, context),
-          ...markbook.subjects.map((s) => _subjectRow(s, bgColor, context)),
+          _headerRow(headerBg, context, level),
+          ...markbook.subjects.map((s) => _subjectRow(s, bgColor, context, level)),
         ],
       ),
     );
   }
 
-  TableRow _headerRow(Color headerBg, BuildContext context) {
-    final style = TextStyle(
+  TableRow _headerRow(Color headerBg, BuildContext context, EducationLevel level) {
+    final style = AppTypography.title(
+      level,
       fontSize: 10,
       fontWeight: FontWeight.bold,
       color: AppColors.textSecondaryOf(context),
@@ -185,13 +194,19 @@ class MarkbookTableWidget extends StatelessWidget {
   }
 
   TableRow _subjectRow(
-      SubjectMarkbook s, Color bgColor, BuildContext context) {
-    final baseStyle = TextStyle(fontSize: 11, color: _textColor(context));
-    final scoreStyle =
-        baseStyle.copyWith(fontWeight: FontWeight.w600, fontSize: 12);
-    final avgStyle = scoreStyle.copyWith(
-      color: AppColors.primaryOf(context),
+      SubjectMarkbook s, Color bgColor, BuildContext context, EducationLevel level) {
+    final baseStyle = AppTypography.body(level, fontSize: 11, color: _textColor(context));
+    final scoreStyle = AppTypography.score(
+      level,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: _textColor(context),
+    );
+    final avgStyle = AppTypography.score(
+      level,
+      fontSize: 12,
       fontWeight: FontWeight.bold,
+      color: AppColors.primaryOf(context),
     );
 
     // Hiển thị danh sách TX: ví dụ "8.0, 9.0, 7.5, 8.5"
@@ -201,7 +216,7 @@ class MarkbookTableWidget extends StatelessWidget {
     return TableRow(
       decoration: BoxDecoration(color: bgColor),
       children: [
-        _cell(s.subjectName, baseStyle.copyWith(fontWeight: FontWeight.w500)),
+        _cell(s.subjectName, baseStyle.copyWith(fontWeight: FontWeight.w600)),
         _cell(txHk1, scoreStyle, center: true),
         _cell(_fmt(s.semester1?.gkScore), scoreStyle, center: true),
         _cell(_fmt(s.semester1?.ckScore), scoreStyle, center: true),
@@ -211,14 +226,20 @@ class MarkbookTableWidget extends StatelessWidget {
         _cell(_fmt(s.semester2?.ckScore), scoreStyle, center: true),
         _cell(_fmt(s.semester2?.avg), avgStyle, center: true),
         _cell(_fmt(s.yearAvg), avgStyle, center: true),
-        _classCell(s.academicClassification, context),
+        _classCell(s.academicClassification, context, level),
       ],
     );
   }
 
   /// Bảng nhận xét Tiểu học lớp 1–3.
   Widget _buildNarrativeTable(BuildContext context, Color borderColor,
-      Color bgColor, Color headerBg) {
+      Color bgColor, Color headerBg, EducationLevel level) {
+    final headerStyle = AppTypography.title(
+      level,
+      fontWeight: FontWeight.bold,
+      fontSize: 12,
+      color: AppColors.textSecondaryOf(context),
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Table(
@@ -234,50 +255,23 @@ class MarkbookTableWidget extends StatelessWidget {
           TableRow(
             decoration: BoxDecoration(color: headerBg),
             children: [
-              _cell(
-                  'Môn học',
-                  TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.textSecondaryOf(context))),
-              _cell(
-                  'Nhận xét HK1',
-                  TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.textSecondaryOf(context)),
-                  center: true),
-              _cell(
-                  'Nhận xét HK2',
-                  TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.textSecondaryOf(context)),
-                  center: true),
-              _cell(
-                  'Kết quả',
-                  TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.textSecondaryOf(context)),
-                  center: true),
+              _cell('Môn học', headerStyle),
+              _cell('Nhận xét HK1', headerStyle, center: true),
+              _cell('Nhận xét HK2', headerStyle, center: true),
+              _cell('Kết quả', headerStyle, center: true),
             ],
           ),
           ...markbook.subjects.map((s) {
             final hk1Comments = s.semester1?.comments?.join(', ') ?? '—';
             final hk2Comments = s.semester2?.comments?.join(', ') ?? '—';
+            final bodyStyle = AppTypography.body(level, fontSize: 12, color: _textColor(context));
             return TableRow(
               decoration: BoxDecoration(color: bgColor),
               children: [
-                _cell(s.subjectName,
-                    TextStyle(fontSize: 12, color: _textColor(context))),
-                _cell(hk1Comments,
-                    TextStyle(fontSize: 12, color: _textColor(context)),
-                    center: true),
-                _cell(hk2Comments,
-                    TextStyle(fontSize: 12, color: _textColor(context)),
-                    center: true),
-                _classCell(s.academicClassification, context),
+                _cell(s.subjectName, bodyStyle),
+                _cell(hk1Comments, bodyStyle, center: true),
+                _cell(hk2Comments, bodyStyle, center: true),
+                _classCell(s.academicClassification, context, level),
               ],
             );
           }),
@@ -287,7 +281,7 @@ class MarkbookTableWidget extends StatelessWidget {
   }
 
   /// Row tóm tắt cuối trang.
-  Widget _buildSummaryRow(BuildContext context) {
+  Widget _buildSummaryRow(BuildContext context, EducationLevel level) {
     return Column(
       children: [
         if (markbook.honorTitle != null && markbook.honorTitle!.isNotEmpty) ...[
@@ -309,14 +303,16 @@ class MarkbookTableWidget extends StatelessWidget {
                   child: RichText(
                     text: TextSpan(
                       text: 'Danh hiệu khen thưởng: ',
-                      style: const TextStyle(color: Color(0xFF5D4037), fontSize: 13),
+                      style: AppTypography.body(level, color: const Color(0xFF5D4037), fontSize: 13),
                       children: [
                         TextSpan(
                           text: markbook.honorTitle,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFE65100),
-                              fontSize: 14),
+                          style: AppTypography.title(
+                            level,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFE65100),
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
@@ -330,6 +326,7 @@ class MarkbookTableWidget extends StatelessWidget {
           children: [
             _summaryChip(
               context,
+              level,
               icon: Icons.bar_chart_rounded,
               label: 'ĐTB chung',
               value: _fmt(markbook.overallAvg),
@@ -338,6 +335,7 @@ class MarkbookTableWidget extends StatelessWidget {
             const SizedBox(width: 12),
             _summaryChip(
               context,
+              level,
               icon: Icons.emoji_events_rounded,
               label: 'Học lực',
               value: markbook.overallClassification ?? '—',
@@ -346,6 +344,7 @@ class MarkbookTableWidget extends StatelessWidget {
             const SizedBox(width: 12),
             _summaryChip(
               context,
+              level,
               icon: Icons.favorite_border_rounded,
               label: 'Hạnh kiểm',
               value: markbook.conduct ?? '(GV nhập)',
@@ -357,7 +356,7 @@ class MarkbookTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _summaryChip(BuildContext context,
+  Widget _summaryChip(BuildContext context, EducationLevel level,
       {required IconData icon,
       required String label,
       required String value,
@@ -375,14 +374,19 @@ class MarkbookTableWidget extends StatelessWidget {
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 4),
             Text(label,
-                style: TextStyle(
-                    fontSize: 10, color: AppColors.textSecondaryOf(context))),
+                style: AppTypography.body(
+                  level,
+                  fontSize: 10,
+                  color: AppColors.textSecondaryOf(context),
+                )),
             const SizedBox(height: 2),
             Text(value,
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: color)),
+                style: AppTypography.score(
+                  level,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                )),
           ],
         ),
       ),
@@ -402,7 +406,8 @@ class MarkbookTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _classCell(String? classification, BuildContext context) {
+  Widget _classCell(
+      String? classification, BuildContext context, EducationLevel level) {
     final color = _classificationColor(classification);
     return Padding(
       padding: const EdgeInsets.all(6),
@@ -415,10 +420,12 @@ class MarkbookTableWidget extends StatelessWidget {
           ),
           child: Text(
             classification ?? '—',
-            style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: color),
+            style: AppTypography.button(
+              level,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
             textAlign: TextAlign.center,
           ),
         ),

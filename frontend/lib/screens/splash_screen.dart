@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ashadeep/utils/constants.dart';
+import 'package:ashadeep/core/theme/app_typography.dart';
 import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/core/models/user.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
@@ -188,19 +189,13 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Giáo Dục Đại Việt',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.splashText,
-                    letterSpacing: 1.2,
-                    textStyle: const TextStyle(
-                      fontFamilyFallback: [
-                        '-apple-system',
-                        'BlinkMacSystemFont',
-                        'Segoe UI',
-                        'Roboto',
-                        'sans-serif',
-                      ],
+                    letterSpacing: -0.3,
+                    textStyle: TextStyle(
+                      fontFamilyFallback: AppTypography.fontFamilyFallback,
                     ),
                   ),
                 ),

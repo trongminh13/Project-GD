@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ashadeep/core/enums/education_level.dart';
 
 /// Các chế độ màu chữ giao diện ứng dụng
 enum AppTextColorMode {
   defaultBlack, // Mặc định: Đen than lịch lãm (#202124)
-  green,        // Xanh lá: Tươi mát, tràn đầy năng lượng (#1B5E20)
-  emerald,      // Xanh lục: Ngọc bích sang trọng, tập trung (#004D40)
-  pink,         // Hồng: Trẻ trung, ấm áp, cá tính (#AD1457)
+  green, // Xanh lá: Tươi mát, tràn đầy năng lượng (#1B5E20)
+  emerald, // Xanh lục: Ngọc bích sang trọng, tập trung (#004D40)
+  pink, // Hồng: Trẻ trung, ấm áp, cá tính (#AD1457)
 }
 
 /// Mô tả thông tin các hình nền học đường trong thư mục images/
@@ -28,14 +29,15 @@ class ThemeManager extends ChangeNotifier {
   static const _keyThemeMode = 'theme_mode';
   static const _keyTextColorMode = 'app_text_color_mode';
   static const _keyBgImagePath = 'app_bg_image_path';
+  static const _keyEducationLevel = 'app_education_level';
 
   /// Danh sách 8 hình nền học đường có sẵn trong thư mục images/
   static const List<AppBackgroundItem> availableBackgrounds = [
     AppBackgroundItem(
       key: 'school',
       assetPath: 'images/school.jpg',
-      nameVi: 'Cổng trường',
-      descriptionVi: 'Trường học ban ngày rực rỡ',
+      nameVi: 'Mặc Định',
+      descriptionVi: 'Bút và Vàng',
     ),
     AppBackgroundItem(
       key: 'bg_classroom',
@@ -46,49 +48,51 @@ class ThemeManager extends ChangeNotifier {
     AppBackgroundItem(
       key: 'bg_students',
       assetPath: 'images/bg_students.jpg',
-      nameVi: 'Học sinh',
-      descriptionVi: 'Không khí vui tươi, năng động',
+      nameVi: 'Quốc tế Phụ Nữ',
+      descriptionVi: 'Ngày Quốc tế Phụ nữ',
     ),
     AppBackgroundItem(
       key: 'bg_school_yard',
       assetPath: 'images/bg_school_yard.jpg',
-      nameVi: 'Sân trường',
-      descriptionVi: 'Sân trường rợp bóng cây xanh mát',
+      nameVi: 'Giõ tổ Hùng Vương',
+      descriptionVi: 'Giõ tổ Hùng Vương',
     ),
     AppBackgroundItem(
       key: 'bg_campus',
       assetPath: 'images/bg_campus.jpg',
-      nameVi: 'Khuôn viên',
-      descriptionVi: 'Khuôn viên trường học thanh bình',
+      nameVi: 'Trung thu',
+      descriptionVi: 'Trung thu',
     ),
     AppBackgroundItem(
       key: 'bg_library',
       assetPath: 'images/bg_library.jpg',
-      nameVi: 'Thư viện',
-      descriptionVi: 'Không gian tự học & đọc sách',
+      nameVi: 'Ngày sinh Chủ tịch Hồ Chí Minh',
+      descriptionVi: 'Ngày sinh Chủ tịch Hồ Chí Minh',
     ),
     AppBackgroundItem(
-      key: 'bg_hallway',
+      key: 'Giải Phóng miền Nam',
       assetPath: 'images/bg_hallway.jpg',
-      nameVi: 'Hành lang',
-      descriptionVi: 'Hành lang lớp học ngập tràn ánh nắng',
+      nameVi: 'Giải Phóng miền Nam',
+      descriptionVi: 'Ngày giải phóng miền Nam',
     ),
     AppBackgroundItem(
       key: 'bg_study_desk',
       assetPath: 'images/bg_study_desk.jpg',
-      nameVi: 'Góc học tập',
-      descriptionVi: 'Bàn học, sách vở & không gian tri thức',
+      nameVi: 'Halloween',
+      descriptionVi: 'Halloween',
     ),
   ];
 
   ThemeMode _mode = ThemeMode.light;
   AppTextColorMode _textColorMode = AppTextColorMode.defaultBlack;
   String _bgImagePath = 'images/school.jpg';
+  EducationLevel _educationLevel = EducationLevel.highSchool;
 
   ThemeMode get mode => _mode;
   bool get isDark => _mode == ThemeMode.dark;
   AppTextColorMode get textColorMode => _textColorMode;
   String get bgImagePath => _bgImagePath;
+  EducationLevel get educationLevel => _educationLevel;
 
   /// Màu chữ chính thích ứng theo tùy chọn của người dùng (tối ưu tương phản WCAG AAA trên nền trắng)
   Color get textMain {
@@ -134,7 +138,9 @@ class ThemeManager extends ChangeNotifier {
 
   /// Tên tiếng Việt của hình nền hiện tại
   String get currentBackgroundLabel {
-    final found = availableBackgrounds.where((b) => b.assetPath == _bgImagePath);
+    final found = availableBackgrounds.where(
+      (b) => b.assetPath == _bgImagePath,
+    );
     if (found.isNotEmpty) {
       return found.first.nameVi;
     }
@@ -148,7 +154,7 @@ class ThemeManager extends ChangeNotifier {
   Future<void> _loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // 1. Tải ThemeMode (Dark/Light)
       final savedTheme = prefs.getString(_keyThemeMode);
       if (savedTheme == 'dark') {
@@ -181,6 +187,15 @@ class ThemeManager extends ChangeNotifier {
         _bgImagePath = savedBg;
       }
 
+      // 4. Tải cấp học đã lưu (Cấp 1, Cấp 2, Cấp 3)
+      final savedLevel = prefs.getString(_keyEducationLevel);
+      if (savedLevel != null) {
+        final parsed = EducationLevelHelper.fromString(savedLevel);
+        if (parsed != null) {
+          _educationLevel = parsed;
+        }
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint('ThemeManager _loadTheme error: $e');
@@ -192,7 +207,10 @@ class ThemeManager extends ChangeNotifier {
     _mode = _mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyThemeMode, _mode == ThemeMode.dark ? 'dark' : 'light');
+    await prefs.setString(
+      _keyThemeMode,
+      _mode == ThemeMode.dark ? 'dark' : 'light',
+    );
   }
 
   /// Đặt chế độ màu chữ giao diện
@@ -228,5 +246,20 @@ class ThemeManager extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyBgImagePath, assetPath);
+  }
+
+  /// Cập nhật Cấp học để thay đổi phông chữ và giao diện tương ứng (Cấp 1: Fredoka/Nunito, Cấp 2 & 3: Plus Jakarta Sans/Be Vietnam Pro)
+  Future<void> setEducationLevel(
+    EducationLevel level, {
+    bool notify = true,
+  }) async {
+    if (_educationLevel == level) return;
+    _educationLevel = level;
+    if (notify) {
+      notifyListeners();
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyEducationLevel, level.name);
   }
 }

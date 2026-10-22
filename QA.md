@@ -2226,3 +2226,98 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (13 info deprecation/print tiền nhiệm không ảnh hưởng).
 - `flutter test`: **92 / 92 tests PASSED (100% test suite)**.
 
+---
+
+### GIAI ĐOẠN 29: TRIỂN KHAI HỆ THỐNG TYPOGRAPHY ĐỘNG THEO CẤP HỌC (CẤP 1, CẤP 2, CẤP 3)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Tái cấu trúc toàn diện hệ thống phông chữ (Typography) theo từng cấp học:
+  + **Cấp 1 (Tiểu học - Lớp 1 đến 5)**:
+    - Tiêu đề / Nút bấm / Thông báo: Dùng **Fredoka** (Bold / SemiBold) — phong cách tròn trịa, vui tươi, kích thích trí tò mò của trẻ em.
+    - Đoạn văn / Đề bài / Lời thoại: Dùng **Nunito** (Medium / Regular) — mềm mại, dễ đọc, khoảng cách chữ thoáng.
+  + **Cấp 2 (THCS - Lớp 6 đến 9)**:
+    - Tiêu đề / Nút bấm / Thẻ bài học / Điểm số: Dùng **Plus Jakarta Sans** (Bold / SemiBold) — dáng chữ hình học (Geometric), năng động, bắt trend, chuẩn phong cách app Gen Z hiện đại.
+    - Đoạn văn / Đề bài / Trắc nghiệm / Lời giải: Dùng **Be Vietnam Pro** (Regular / Medium) — tối ưu quang học riêng cho Tiếng Việt, đọc đề dài không mỏi mắt.
+    - Lời thoại / Gợi ý bài học: Dùng **Quicksand** (Medium / SemiBold).
+  + **Cấp 3 (THPT - Lớp 10 đến 12)**:
+    - Tiêu đề / Nút bấm / Điểm số: Dùng **Plus Jakarta Sans** (Bold / SemiBold) — dứt khoát, thanh lịch.
+    - Đoạn văn / Đề thi / Trắc nghiệm / Lời giải: Dùng **Be Vietnam Pro** (Regular / Medium) — chuẩn xác tuyệt đối cho các bài thi THPT Quốc gia phức tạp.
+
+**2. Chi Tiết Khắc Phục Kỹ Thuật:**
+- **Xây dựng module Typography tập trung ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+  + Cung cấp hàm `buildTextTheme(EducationLevel level, {bool isDark})` sinh đủ 15 TextStyles chuẩn Material 3 TextTheme theo cấp học.
+  + Semantic TextStyles: `title`, `button`, `score`, `question`, `body`, `quote`.
+  + Tích hợp cơ chế fallback font toàn diện chống lỗi dấu tiếng Việt: `['Be Vietnam Pro', 'Nunito', 'Roboto', 'sans-serif']`.
+  + Tích hợp helper `_createStyle` phân biệt thông minh giữa môi trường test runner (0ms, offline) và production runtime (Google Fonts CDN).
+- **Nâng cấp Quản lý Giao diện ([`theme_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/theme_manager.dart))**:
+  + Bổ sung biến trạng thái `EducationLevel _educationLevel` và phương thức `setEducationLevel(EducationLevel level)`.
+  + Tự động lưu và khôi phục cấp học người dùng từ `SharedPreferences`.
+- **Cấu hình ThemeData Ứng dụng ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart))**:
+  + Áp dụng `fontFamily` và `textTheme: AppTypography.buildTextTheme(...)` động cho cả Light Theme và Dark Theme.
+- **Chuẩn hóa Hằng số TextStyles ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+  + Cập nhật `AppTextStyles` tự động kế thừa từ `Theme.of(context).textTheme`, thay thế hoàn toàn cấu hình cứng font `Outfit` cũ.
+- **Đồng bộ màn hình Học sinh & Bài tập ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart), [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart))**:
+  + Tự động cập nhật `themeManager.setEducationLevel(...)` khi tải profile học sinh.
+  + Áp dụng `AppTypography.question` cho đề bài và `AppTypography.body` cho các đáp án trắc nghiệm, lời giải chi tiết.
+- **Xây dựng bộ kiểm thử mới ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/app_typography_test.dart))**:
+  + 6 ca kiểm thử bao phủ toàn bộ các trường hợp cấp 1, cấp 2, cấp 3, textTheme, semantic styles và quản lý state.
+
+---
+
+### GIAI ĐOẠN 30: RÀ SOÁT TOÀN DIỆN & KHẮC PHỤC CÁC ĐIỂM BẤT CẬP (SENIOR QA AUDIT) SAU TRIỂN KHAI TYPOGRAPHY
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Senior QA rà soát toàn diện dự án để phát hiện và xử lý triệt để các điểm "cấn" (bất cập về UI/UX, lệch font nhận diện thương hiệu, màn hình còn sót font cứng hoặc chưa đồng bộ cấp học).
+
+**2. Các Điểm Bất Cập Phát Hiện & Giải Pháp Kỹ Thuật:**
+- **Điểm cấn 1 — Màn hình khởi động Splash Screen ([`splash_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/splash_screen.dart))**:
+  + *Phát hiện*: Chữ "Giáo Dục Đại Việt" tại màn hình Splash vẫn dùng font `GoogleFonts.outfit` cũ và danh sách fallback không có font tiếng Việt chuẩn, gây lệch nhận diện thương hiệu với màn hình Đăng nhập và Dashboard.
+  + *Khắc phục*: Chuyển sang `GoogleFonts.plusJakartaSans` (Font tiêu đề hiện đại, dứt khoát) kết hợp `AppTypography.fontFamilyFallback` toàn diện (`['Be Vietnam Pro', 'Nunito', 'Roboto', ...]`), bảo đảm hiển thị chuẩn sắc nét trên mọi nền tảng di động và web.
+- **Điểm cấn 2 — Bảng Điểm & Phiếu Báo Điểm Khổ A4 Phụ Huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+  + *Phát hiện*: Khi phụ huynh xem học bạ của con, màn hình chưa tự động đồng bộ cấp học của con vào `ThemeManager`, khiến học sinh Tiểu học vẫn phải hiển thị giao diện với font chữ mặc định của THPT; đồng thời modal Phiếu báo điểm A4 dùng nhiều TextStyle thô chưa có Typography thích ứng.
+  + *Khắc phục*: Tự động đọc `EducationLevelHelper.fromString(data.educationLevel)` và cập nhật `ThemeManager.setEducationLevel(level)` khi tải học bạ thành công. Áp dụng `AppTypography.title`, `AppTypography.body`, `AppTypography.score`, `AppTypography.button` cho cả bảng điểm, tiêu đề, và modal Phiếu in A4.
+- **Điểm cấn 3 — Bảng Điểm Học Bạ Chuẩn Bộ GD&ĐT ([`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart))**:
+  + *Phát hiện*: Component dùng chung cho cả Học sinh và Phụ huynh vẫn dùng các `TextStyle` thô với kích thước và font mặc định, chưa phản ánh tinh thần tươi vui (Fredoka/Nunito) của cấp 1 hay năng động chuẩn Gen Z (Plus Jakarta Sans/Be Vietnam Pro) của cấp 2 & 3.
+  + *Khắc phục*: Đọc `level` từ `markbook.educationLevel` và đồng bộ Typography toàn bộ component: tên học sinh & tiêu đề bảng (`AppTypography.title`), điểm số TX/GK/CK/DTB (`AppTypography.score`), tên môn học & nhận xét đánh giá (`AppTypography.body`), thẻ xếp loại & huy hiệu cấp học (`AppTypography.button`).
+- **Điểm cấn 4 — Web Loading Screen & CSS Font Stack ([`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+  + *Phát hiện*: Màn hình chờ ban đầu khi tải Web chưa khai báo các font mới trong CSS stack, dễ gây hiện tượng giật font (FOUC - Flash of Unstyled Text) khi Flutter Canvas hoàn tất khởi chạy.
+  + *Khắc phục*: Bổ sung preconnect Google Fonts và cập nhật `font-family` CSS ưu tiên `"Plus Jakarta Sans", "Be Vietnam Pro"` trước các font hệ thống.
+- **Điểm cấn 5 — Cải tiến Thư viện Typography ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+  + *Khắc phục*: Bổ sung tham số `fontStyle` cho `AppTypography.body` và cung cấp alias `fontFamilyFallback` trỏ tới `fontFallback`, hỗ trợ linh hoạt các đoạn ghi chú in nghiêng (như chức danh ký số GVCN, Hiệu trưởng).
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (Clean 100%).
+- `flutter test`: **98 / 98 tests PASSED (100% test suite)**.
+
+---
+
+### GIAI ĐOẠN 31: DỌN DẸP FONT DƯ THỪA & CHUYỂN ĐỔI SANG LOCAL ASSET-FIRST (100% OFFLINE)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Dọn dẹp toàn bộ tệp rác (.zip) và các thư mục giải nén trùng lặp trong `frontend/assets/fonts/` (tiết kiệm gần 20MB dung lượng).
+- Lọc và chuẩn hóa cấu trúc 19 tệp font `.ttf` cốt lõi (Regular 400, Medium 500, SemiBold 600, Bold 700, Italic) cho 4 họ font: `BeVietnamPro`, `Fredoka`, `Nunito`, `PlusJakartaSans`.
+- Khai báo chính thức asset font trong `pubspec.yaml`.
+- Chuyển đổi toàn diện sang kiến trúc **Local Asset-First (100% Offline)**: Cấu hình `GoogleFonts.config.allowRuntimeFetching = false;` để cấm tải font qua HTTP CDN, triệt tiêu hoàn toàn rủi ro mạng và hiện tượng giật font FOUC.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- **Dọn dẹp & Tổ chức cấu trúc Font ([`assets/fonts/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/assets/fonts))**:
+  + Xóa 4 tệp `.zip` rác: `Be_Vietnam_Pro,Fredoka,Nunito,Plus_Jakarta_Sans.zip`, `Fredoka,Nunito,Plus_Jakarta_Sans.zip`, `Fredoka,Plus_Jakarta_Sans.zip`, `Plus_Jakarta_Sans.zip`.
+  + Xóa các thư mục giải nén con trùng lặp và các font weights không dùng đến (Thin, ExtraLight, Black, Condensed, Expanded).
+  + Chuẩn hóa 4 thư mục phẳng: `BeVietnamPro/` (5 files), `Fredoka/` (4 files), `Nunito/` (5 files), `PlusJakartaSans/` (5 files). Tổng cộng 19 tệp `.ttf` tinh gọn (~1.8 MB).
+- **Khai báo Font Assets ([`pubspec.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/pubspec.yaml))**:
+  + Đăng ký đầy đủ 4 families: `Fredoka`, `Nunito`, `Plus Jakarta Sans`, `Be Vietnam Pro` kèm weights (400, 500, 600, 700) và style italic vào khối `fonts:`.
+- **Thiết lập Khóa Mạng CDN ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart), [`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+  + Thêm `AppTypography.initialize()` thực thi `GoogleFonts.config.allowRuntimeFetching = false;` ngay đầu hàm `main()`.
+  + Nâng cấp `_createStyle` với cơ chế bọc `try-catch` an toàn tuyệt đối, ưu tiên local asset font và fallback font hệ thống chống lỗi dấu tiếng Việt.
+- **Bổ sung Ca Kiểm Thử Local Asset-First ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/app_typography_test.dart))**:
+  + Bổ sung `TC-TYPO-07`: Xác nhận `AppTypography.initialize()` vô hiệu hóa thành công runtime HTTP fetching và đảm bảo fontFallback đầy đủ.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (Clean 100%).
+- `flutter test test/unit/app_typography_test.dart`: **7 / 7 tests PASSED (100%)**.
+- `flutter test`: **99 / 99 tests PASSED (100% test suite)**.
+- Ứng dụng khởi động và hiển thị typography sắc nét ngay cả khi thiết bị tắt hoàn toàn kết nối Internet.
+
+
+
+
