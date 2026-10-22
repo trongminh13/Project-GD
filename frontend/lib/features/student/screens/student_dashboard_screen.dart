@@ -951,12 +951,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
+        ),
         title: const Text('Đăng xuất?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textMain)),
         content: const Text('Em có chắc chắn muốn đăng xuất khỏi hệ thống không?', style: TextStyle(color: AppColors.textMain)),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+            style: TextButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
+            ),
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Hủy', style: TextStyle(color: AppColors.textSub)),
           ),
@@ -965,7 +970,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
             ),
             child: const Text('Đăng xuất'),
           ),
@@ -991,7 +996,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
+        ),
         title: const Row(
           children: [
             Icon(Icons.lock_reset_outlined, size: 20, color: AppColors.primary),
@@ -1009,11 +1017,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               TextField(
                 controller: oldPassController,
                 obscureText: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Nhập mật khẩu hiện tại',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1022,11 +1030,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               TextField(
                 controller: newPassController,
                 obscureText: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Tối thiểu 6 ký tự',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1035,11 +1043,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               TextField(
                 controller: confirmPassController,
                 obscureText: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Nhập lại mật khẩu mới',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
               ),
             ],
@@ -1047,7 +1055,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+            style: TextButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
+            ),
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Hủy', style: TextStyle(color: AppColors.textSub)),
           ),
@@ -1055,7 +1065,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
             ),
             onPressed: () {
               if (oldPassController.text.isEmpty || newPassController.text.isEmpty) {
@@ -1090,7 +1100,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
+        ),
         title: const Row(
           children: [
             Icon(Icons.support_agent_outlined, size: 20, color: AppColors.primary),
@@ -1121,7 +1134,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
             ),
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Đã hiểu'),
@@ -2789,7 +2802,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Container(
@@ -2806,6 +2823,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppColors.cardRadius),
                         border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                       ),
                       child: Text(
@@ -2860,7 +2878,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
                     ),
                     onPressed: () => Navigator.of(ctx).pop(),
                     child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),

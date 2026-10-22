@@ -2359,11 +2359,65 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Chuẩn hóa Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
   + Nút In phiếu điểm và bộ 3 nút chọn kỳ chuyển sang bo 4px, modal xem trước A4 bo đỉnh 16px.
 - **Cập nhật & Đồng bộ Bộ Test Widget**:
-  + [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật TC-NAV-15 xác nhận nút Đăng xuất bo góc 4px (`BorderRadius.circular(4)`).
+  + [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật TC-NAV-13 xác nhận AlertDialog popup Đăng xuất có bo góc 4px (`BorderRadius.circular(4)`); TC-NAV-15 xác nhận nút Đăng xuất bo góc 4px (`BorderRadius.circular(4)`).
   + [`app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_section_header_test.dart): Cập nhật TC-HEADER-02 và TC-HEADER-04 xác nhận nút "Xem tất cả" bo góc 4px.
   + [`theme_manager_customization_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Đồng bộ các nhãn font family tiếng Việt theo cập nhật typography.
+- **Hoàn thiện Bo Góc 4px Toàn Bộ Hộp Thoại (Dialog & AlertDialog Popups)**:
+  + [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+    - Popup xác nhận Đăng xuất (`_logout()`): Chuyển `AlertDialog` từ `BorderRadius.zero` sang `BorderRadius.circular(AppColors.cardRadius)` (4px) kèm viền `AppColors.cardBorder` 1px; các nút Hủy (`TextButton`) và Đăng xuất (`ElevatedButton`) bo góc 4px.
+    - Popup Đổi mật khẩu (`_showChangePasswordDialog()`): `AlertDialog`, input fields (`OutlineInputBorder`), nút Hủy & Cập nhật bo góc 4px.
+    - Popup Trợ giúp & Liên hệ (`_showSupportDialog()`): `AlertDialog` và nút Đã hiểu bo góc 4px.
+    - Dialog Xem chi tiết thông báo (`_showNoticeDetailModal()`): `Dialog`, badge đối tượng và nút Đã hiểu bo góc 4px.
+  + [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart):
+    - Popup Xác nhận nộp bài & Thoát làm bài: `AlertDialog`, box cảnh báo và các nút hành động bo góc 4px.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
 - `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (Clean 100%).
 - `flutter test`: **99 / 99 tests PASSED (100% test suite)**.
 - Giao diện đạt độ đồng bộ thị giác cao, hiện đại, sắc sảo (Modern Clean Subtle Rounded Geometry) trên toàn bộ các phân hệ học sinh và phụ huynh.
+
+---
+
+### GIAI ĐOẠN 33: TỐI ƯU HÓA TRÌNH BÀY BẢNG ĐIỂM (HERO KPI CARD, TIÊU CHUẨN DANH HIỆU THPT & ĐIỂM THÀNH PHẦN CHI TIẾT)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- **Hero KPI Card**:
+  + Đưa tiêu đề/nhãn ("Số môn đánh giá", "Môn đạt Giỏi" / "Hoàn thành môn", "Tiến độ học tập") lên **TRÊN ĐẦU** của từng ô chỉ số phụ.
+  + Bỏ hoàn toàn các biểu tượng (icon) trong 3 component chỉ số phụ để giải phóng thị giác, tạo sự thông thoáng.
+  + Phóng to font chữ của giá trị số ("11 môn", "4 môn 10", "100% hoàn thành") lên một chút để tạo điểm nhấn thị giác rõ nét.
+- **Tiêu Chuẩn Danh Hiệu THPT**:
+  + Bỏ icon ngôi sao đỏ ở thanh tiêu đề thẻ.
+  + Bỏ icon checkbox (chữ v tích trong ô vuông) ở từng dòng tiêu chí.
+  + Tái cấu trúc toàn bộ nội dung thành dạng **Bảng ô lưới (Grid Table)** gồm 2 cột x 5 hàng (Cột 1: Tiêu chí TT 22/2021; Cột 2: Kết quả đối soát thực tế của học sinh).
+- **Kết Quả Chi Tiết Môn Học (Accordion mở rộng)**:
+  + Tái cấu trúc điểm thành phần chi tiết thành bảng 3 hàng ngang: bên trái là Tiêu đề thành phần điểm, bên phải là Điểm số cụ thể (giải pháp tối ưu responsive cho giao diện di động hẹp tránh tràn dòng điểm thường xuyên `ĐĐGtx`).
+
+**2. Chi Tiết Khắc Phục Kỹ Thuật:**
+- **Khối Hero KPI Card ([`marks_hero_kpi_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart))**:
+  + Điều chỉnh cấu trúc `_buildKpiMiniItem`: Đặt nhãn `label` lên trên cùng (`fontSize: 10.5`, `FontWeight.w600`, `letterSpacing: 0.3`, `color: AppColors.textSub`).
+  + Loại bỏ hoàn toàn khối `Container` chứa `Icon` ở bên trái.
+  + Phóng to font của `value` từ `13.5px` lên `15.5px`, `FontWeight.w900`, `color: AppColors.textMainOf(context)`, căn giữa tinh tế.
+- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+  + Loại bỏ `Icon(Icons.stars, color: Color(0xFFEF5350))` ở tiêu đề thẻ.
+  + Loại bỏ `Icon(Icons.check_box)` / `Icons.check_box_outline_blank` ở từng dòng.
+  + Xây dựng Bảng ô lưới (Grid Table) 2 cột x 5 hàng trong khung viền 1px bo góc 4px (`AppColors.cardBorderRadius`):
+    - Hàng Header: Cột 1 "TIÊU CHÍ (THÔNG TƯ 22/2021/TT-BGDĐT)" (flex 65%), Cột 2 "KẾT QUẢ ĐỐI SOÁT" (flex 35%, căn giữa).
+    - Hàng 1 (ĐTB Chung): Tiêu chí ĐTB các môn $\ge 8.0$ $\leftrightarrow$ Giá trị ĐTB thực tế kèm trạng thái Đạt/Cần thêm.
+    - Hàng 2 (Môn Trọng Điểm): Ít nhất 1 trong 3 môn (Toán, Văn, Ngoại ngữ) $\ge 8.0$ $\leftrightarrow$ Điểm môn cao nhất và danh sách môn đạt.
+    - Hàng 3 (Môn Khống Chế): Không có môn nào $< 6.5$ (hoặc chưa đạt Đ) $\leftrightarrow$ Môn điểm thấp nhất và trạng thái đạt chuẩn.
+    - Hàng 4 (Kết Quả Chung Cuộc): Tổng kết xếp loại $\leftrightarrow$ Huy hiệu danh hiệu (ví dụ: `ĐẠT HỌC SINH GIỎI 🏆` hoặc `Cần thêm...`).
+    - Các hàng phân cách bởi vạch kẻ mảnh 1px `AppColors.cardBorder`.
+- **Thẻ Môn Học Accordion Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
+  + Thay thế widget ô con `_buildScoreSubCell` cũ bằng bảng `_buildScoreRow`:
+    - Cột trái (flex 62%): Tên thành phần điểm kèm hệ số (VD: `ĐĐGtx (Đánh giá thường xuyên x1)`).
+    - Vạch ngăn dọc 1px `AppColors.cardBorder`.
+    - Cột phải (flex 38%): Điểm số chi tiết (VD: `8.0, 9.0, 10.0`), font đậm `13.0px`, `FontWeight.w800`, căn phải.
+  + Áp dụng thống nhất cho cả Học kỳ 1/2 (`ĐĐGtx`, `ĐĐGgk`, `ĐĐGck`) và Cả năm (`ĐTB Học kỳ I`, `ĐTB Học kỳ II`, `ĐTB Cả năm`).
+  + Toàn bộ bảng đặt trong khung viền đen 1px bo góc 4px (`AppColors.cardBorderRadius`) với `clipBehavior: Clip.antiAlias`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (13 info deprecation/print tiền nhiệm không ảnh hưởng).
+- `flutter test`: **99 / 99 tests PASSED (100% test suite)**, trong đó bao gồm các test liên quan trực tiếp:
+  + `test/widgets/student_adaptive_dashboard_test.dart`: **PASSED**.
+  + `test/widgets/student_dashboard_nav_test.dart`: **PASSED**.
+- Giao diện bảng điểm hiển thị cực kỳ gọn gàng, dữ liệu phân cấp rõ ràng, dễ nhìn, tối ưu hoàn hảo cho cả thiết bị di động bề ngang hẹp và tablet/desktop.

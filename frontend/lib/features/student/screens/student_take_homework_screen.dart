@@ -265,7 +265,10 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1),
+        ),
         title: Row(
           children: [
             Icon(
@@ -285,6 +288,7 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: _kWarningAmber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppColors.cardRadius),
                   border: Border.all(color: _kWarningAmber.withValues(alpha: 0.3)),
                 ),
                 child: Text(
@@ -302,6 +306,9 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
         ),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
+            ),
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Kiểm tra lại', style: TextStyle(color: _kTextMuted)),
           ),
@@ -310,7 +317,7 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
               backgroundColor: _kPrimaryBlue,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Nộp bài ngay'),
@@ -432,7 +439,10 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
         final shouldLeave = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppColors.cardRadius),
+              side: const BorderSide(color: AppColors.cardBorder, width: 1),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.help_outline_rounded, color: _kWarningAmber),
@@ -446,6 +456,9 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
             ),
             actions: [
               TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
+                ),
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Thoát không lưu', style: TextStyle(color: _kTextMuted)),
               ),
@@ -454,7 +467,7 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
                   backgroundColor: _kPrimaryBlue,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppColors.cardRadius)),
                 ),
                 onPressed: () async {
                   final nav = Navigator.of(ctx);

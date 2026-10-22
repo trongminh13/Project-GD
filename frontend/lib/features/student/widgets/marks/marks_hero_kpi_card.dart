@@ -142,9 +142,9 @@ class MarksHeroKpiCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
                     child: _buildKpiMiniItem(
+                      context,
                       label: 'Số môn đánh giá',
                       value: '${markbook.subjects.length} môn',
-                      icon: Icons.assignment_turned_in_outlined,
                     ),
                   ),
                 ),
@@ -153,11 +153,11 @@ class MarksHeroKpiCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
                     child: _buildKpiMiniItem(
+                      context,
                       label: level == 'PRIMARY' ? 'Hoàn thành môn' : 'Môn đạt Giỏi',
                       value: level == 'PRIMARY'
                           ? '100% Tốt'
                           : (perfectCount > 0 ? '$perfectCount môn 10' : '8 môn ≥ 8.0'),
-                      icon: Icons.star_outline,
                     ),
                   ),
                 ),
@@ -166,9 +166,9 @@ class MarksHeroKpiCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
                     child: _buildKpiMiniItem(
+                      context,
                       label: 'Tiến độ học tập',
                       value: '100% Hoàn thành',
-                      icon: Icons.verified_outlined,
                     ),
                   ),
                 ),
@@ -180,25 +180,38 @@ class MarksHeroKpiCard extends StatelessWidget {
     );
   }
 
-  Widget _buildKpiMiniItem({
+  Widget _buildKpiMiniItem(
+    BuildContext context, {
     required String label,
     required String value,
-    required IconData icon,
   }) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(height: 4),
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+            color: AppColors.textSub,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 5),
         Text(
           value,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textMain),
+          style: TextStyle(
+            fontSize: 15.5,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textMainOf(context),
+            letterSpacing: -0.2,
+          ),
           textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10.5, color: AppColors.textSub),
-          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

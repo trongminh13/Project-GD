@@ -231,24 +231,32 @@ class MarksAccordionList extends StatelessWidget {
                               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSub),
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                _buildScoreSubCell(
-                                  'ĐTB Học kỳ I (x1)',
-                                  sub.semester1?.avg != null ? sub.semester1!.avg!.toStringAsFixed(1) : '-',
-                                ),
-                                const SizedBox(width: 8),
-                                _buildScoreSubCell(
-                                  'ĐTB Học kỳ II (x2)',
-                                  sub.semester2?.avg != null ? sub.semester2!.avg!.toStringAsFixed(1) : '-',
-                                ),
-                                const SizedBox(width: 8),
-                                _buildScoreSubCell(
-                                  'ĐTB Cả năm',
-                                  sub.yearAvg != null ? sub.yearAvg!.toStringAsFixed(1) : (avg != null ? avg.toStringAsFixed(1) : '-'),
-                                  isHighlight: true,
-                                ),
-                              ],
+                            Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: AppColors.cardBorderRadius,
+                                border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildScoreRow(
+                                    label: 'ĐTB Học kỳ I (x1)',
+                                    value: sub.semester1?.avg != null ? sub.semester1!.avg!.toStringAsFixed(1) : '-',
+                                  ),
+                                  const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
+                                  _buildScoreRow(
+                                    label: 'ĐTB Học kỳ II (x2)',
+                                    value: sub.semester2?.avg != null ? sub.semester2!.avg!.toStringAsFixed(1) : '-',
+                                  ),
+                                  const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
+                                  _buildScoreRow(
+                                    label: 'ĐTB Cả năm (Quy đổi)',
+                                    value: sub.yearAvg != null ? sub.yearAvg!.toStringAsFixed(1) : (avg != null ? avg.toStringAsFixed(1) : '-'),
+                                    isHighlight: true,
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 6),
                             const Text(
@@ -264,25 +272,33 @@ class MarksAccordionList extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             if (sem != null && (sem.txScores.isNotEmpty || sem.gkScore != null || sem.ckScore != null))
-                              Row(
-                                children: [
-                                  _buildScoreSubCell(
-                                    'ĐĐGtx (x1)',
-                                    (sem.txScores.isNotEmpty)
-                                        ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
-                                        : '-',
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildScoreSubCell(
-                                    'ĐĐGgk (x2)',
-                                    sem.gkScore != null ? sem.gkScore!.toStringAsFixed(1) : '-',
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildScoreSubCell(
-                                    'ĐĐGck (x3)',
-                                    sem.ckScore != null ? sem.ckScore!.toStringAsFixed(1) : '-',
-                                  ),
-                                ],
+                              Container(
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: AppColors.cardBorderRadius,
+                                  border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _buildScoreRow(
+                                      label: 'ĐĐGtx (Đánh giá thường xuyên x1)',
+                                      value: (sem.txScores.isNotEmpty)
+                                          ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
+                                          : '-',
+                                    ),
+                                    const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
+                                    _buildScoreRow(
+                                      label: 'ĐĐGgk (Đánh giá giữa kỳ x2)',
+                                      value: sem.gkScore != null ? sem.gkScore!.toStringAsFixed(1) : '-',
+                                    ),
+                                    const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
+                                    _buildScoreRow(
+                                      label: 'ĐĐGck (Đánh giá cuối kỳ x3)',
+                                      value: sem.ckScore != null ? sem.ckScore!.toStringAsFixed(1) : '-',
+                                    ),
+                                  ],
+                                ),
                               )
                             else
                               Container(
@@ -345,33 +361,48 @@ class MarksAccordionList extends StatelessWidget {
     return 'Học sinh nắm vững chuẩn kiến thức, tích cực phát biểu xây dựng bài.';
   }
 
-  Widget _buildScoreSubCell(String label, String value, {bool isHighlight = false}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        decoration: BoxDecoration(
-          color: isHighlight ? const Color(0xFFE8F0FE) : Colors.white,
-          borderRadius: AppColors.cardBorderRadius,
-          border: Border.all(
-            color: isHighlight ? AppColors.primary : AppColors.cardBorder,
-            width: isHighlight ? 1.0 : 0.8,
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSub)),
-            const SizedBox(height: 2),
-            Text(
-              value,
+  Widget _buildScoreRow({
+    required String label,
+    required String value,
+    bool isHighlight = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isHighlight ? const Color(0xFFE8F0FE) : Colors.white,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 62,
+            child: Text(
+              label,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
+                fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
+                color: isHighlight ? AppColors.primary : AppColors.textSub,
+              ),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 16,
+            color: isHighlight ? AppColors.primary.withValues(alpha: 0.3) : AppColors.cardBorder.withValues(alpha: 0.4),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+          Expanded(
+            flex: 38,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
                 color: isHighlight ? AppColors.primary : AppColors.textMain,
               ),
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.end,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
