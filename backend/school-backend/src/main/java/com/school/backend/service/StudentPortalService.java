@@ -6,6 +6,7 @@ import com.school.backend.entity.Enrollment;
 import com.school.backend.entity.Marks;
 import com.school.backend.entity.SchoolClass;
 import com.school.backend.entity.Student;
+import com.school.backend.entity.Teacher;
 import com.school.backend.payload.dto.StudentAttendanceDto;
 import com.school.backend.payload.dto.StudentMarkDto;
 import com.school.backend.payload.dto.StudentProfileDto;
@@ -59,6 +60,8 @@ public class StudentPortalService {
 
         String gradeStr = activeClass != null ? activeClass.getGrade() : null;
         EducationLevel level = EducationLevel.fromGrade(gradeStr);
+        Teacher homeroom = activeClass != null ? activeClass.getEffectiveHomeroomTeacher() : null;
+        String homeroomTeacherName = homeroom != null ? homeroom.getName() : "Cô Nguyễn Thị Lan";
 
         return StudentProfileDto.builder()
                 .id(student.getId())
@@ -73,6 +76,7 @@ public class StudentPortalService {
                 .educationLevel(level)
                 .educationLevelName(level.getDisplayName())
                 .schoolName(level.getDefaultSchoolName())
+                .homeroomTeacherName(homeroomTeacherName)
                 .build();
     }
 

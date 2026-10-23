@@ -14,6 +14,9 @@ class AuthService {
   final bool? _isDemoModeOverride;
   String? _verificationId;
 
+  /// Bộ nhớ đệm phiên đăng nhập hiện tại giúp Dashboard nạp dữ liệu đồng bộ tức thì
+  static Map<String, dynamic>? currentSessionUser;
+
   AuthService({http.Client? client, bool? isDemoMode})
       : _httpClient = client,
         _isDemoModeOverride = isDemoMode;
@@ -55,6 +58,7 @@ class AuthService {
             await _storage.write(key: 'jwt_token', value: user.token);
           } catch (_) {}
         }
+        currentSessionUser = data;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', jsonEncode(data));
 
@@ -119,22 +123,30 @@ class AuthService {
       demoUserData = {
         'id': '1',
         'username': 'Em Nguyễn Minh Anh',
+        'loginUsername': 'student01',
+        'name': 'Hoàng Văn Thư',
         'roles': ['ROLE_STUDENT'],
         'token': 'mock_jwt_token_student01',
         'mustChangePassword': false,
         'grade': '1',
         'section': 'A',
         'className': 'Lớp 1A',
-        'classTeacher': 'Cô Lê Thu Hà',
-        'schoolName': 'Trường Tiểu học Đại Việt',
+        'classTeacher': 'Cô Nguyễn Thị Lan',
+        'homeroomTeacherName': 'Cô Nguyễn Thị Lan',
+        'schoolName': 'Trường Tiểu học Astra',
         'educationLevel': 'PRIMARY',
         'educationLevelName': 'Tiểu học',
+        'dob': '2020-10-20',
+        'dateOfBirth': '20/10/2020',
+        'gender': 'Nam',
       };
     } else if (u == 'student02' || u == 'hocsinh2.demo') {
       expectedPass = 'student123';
       demoUserData = {
         'id': '2',
         'username': 'Em Trần Bảo Nam',
+        'loginUsername': 'student02',
+        'name': 'Trần Bảo Nam',
         'roles': ['ROLE_STUDENT'],
         'token': 'mock_jwt_token_student02',
         'mustChangePassword': false,
@@ -142,15 +154,21 @@ class AuthService {
         'section': 'A',
         'className': 'Lớp 6A',
         'classTeacher': 'Thầy Nguyễn Văn Nam',
-        'schoolName': 'Trường THCS Đại Việt',
+        'homeroomTeacherName': 'Thầy Nguyễn Văn Nam',
+        'schoolName': 'Trường THCS Astra',
         'educationLevel': 'SECONDARY',
         'educationLevelName': 'THCS',
+        'dob': '2014-08-20',
+        'dateOfBirth': '20/08/2014',
+        'gender': 'Nam',
       };
     } else if (u == 'student03' || u == 'hocsinh3.demo') {
       expectedPass = 'student123';
       demoUserData = {
         'id': '3',
         'username': 'Em Lê Hoàng Long',
+        'loginUsername': 'student03',
+        'name': 'Lê Hoàng Long',
         'roles': ['ROLE_STUDENT'],
         'token': 'mock_jwt_token_student03',
         'mustChangePassword': false,
@@ -158,9 +176,13 @@ class AuthService {
         'section': 'A',
         'className': 'Lớp 10A',
         'classTeacher': 'Thầy Vũ Đình Trọng',
-        'schoolName': 'Trường THPT Đại Việt',
+        'homeroomTeacherName': 'Thầy Vũ Đình Trọng',
+        'schoolName': 'Trường THPT Astra',
         'educationLevel': 'HIGH_SCHOOL',
         'educationLevelName': 'THPT',
+        'dob': '2010-08-15',
+        'dateOfBirth': '15/08/2010',
+        'gender': 'Nam',
       };
     } else if (u == 't001' || u == 'giaovien.demo') {
       expectedPass = 'teacher123';
@@ -201,6 +223,7 @@ class AuthService {
             await _storage.write(key: 'jwt_token', value: user.token);
           } catch (_) {}
         }
+        currentSessionUser = demoUserData;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', jsonEncode(demoUserData));
 
@@ -272,11 +295,14 @@ class AuthService {
     try {
       await _firebaseAuth?.signOut();
     } catch (_) {}
+    currentSessionUser = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_data');
   }
 
   Future<String?> getToken() async {
+    final cachedToken = currentSessionUser?['token']?.toString();
+    if (cachedToken != null && cachedToken.isNotEmpty) return cachedToken;
     try {
       final token = await _storage.read(key: 'jwt_token');
       if (token != null && token.isNotEmpty) return token;

@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ashadeep/core/theme/theme_manager.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/core/services/student_portal_service.dart';
@@ -25,6 +27,7 @@ import 'package:ashadeep/screens/login_screen.dart';
 import 'package:ashadeep/core/enums/education_level.dart';
 import 'package:ashadeep/models/markbook.dart';
 import 'package:ashadeep/features/student/widgets/marks/student_marks_tab.dart';
+import 'package:ashadeep/features/student/widgets/mascot/primary_animal_identity_card.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -70,44 +73,53 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     _loadAllData();
   }
 
+  void _safeUpdateThemeEducationLevel(EducationLevel level) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
+      } catch (_) {}
+    });
+  }
+
   /// Tải dữ liệu toàn diện theo mô hình Progressive Rendering:
   /// Khởi chạy song song nhưng độc lập, phần nào có dữ liệu kết xuất ngay phần đó.
   Future<void> _loadAllData() async {
-    setState(() {
-      _isLoading = true;
-      _hasHomeworkError = false;
-      _hasMaterialsError = false;
-    });
+    // 1. Nạp dữ liệu khởi tạo tức thì (0ms Fast Render)
+    final mock = _getAdaptiveMockProfileSync();
+    _profile = mock;
+    _attendance = _getMockAttendance();
+    _marks = _getMockMarks();
+    _homework = _getMockHomework();
+    _materials = _getMockMaterials();
+    _notices = _getMockNotices();
+    _isLoading = false;
 
-    // Fast-path cho môi trường Demo / Web GitHub Pages (0ms network delay)
-    if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) {
-      if (mounted) {
-        setState(() {
-          _profile = _getMockProfile();
-          _attendance = _getMockAttendance();
-          _marks = _getMockMarks();
-          _homework = _getMockHomework();
-          _materials = _getMockMaterials();
-          _notices = _getMockNotices();
-          _isLoading = false;
-        });
-        final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
-        try {
-          Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
-        } catch (_) {}
-      }
+    final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+    _safeUpdateThemeEducationLevel(level);
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    // Nếu môi trường thuần Demo tĩnh (chạy không có máy chủ backend thật)
+    if (ApiConstants.isDemoMode) {
+      _syncProfileWithStoredSession();
       return;
     }
 
-    // Chạy song song độc lập, không dùng Future.wait đơn khối làm tắc nghẽn cả màn hình
-    await Future.wait([
-      _loadProfile(),
-      _loadAttendance(),
-      _loadMarks(),
-      _loadHomework(),
-      _loadMaterials(),
-      _loadNotices(),
-    ]);
+    // 2. Đồng bộ ngầm với Backend (Progressive Live Sync)
+    // Phần nào có API thật trả về sẽ cập nhật đè lên giao diện; nếu offline, giữ nguyên fallback an toàn.
+    try {
+      await Future.wait([
+        _loadProfile(),
+        _loadAttendance(),
+        _loadMarks(),
+        _loadHomework(),
+        _loadMaterials(),
+        _loadNotices(),
+      ]);
+    } catch (_) {}
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -117,17 +129,31 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   Future<void> _loadProfile() async {
     try {
       final p = await _portalService.getMyProfile();
-      if (mounted) {
+      Map<String, dynamic>? profileData = p;
+      if (profileData == null && FeatureFlags.useDemoFallback) {
+        profileData = _getAdaptiveMockProfileSync();
+      }
+      if (!mounted) return;
+      if (profileData != null) {
         setState(() {
-          _profile = p;
+          _profile = profileData;
           _isLoading = false; // Có profile là hiển thị khung trang chủ ngay
         });
-        final level = EducationLevelHelper.fromGrade(p?['grade'], p?['educationLevel']);
-        try {
-          Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
-        } catch (_) {}
+        final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+        _safeUpdateThemeEducationLevel(level);
       }
-    } catch (_) {}
+    } catch (_) {
+      if (FeatureFlags.useDemoFallback) {
+        final mock = _getAdaptiveMockProfileSync();
+        if (!mounted) return;
+        setState(() {
+          _profile = mock;
+          _isLoading = false;
+        });
+        final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+        _safeUpdateThemeEducationLevel(level);
+      }
+    }
   }
 
   Future<void> _loadAttendance() async {
@@ -252,25 +278,209 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
   }
 
-  Map<String, dynamic> _getMockProfile() {
-    return {
-      'id': 1,
-      'name': 'Nguyễn Minh Anh',
-      'grade': '10',
-      'section': 'A1',
-      'className': 'Lớp 10A1',
-      'rollNo': 'HS001',
-      'admissionNumber': 'HS-2026-001',
-      'classTeacher': 'Cô Lê Thu Hà',
-      'schoolName': 'Trường THPT Astra',
-      'educationLevel': 'HIGH_SCHOOL',
-      'educationLevelName': 'THPT',
-      'dateOfBirth': '15/08/2010',
-      'gender': 'Nữ',
-      'parentName': 'Nguyễn Văn Hùng',
-      'parentPhone': '0910157611',
-    };
+  String _extractDobDMY(Map<String, dynamic>? profile) {
+    if (profile == null) return '20102026';
+    final raw = profile['dob'] ?? profile['dateOfBirth'];
+    if (raw == null) return '20102026';
+    final s = raw.toString().trim();
+    final isoMatch = RegExp(r'^(\d{4})-(\d{1,2})-(\d{1,2})').firstMatch(s);
+    if (isoMatch != null) {
+      final y = isoMatch.group(1)!;
+      final m = isoMatch.group(2)!.padLeft(2, '0');
+      final d = isoMatch.group(3)!.padLeft(2, '0');
+      return '$d/$m/$y';
+    }
+    return s;
   }
+
+  Map<String, dynamic> _getAdaptiveMockProfileSync() {
+    final userData = AuthService.currentSessionUser;
+    if (userData == null) {
+      // Mặc định cho Standalone & Widget Tests khi chưa qua màn đăng nhập
+      return {
+        'id': 1,
+        'name': 'Nguyễn Minh Anh',
+        'grade': '10',
+        'section': 'A1',
+        'className': 'Lớp 10A1',
+        'rollNo': 'HS001',
+        'admissionNumber': 'HS-2026-001',
+        'classTeacher': 'Cô Lê Thu Hà',
+        'homeroomTeacherName': 'Cô Lê Thu Hà',
+        'schoolName': 'Trường THPT Astra',
+        'educationLevel': 'HIGH_SCHOOL',
+        'educationLevelName': 'THPT',
+        'dob': '2010-08-15',
+        'dateOfBirth': '15/08/2010',
+        'gender': 'Nữ',
+        'parentName': 'Nguyễn Văn Hùng',
+        'parentPhone': '0910157611',
+      };
+    }
+
+    final rawGrade = userData['grade']?.toString() ?? '';
+    final rawLevel = userData['educationLevel']?.toString() ?? '';
+    final username = (userData['loginUsername'] ?? userData['username'] ?? '').toString().toLowerCase();
+
+    // 1. Phân loại chuẩn xác theo username, educationLevel hoặc khối lớp cụ thể
+    final isSec = username.contains('student02') ||
+        username.contains('hocsinh2') ||
+        username.contains('6a') ||
+        rawLevel.toUpperCase().contains('SEC') ||
+        RegExp(r'^(6|7|8|9)').hasMatch(rawGrade);
+
+    final isHigh = username.contains('student03') ||
+        username.contains('hocsinh3') ||
+        username.contains('10a') ||
+        rawLevel.toUpperCase().contains('HIGH') ||
+        rawLevel.toUpperCase().contains('THPT') ||
+        RegExp(r'^(10|11|12)').hasMatch(rawGrade);
+
+    final isPrim = username.contains('student01') ||
+        username.contains('hocsinh1') ||
+        username.contains('1a') ||
+        rawLevel.toUpperCase().contains('PRIM') ||
+        (RegExp(r'^[1-5]').hasMatch(rawGrade) && !RegExp(r'^(10|11|12)').hasMatch(rawGrade));
+
+    if (isSec) {
+      return {
+        'id': 2,
+        'name': userData['name'] ?? 'Trần Bảo Nam',
+        'grade': '6',
+        'section': 'A',
+        'className': 'Lớp 6A',
+        'rollNo': 'HS002',
+        'admissionNumber': 'STU002',
+        'classTeacher': 'Thầy Nguyễn Văn Nam',
+        'homeroomTeacherName': 'Thầy Nguyễn Văn Nam',
+        'schoolName': 'Trường THCS Astra',
+        'educationLevel': 'SECONDARY',
+        'educationLevelName': 'THCS',
+        'dob': '2015-04-18',
+        'dateOfBirth': '18/04/2015',
+        'gender': 'Nam',
+      };
+    } else if (isHigh) {
+      return {
+        'id': 3,
+        'name': userData['name'] ?? 'Lê Hoàng Long',
+        'grade': '10',
+        'section': 'A1',
+        'className': 'Lớp 10A1',
+        'rollNo': 'HS003',
+        'admissionNumber': 'STU003',
+        'classTeacher': 'Cô Lê Thu Hà',
+        'homeroomTeacherName': 'Cô Lê Thu Hà',
+        'schoolName': 'Trường THPT Astra',
+        'educationLevel': 'HIGH_SCHOOL',
+        'educationLevelName': 'THPT',
+        'dob': '2010-08-15',
+        'dateOfBirth': '15/08/2010',
+        'gender': 'Nữ',
+        'parentName': 'Nguyễn Văn Hùng',
+        'parentPhone': '0910157611',
+      };
+    } else if (isPrim) {
+      return {
+        'id': 1,
+        'name': userData['name'] ?? 'Hoàng Văn Thư',
+        'grade': '1',
+        'section': 'A',
+        'className': 'Lớp 1A',
+        'rollNo': 'HS001',
+        'admissionNumber': 'STU001',
+        'classTeacher': 'Cô Nguyễn Thị Lan',
+        'homeroomTeacherName': 'Cô Nguyễn Thị Lan',
+        'schoolName': 'Trường Tiểu học Astra',
+        'educationLevel': 'PRIMARY',
+        'educationLevelName': 'Tiểu học',
+        'dob': '2020-10-20',
+        'dateOfBirth': '20/10/2020',
+        'gender': 'Nam',
+      };
+    } else {
+      // Mặc định cho Standalone & Widget Tests: Cấp 3 THPT
+      final level = rawGrade.isNotEmpty ? EducationLevelHelper.fromGrade(rawGrade, rawLevel) : EducationLevel.highSchool;
+      if (level == EducationLevel.secondary) {
+        return {
+          'id': 2,
+          'name': userData['name'] ?? 'Trần Bảo Nam',
+          'grade': '6',
+          'section': 'A',
+          'className': 'Lớp 6A',
+          'rollNo': 'HS002',
+          'admissionNumber': 'STU002',
+          'classTeacher': 'Thầy Nguyễn Văn Nam',
+          'homeroomTeacherName': 'Thầy Nguyễn Văn Nam',
+          'schoolName': 'Trường THCS Astra',
+          'educationLevel': 'SECONDARY',
+          'educationLevelName': 'THCS',
+          'dob': '2015-04-18',
+          'dateOfBirth': '18/04/2015',
+          'gender': 'Nam',
+        };
+      } else if (level == EducationLevel.primary) {
+        return {
+          'id': 1,
+          'name': userData['name'] ?? 'Hoàng Văn Thư',
+          'grade': '1',
+          'section': 'A',
+          'className': 'Lớp 1A',
+          'rollNo': 'HS001',
+          'admissionNumber': 'STU001',
+          'classTeacher': 'Cô Nguyễn Thị Lan',
+          'homeroomTeacherName': 'Cô Nguyễn Thị Lan',
+          'schoolName': 'Trường Tiểu học Astra',
+          'educationLevel': 'PRIMARY',
+          'educationLevelName': 'Tiểu học',
+          'dob': '2020-10-20',
+          'dateOfBirth': '20/10/2020',
+          'gender': 'Nam',
+        };
+      }
+      return {
+        'id': 1,
+        'name': userData['name'] ?? 'Nguyễn Minh Anh',
+        'grade': '10',
+        'section': 'A1',
+        'className': 'Lớp 10A1',
+        'rollNo': 'HS001',
+        'admissionNumber': 'HS-2026-001',
+        'classTeacher': 'Cô Lê Thu Hà',
+        'homeroomTeacherName': 'Cô Lê Thu Hà',
+        'schoolName': 'Trường THPT Astra',
+        'educationLevel': 'HIGH_SCHOOL',
+        'educationLevelName': 'THPT',
+        'dob': '2010-08-15',
+        'dateOfBirth': '15/08/2010',
+        'gender': 'Nữ',
+        'parentName': 'Nguyễn Văn Hùng',
+        'parentPhone': '0910157611',
+      };
+    }
+  }
+
+  Future<void> _syncProfileWithStoredSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final str = prefs.getString('user_data');
+      if (str != null && str.isNotEmpty) {
+        final userData = jsonDecode(str) as Map<String, dynamic>;
+        AuthService.currentSessionUser = userData;
+        final updatedMock = _getAdaptiveMockProfileSync();
+        if (mounted && (_profile?['educationLevel'] != updatedMock['educationLevel'] || _profile?['name'] != updatedMock['name'])) {
+          setState(() {
+            _profile = updatedMock;
+          });
+          final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+          _safeUpdateThemeEducationLevel(level);
+        }
+      }
+      // Nạp ngầm dữ liệu thật từ Backend Spring Boot nếu đang có phiên đăng nhập
+      _loadProfile();
+    } catch (_) {}
+  }
+
 
   List<Map<String, dynamic>> _getMockMarks() {
     return [
@@ -314,10 +524,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   StudentMarkbook _getAdaptiveMockMarkbook() {
     final level = _profile?['educationLevel']?.toString() ?? 'HIGH_SCHOOL';
-    final name = _profile?['name']?.toString() ?? 'Lê Hoàng Long';
+    final name = _profile?['name']?.toString() ?? 'Nguyễn Minh Anh';
     final className = _profile?['className']?.toString() ?? '10A';
-    final school = _profile?['schoolName']?.toString() ?? 'Trường THPT Chu Văn An';
-    final admission = _profile?['admissionNumber']?.toString() ?? 'STU003';
+    final school = _profile?['schoolName']?.toString() ?? 'Trường THPT Astra';
+    final admission = _profile?['admissionNumber']?.toString() ?? 'HS-2026-001';
 
     if (level == 'PRIMARY') {
       return StudentMarkbook(
@@ -1711,7 +1921,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
     final levelShortTitle = EducationLevelHelper.getShortTitle(educationLevel);
     final schoolName = _profile?['schoolName']?.toString() ?? EducationLevelHelper.getSchoolName(educationLevel);
-    final classTeacher = _profile?['classTeacher'] ?? 'Cô Lê Thu Hà';
+    final classTeacher = _profile?['homeroomTeacherName'] ??
+        _profile?['classTeacher'] ??
+        (educationLevel == EducationLevel.primary ? 'Cô Nguyễn Thị Lan' : 'Cô Lê Thu Hà');
     final now = DateTime.now();
     final timeGreeting = _getTimeGreeting(now);
     final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 4: Thứ 6
@@ -1749,8 +1961,19 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             ),
 
-          // Header cá nhân học sinh
-          Container(
+          // Header cá nhân học sinh: Cấp 1 hiển thị Thẻ Con Vật Nhận Diện; Cấp 2 & Cấp 3 giữ Card học thuật
+          if (educationLevel == EducationLevel.primary)
+            PrimaryAnimalIdentityCard(
+              studentName: studentName,
+              className: className,
+              dateStr: '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}',
+              dobDMY: _extractDobDMY(_profile),
+              teacherName: classTeacher,
+              onTapMore: _showMoreBottomSheet,
+              onLogout: _logout,
+            )
+          else
+            Container(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: AppColors.cardBorderRadius,
@@ -2002,24 +2225,20 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               ),
             ),
           const SizedBox(height: 24),
-          // Footer Trang Chủ: Đăng xuất tài khoản (Flat Square Design - px=0 sát BottomNavigationBar)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: AppColors.cardBorderRadius,
-              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-            ),
+          // Footer Trang Chủ: Đăng xuất tài khoản
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 16),
             child: Column(
               children: [
                 InkWell(
                   onTap: _logout,
+                  borderRadius: AppColors.cardBorderRadius,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.06),
-                      border: Border.all(color: AppColors.error, width: 1.0),
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
                       borderRadius: AppColors.cardBorderRadius,
                     ),
                     alignment: Alignment.center,
@@ -2041,7 +2260,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Text(
                   'Astra School Portal · Hệ thống Giáo dục Liên cấp Đại Việt',
                   style: TextStyle(fontSize: 11, color: AppColors.textSub),

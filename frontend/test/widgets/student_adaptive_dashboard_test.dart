@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ashadeep/features/student/screens/student_dashboard_screen.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/core/services/auth_service.dart';
+import 'package:ashadeep/features/student/widgets/mascot/primary_animal_identity_card.dart';
 
 void main() {
   setUp(() {
@@ -150,5 +152,55 @@ void main() {
       expect(find.textContaining('CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'), findsOneWidget);
       expect(find.textContaining('PHIẾU BÁO ĐIỂM HỌC TẬP'), findsOneWidget);
     });
+
+    testWidgets('TC-ADAPTIVE-06: Secondary and High School students do NOT display PrimaryAnimalIdentityCard; only Primary student displays it', (tester) async {
+      // 1. Kiểm tra Cấp 3 THPT (student03) - KHÔNG ĐƯỢC có Thẻ Con Vật
+      AuthService.currentSessionUser = {
+        'username': 'student03',
+        'roles': ['STUDENT'],
+      };
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Lớp 10A1'), findsOneWidget);
+      expect(find.byType(PrimaryAnimalIdentityCard), findsNothing);
+
+      // 2. Kiểm tra Cấp 2 THCS (student02) - KHÔNG ĐƯỢC có Thẻ Con Vật
+      AuthService.currentSessionUser = {
+        'username': 'student02',
+        'roles': ['STUDENT'],
+      };
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Lớp 6A'), findsOneWidget);
+      expect(find.byType(PrimaryAnimalIdentityCard), findsNothing);
+
+      // 3. Kiểm tra Cấp 1 Tiểu học (student01) - BẮT BUỘC có Thẻ Con Vật
+      AuthService.currentSessionUser = {
+        'username': 'student01',
+        'roles': ['STUDENT'],
+      };
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(PrimaryAnimalIdentityCard), findsOneWidget);
+      expect(find.text('TÊN LỚP'), findsOneWidget);
+      expect(find.text('HỌC SINH'), findsOneWidget);
+      expect(find.text('GIÁO VIÊN'), findsOneWidget);
+
+      // Dọn dẹp session sau test
+      AuthService.currentSessionUser = null;
+    });
   });
 }
+

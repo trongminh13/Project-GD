@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thẻ lớp học - 10 con vật</title>
+<style>
+  :root { --c: #0b63c5; }                        /* màu chủ đạo, JS đổi theo con vật */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 12px 40px;
+    background: #fff;
+    font-family: "Nunito", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    color: var(--c);
+  }
+
+  /* ================= THẺ CHỮ NHẬT ================= */
+  .card {
+    display: flex;
+    width: min(700px, 100%);
+    background: #fff;
+    border: 4px solid var(--c);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: border-color .3s;
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 22px 24px;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field {
+    border: 3px solid var(--c);
+    border-radius: 12px;
+    padding: 8px 14px 10px;
+    min-width: 0;
+    transition: border-color .3s;
+  }
+  .label {
+    display: inline-block;
+    background: var(--c);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2em;
+    padding: 2px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    transition: background .3s;
+  }
+  .value {
+    font-size: clamp(19px, 4.2vw, 28px);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--c);
+    word-break: break-word;
+    min-height: 1.2em;
+  }
+
+  /* ---------- Con vật thò ra từ mép phải ---------- */
+  .pet-side {
+    flex: 0 0 38%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    overflow: hidden;                              /* phần thân vượt mép phải bị che */
+    background: #fff;
+  }
+  .pet-side svg { width: 100%; max-width: 270px; height: auto; display: block; }
+
+  /* Quy ước SVG: chỉ có màu chủ đạo (--c) và trắng */
+  .b   { fill: var(--c); stroke: #fff; stroke-width: 3; stroke-linejoin: round; }
+  .wl  { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .w   { fill: #fff; }
+  .pc  { fill: var(--c); }
+  .pcs { fill: none; stroke: var(--c); stroke-width: 2.5; stroke-linecap: round; }
+  .ps  { stroke: var(--c); stroke-width: 1.5; }
+  .o   { fill: none; stroke: #fff; stroke-linecap: round; }
+  .i   { fill: none; stroke: var(--c); stroke-linecap: round; }
+  .mouth { stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
+
+  @media (max-width: 480px) {
+    .card { flex-direction: column; }
+    .pet-side { flex: none; }
+    .pet-side svg { max-width: 230px; }
+  }
+
+  /* ================= BẢNG THỬ ================= */
+  .panel {
+    margin-top: 30px;
+    width: min(700px, 100%);
+    border: 2px solid var(--c);
+    border-radius: 14px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .panel label {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 12px; font-weight: 800; letter-spacing: .1em;
+  }
+  .panel input {
+    padding: 9px 10px;
+    border: 2px solid var(--c);
+    border-radius: 8px;
+    font: inherit; font-weight: 600; letter-spacing: 0;
+    color: var(--c);
+    background: #fff;
+    outline: none;
+  }
+  .panel input:focus { box-shadow: 0 0 0 3px rgba(0,0,0,.08); }
+  .result { grid-column: 1 / -1; font-size: 14px; line-height: 1.6; word-break: break-all; }
+  .result code { background: var(--c); color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+  .chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 2px solid; background: #fff; border-radius: 999px;
+    padding: 4px 12px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+  }
+  @media (max-width: 480px) { .panel { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="info">
+    <div class="row2">
+      <div class="field"><span class="label">TÊN LỚP</span><div class="value" id="vClass"></div></div>
+      <div class="field"><span class="label">NGÀY</span><div class="value" id="vDate"></div></div>
+    </div>
+    <div class="field"><span class="label">HỌC SINH</span><div class="value" id="vStudent"></div></div>
+    <div class="field"><span class="label">GIÁO VIÊN</span><div class="value" id="vTeacher"></div></div>
+  </div>
+  <div class="pet-side">
+    <svg id="pet" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img"></svg>
+  </div>
+</div>
+
+<!-- Bảng thử: nhập thông tin để xem học sinh nhận con vật nào -->
+<section class="panel">
+  <label>TÊN LỚP<input id="iClass" value="Lớp 5A"></label>
+  <label>NGÀY<input id="iDate"></label>
+  <label>HỌC SINH<input id="iStudent" value="Hoàng Văn Thư"></label>
+  <label>NGÀY SINH<input id="iDob" type="date" value="2026-10-20"></label>
+  <label style="grid-column:1/-1">GIÁO VIÊN<input id="iTeacher" value="Cô Nguyễn Thị Lan"></label>
+  <p class="result">Mã học sinh: <code id="key"></code> &rarr; <b id="aname"></b></p>
+  <div class="chips" id="chips"></div>
+</section>
+
+<script>
+(function () {
+
+  /* =====================================================
+     1) HÀM TẠO MÃ + RANDOM THEO MÃ
+     Mã = tên học sinh (không dấu, viết liền, chữ thường) + ngày sinh (ddmmyyyy)
+     Ví dụ: "Hoàng Văn Thư" + 20/10/2026  ->  hoangvanthu20102026
+     Cùng một mã thì luôn ra cùng một con vật.
+     ===================================================== */
+  function stripAccents(s) {
+    return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
+  function makeKey(studentName, dobDMY) {
+    const name = stripAccents(studentName).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const dob  = String(dobDMY).replace(/\D/g, '');
+    return name + dob;
+  }
+  function hashString(s) {                       // FNV-1a + trộn bit
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13;
+    return h >>> 0;
+  }
+  function pickAnimal(key) {                     // trả về 1 trong 10 con vật
+    return ANIMALS[hashString(key) % ANIMALS.length];
+  }
+
+  /* =====================================================
+     2) 10 CON VẬT (cùng tư thế: thân giấu sau mép phải, nghiêng người vẫy tay)
+     Mỗi con chỉ có 1 màu + trắng
+     ===================================================== */
+  const E = (x1, x2, y, rx = 8, ry = 9.5, pr = 4.5) =>
+    `<ellipse class="w" cx="${x1}" cy="${y}" rx="${rx}" ry="${ry}"/><ellipse class="w" cx="${x2}" cy="${y}" rx="${rx}" ry="${ry}"/>` +
+    `<circle class="pc" cx="${x1 + 1.5}" cy="${y + 2}" r="${pr}"/><circle class="pc" cx="${x2 - 1.5}" cy="${y + 2}" r="${pr}"/>`;
+  const S = (cx, cy, w, d) =>
+    `<path class="w mouth" d="M${cx - w} ${cy} Q${cx} ${cy + d} ${cx + w} ${cy} Q${cx} ${cy + d * .24} ${cx - w} ${cy} Z"/>` +
+    `<ellipse class="pc" cx="${cx}" cy="${cy + d * .48}" rx="${w * .47}" ry="4"/>`;
+
+  const ANIMALS = [
+    { id: 'gau', name: 'Gấu', color: '#0b63c5', colorName: 'xanh nước biển', head: `
+      <circle class="b" cx="112" cy="62" r="19"/><circle class="b" cx="188" cy="62" r="19"/>
+      <circle class="wl" cx="112" cy="62" r="9"/><circle class="wl" cx="188" cy="62" r="9"/>
+      <circle class="b" cx="150" cy="105" r="52"/>
+      <ellipse class="wl" cx="150" cy="124" rx="24" ry="20"/>
+      ${E(130, 170, 98)}
+      <ellipse class="w" cx="150" cy="112" rx="8.5" ry="6"/>
+      <path class="wl" d="M150 118 L150 124"/>
+      ${S(150, 125, 16, 25)}` },
+
+    { id: 'casau', name: 'Cá sấu', color: '#ee4f8f', colorName: 'hồng', head: `
+      <circle class="b" cx="122" cy="64" r="17"/><circle class="b" cx="178" cy="64" r="17"/>
+      <ellipse class="b" cx="150" cy="106" rx="56" ry="48"/>
+      ${E(122, 178, 63, 8.5, 9.5, 4.5)}
+      <ellipse class="wl" cx="150" cy="124" rx="42" ry="26"/>
+      <circle class="w" cx="137" cy="108" r="3"/><circle class="w" cx="163" cy="108" r="3"/>
+      <path class="wl" d="M118 126 Q150 148 182 126"/>
+      <path class="w" d="M126.5 132 L133.5 132 L130 139Z M136.5 135.2 L143.5 135.2 L140 142Z M146.5 136.3 L153.5 136.3 L150 143.5Z M156.5 135.2 L163.5 135.2 L160 142Z M166.5 132 L173.5 132 L170 139Z"/>` },
+
+    { id: 'meo', name: 'Mèo', color: '#2f9e4f', colorName: 'xanh lá', head: `
+      <path class="b" d="M102 84 L104 34 L138 62 Z"/><path class="b" d="M198 84 L196 34 L162 62 Z"/>
+      <path class="wl" d="M112 68 L113 50 L127 60"/><path class="wl" d="M188 68 L187 50 L173 60"/>
+      <ellipse class="b" cx="150" cy="108" rx="54" ry="48"/>
+      <ellipse class="w" cx="130" cy="102" rx="7.5" ry="10"/><ellipse class="w" cx="170" cy="102" rx="7.5" ry="10"/>
+      <ellipse class="pc" cx="131" cy="103" rx="3" ry="8"/><ellipse class="pc" cx="169" cy="103" rx="3" ry="8"/>
+      <path class="w" d="M144 114 L156 114 L150 121 Z"/>
+      <path class="wl" d="M150 121 L150 126 M150 126 Q142 135 134 127 M150 126 Q158 135 166 127"/>
+      <path class="wl" style="stroke-width:2.2" d="M104 114 L88 110 M104 122 L88 126 M196 114 L214 110 M196 122 L214 126"/>` },
+
+    { id: 'ca', name: 'Cá', color: '#f08a1c', colorName: 'cam', head: `
+      <path class="b" d="M114 70 Q150 14 186 70 Q150 54 114 70 Z"/>
+      <path class="wl" style="stroke-width:2.2" d="M150 52 L150 32 M132 58 L126 40 M168 58 L174 40"/>
+      <ellipse class="b" cx="94" cy="118" rx="16" ry="9" transform="rotate(-25 94 118)"/>
+      <ellipse class="b" cx="206" cy="118" rx="16" ry="9" transform="rotate(25 206 118)"/>
+      <ellipse class="b" cx="150" cy="108" rx="56" ry="50"/>
+      <path class="wl" style="stroke-width:2.2" d="M100 98 Q94 112 100 126 M200 98 Q206 112 200 126"/>
+      <circle class="w" cx="127" cy="94" r="13"/><circle class="w" cx="173" cy="94" r="13"/>
+      <circle class="pc" cx="129" cy="97" r="6.5"/><circle class="pc" cx="171" cy="97" r="6.5"/>
+      <circle class="w" cx="131" cy="94.5" r="2"/><circle class="w" cx="173" cy="94.5" r="2"/>
+      <ellipse class="w" cx="150" cy="125" rx="17" ry="10"/>
+      <path class="pcs" d="M141 123 Q150 132 159 123"/>` },
+
+    { id: 'ngua', name: 'Ngựa', color: '#7b4fc9', colorName: 'tím', head: `
+      <path class="b" d="M121 66 L113 20 L145 52 Z"/><path class="b" d="M179 66 L187 20 L155 52 Z"/>
+      <path class="wl" d="M122 56 L119 36 L134 50"/><path class="wl" d="M178 56 L181 36 L166 50"/>
+      <ellipse class="b" cx="150" cy="104" rx="45" ry="57"/>
+      <path class="b" d="M126 60 Q132 24 152 42 Q162 26 174 60 Q150 50 126 60 Z"/>
+      ${E(132, 168, 96, 7, 9, 4)}
+      <ellipse class="wl" cx="150" cy="136" rx="28" ry="20"/>
+      <circle class="w" cx="139" cy="132" r="3.5"/><circle class="w" cx="161" cy="132" r="3.5"/>
+      <path class="wl" d="M138 146 Q150 154 162 146"/>` },
+
+    { id: 'tho', name: 'Thỏ', color: '#d63a3a', colorName: 'đỏ', head: `
+      <ellipse class="b" cx="126" cy="42" rx="14" ry="38" transform="rotate(-8 126 42)"/>
+      <ellipse class="b" cx="174" cy="42" rx="14" ry="38" transform="rotate(8 174 42)"/>
+      <ellipse class="wl" cx="126" cy="44" rx="6" ry="26" transform="rotate(-8 126 44)"/>
+      <ellipse class="wl" cx="174" cy="44" rx="6" ry="26" transform="rotate(8 174 44)"/>
+      <circle class="b" cx="150" cy="108" r="50"/>
+      ${E(131, 169, 102, 7, 9, 4.2)}
+      <ellipse class="w" cx="150" cy="114" rx="6.5" ry="4.5"/>
+      <path class="wl" d="M150 119 L150 125 M150 125 Q142 133 135 127 M150 125 Q158 133 165 127"/>
+      <rect class="w ps" x="143" y="128" width="14" height="11" rx="2"/>
+      <path class="pcs" style="stroke-width:1.6" d="M150 129 L150 138"/>` },
+
+    { id: 'cho', name: 'Chó', color: '#0f9aa8', colorName: 'xanh ngọc', head: `
+      <ellipse class="b" cx="102" cy="100" rx="17" ry="34" transform="rotate(16 102 100)"/>
+      <ellipse class="b" cx="198" cy="100" rx="17" ry="34" transform="rotate(-16 198 100)"/>
+      <circle class="b" cx="150" cy="105" r="50"/>
+      <ellipse class="wl" cx="170" cy="94" rx="17" ry="18"/>
+      ${E(131, 169, 98, 7.5, 9, 4.3)}
+      <ellipse class="wl" cx="150" cy="126" rx="26" ry="19"/>
+      <ellipse class="w" cx="150" cy="115" rx="10" ry="7"/>
+      <path class="wl" d="M150 122 L150 128 M150 128 Q141 137 132 129 M150 128 Q159 137 168 129"/>
+      <path class="w" d="M143 134 L143 147 Q150 155 157 147 L157 134 Z"/>
+      <path class="pcs" style="stroke-width:1.8" d="M150 136 L150 147"/>` },
+
+    { id: 'voi', name: 'Voi', color: '#8a5a3c', colorName: 'nâu', head: `
+      <circle class="b" cx="98" cy="104" r="30"/><circle class="b" cx="202" cy="104" r="30"/>
+      <circle class="wl" cx="98" cy="104" r="17"/><circle class="wl" cx="202" cy="104" r="17"/>
+      <circle class="b" cx="150" cy="102" r="47"/>
+      ${E(132, 168, 92, 6.5, 8, 3.8)}
+      <path class="o" stroke-width="27" d="M150 108 Q150 150 138 160 Q131 166 126 157"/>
+      <path class="i" stroke-width="21" d="M150 108 Q150 150 138 160 Q131 166 126 157"/>
+      <path class="wl" style="stroke-width:2.2" d="M141 126 L159 126 M140 138 L158 138"/>
+      <path class="wl" d="M118 122 Q124 134 136 132 M182 122 Q176 134 164 132"/>` },
+
+    { id: 'vit', name: 'Vịt', color: '#d49b00', colorName: 'vàng', head: `
+      <path class="b" d="M136 62 Q130 38 147 47 Q151 28 164 45 Q178 38 168 64 Z"/>
+      <circle class="b" cx="150" cy="106" r="50"/>
+      ${E(130, 170, 94, 6.5, 8.5, 4)}
+      <ellipse class="w" cx="150" cy="122" rx="30" ry="15"/>
+      <path class="pcs" d="M122 122 Q150 138 178 122"/>
+      <circle class="pc" cx="141" cy="115" r="2.5"/><circle class="pc" cx="159" cy="115" r="2.5"/>` },
+
+    { id: 'ech', name: 'Ếch', color: '#5fa300', colorName: 'xanh chanh', head: `
+      <circle class="b" cx="116" cy="68" r="23"/><circle class="b" cx="184" cy="68" r="23"/>
+      <ellipse class="b" cx="150" cy="114" rx="58" ry="44"/>
+      <circle class="w" cx="116" cy="66" r="13"/><circle class="w" cx="184" cy="66" r="13"/>
+      <circle class="pc" cx="118" cy="68" r="6.5"/><circle class="pc" cx="182" cy="68" r="6.5"/>
+      <circle class="w" cx="142" cy="102" r="2.6"/><circle class="w" cx="158" cy="102" r="2.6"/>
+      ${S(150, 118, 44, 44)}` }
+  ];
+
+  /* Phần chung của mọi con vật: thân giấu sau mép phải + tay vẫy */
+  const BODY = `
+    <ellipse class="b" cx="226" cy="196" rx="62" ry="92" transform="rotate(-24 226 196)"/>
+    <path class="o" stroke-width="31" d="M188 156 Q84 172 78 66"/>
+    <path class="i" stroke-width="25" d="M188 156 Q84 172 78 66"/>
+    <circle class="b" cx="78" cy="62" r="16"/>
+    <circle class="wl" style="stroke-width:2.5" cx="78" cy="64" r="6"/>
+    <path class="wl" style="stroke-width:4" d="M52 40 Q38 62 52 86"/>
+    <path class="wl" style="stroke-width:4" d="M36 30 Q16 62 36 96"/>`;
+
+  /* =====================================================
+     3) VẼ THẺ
+     data = { cls, date, student, dob (dd/mm/yyyy), teacher }
+     forcedIndex: ép chọn con vật (chỉ để xem thử), bỏ qua thì random theo mã
+     ===================================================== */
+  const $ = (id) => document.getElementById(id);
+  const pet = $('pet');
+
+  function renderCard(data, forcedIndex) {
+    const key = makeKey(data.student, data.dob);
+    const a = (forcedIndex != null) ? ANIMALS[forcedIndex] : pickAnimal(key);
+    document.documentElement.style.setProperty('--c', a.color);
+    pet.innerHTML = BODY + `<g transform="rotate(-10 150 105)">${a.head}</g>`;
+    pet.setAttribute('aria-label', `${a.name} màu ${a.colorName} nghiêng người ra vẫy tay chào`);
+    $('vClass').textContent = data.cls;
+    $('vDate').textContent = data.date;
+    $('vStudent').textContent = data.student;
+    $('vTeacher').textContent = data.teacher;
+    return { key, animal: a };
+  }
+
+  /* ---------- Bảng thử ---------- */
+  const pad = (n) => String(n).padStart(2, '0');
+  const now = new Date();
+  $('iDate').value = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+
+  const toDMY = (iso) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+  };
+
+  let forced = null;
+  const chipsBox = $('chips');
+  const chips = [];
+
+  function addChip(label, color, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = label;
+    b.style.borderColor = color;
+    b.style.color = color;
+    b.addEventListener('click', onClick);
+    chipsBox.appendChild(b);
+    return b;
+  }
+  const autoChip = addChip('Theo tên + ngày sinh', '#0b63c5', () => { forced = null; update(); });
+  ANIMALS.forEach((a, i) => chips.push(addChip(`${i + 1}. ${a.name}`, a.color, () => { forced = i; update(); })));
+
+  function update() {
+    const data = {
+      cls: $('iClass').value, date: $('iDate').value,
+      student: $('iStudent').value, dob: toDMY($('iDob').value), teacher: $('iTeacher').value
+    };
+    const r = renderCard(data, forced);
+    $('key').textContent = r.key || '(chưa có)';
+    $('aname').textContent = `${r.animal.name} (${r.animal.colorName} + trắng)` + (forced != null ? ' - đang xem thử' : '');
+    const setChip = (el, on, color) => { el.style.background = on ? color : '#fff'; el.style.color = on ? '#fff' : color; };
+    setChip(autoChip, forced == null, '#0b63c5');
+    chips.forEach((c, i) => setChip(c, forced === i, ANIMALS[i].color));
+  }
+
+  ['iClass', 'iDate', 'iStudent', 'iDob', 'iTeacher'].forEach(id =>
+    $(id).addEventListener('input', () => { if (id === 'iStudent' || id === 'iDob') forced = null; update(); }));
+
+  update();
+
+  // Dùng ở chỗ khác: window.makeKey, window.pickAnimal, window.renderCard
+  window.makeKey = makeKey; window.pickAnimal = pickAnimal; window.renderCard = renderCard;
+})();
+</script>
+</body>
+</html>
