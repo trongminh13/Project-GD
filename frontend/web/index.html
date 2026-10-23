@@ -211,7 +211,7 @@
       transform-origin: 84px 34px;
     }
 
-    /* 1. Di chuyển cả nhân vật: Giữa vẫy tay -> Ra mép phải khung điện thoại -> Mép trái -> Về giữa */
+    /* 1. Di chuyển cả nhân vật: Đồng bộ 100% công thức biên độ thoát half và gia tốc Cubic của Pha 2 */
     @keyframes runnerTrackMotion {
 
       /* 0% - 24%: Đứng chính giữa sân khấu vẫy tay chào */
@@ -219,31 +219,30 @@
       24% {
         transform: translateX(0);
         opacity: 1;
+        animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0); /* Curves.easeInCubic chuẩn Pha 2 */
       }
 
-      /* 24% - 50%: Chạy sang mép phải trong phạm vi khung điện thoại */
-      47% {
+      /* 24% - 49.5%: Sải bước tăng tốc và THOÁT HOÀN TOÀN 100% RA KHỎI MÉP PHẢI (nửa màn hình + nửa thân chú sách) */
+      49.5% {
+        transform: translateX(calc(min(50vw, 240px) + 90px));
         opacity: 1;
       }
 
-      50% {
-        transform: translateX(min(220px, 48%));
+      /* 49.6% - 53.5%: Đã khuất hoàn toàn 100% sau mép phải, ẩn ngầm và đổi vị trí sang ngoài mép trái */
+      49.6%,
+      53.5% {
+        transform: translateX(calc(-1 * min(50vw, 240px) - 90px));
         opacity: 0;
+        animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* Curves.easeOutCubic chuẩn Pha 2 */
       }
 
-      /* 50.1% - 54%: Nhảy tức thời sang mép trái ngoài màn hình (ẩn ngầm) */
-      50.1%,
+      /* 54%: Xuất hiện sẵn sàng ở vị trí ngoài mép trái màn hình */
       54% {
-        transform: translateX(max(-220px, -48%));
-        opacity: 0;
-      }
-
-      /* 54.1%: Bắt đầu xuất hiện từ mép trái */
-      54.1% {
+        transform: translateX(calc(-1 * min(50vw, 240px) - 90px));
         opacity: 1;
       }
 
-      /* 54.1% - 85%: Bước từ mép trái vào lại giữa sân khấu */
+      /* 54% - 85%: Bước đều từ ngoài mép trái vào giữa với gia tốc giảm tốc êm ái Curves.easeOutCubic */
       85%,
       100% {
         transform: translateX(0);

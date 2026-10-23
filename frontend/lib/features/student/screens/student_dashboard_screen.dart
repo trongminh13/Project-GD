@@ -69,8 +69,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    // 1. Nạp dữ liệu khởi tạo tức thì (0ms Fast Render đồng bộ trước frame build đầu tiên)
+    _profile = _getAdaptiveMockProfileSync();
+    _attendance = _getMockAttendance();
+    _marks = _getMockMarks();
+    _homework = _getMockHomework();
+    _materials = _getMockMaterials();
     _notices = _getMockNotices();
-    _loadAllData();
+    _isLoading = false;
+
+    // 2. Đưa việc cập nhật Theme Provider và đồng bộ ngầm sau khi frame đầu đã hoàn tất dựng
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+      try {
+        Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
+      } catch (_) {}
+      _loadAllData();
+    });
   }
 
   void _safeUpdateThemeEducationLevel(EducationLevel level) {
@@ -85,30 +101,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   /// Tải dữ liệu toàn diện theo mô hình Progressive Rendering:
   /// Khởi chạy song song nhưng độc lập, phần nào có dữ liệu kết xuất ngay phần đó.
   Future<void> _loadAllData() async {
-    // 1. Nạp dữ liệu khởi tạo tức thì (0ms Fast Render)
-    final mock = _getAdaptiveMockProfileSync();
-    _profile = mock;
-    _attendance = _getMockAttendance();
-    _marks = _getMockMarks();
-    _homework = _getMockHomework();
-    _materials = _getMockMaterials();
-    _notices = _getMockNotices();
-    _isLoading = false;
-
-    final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
-    _safeUpdateThemeEducationLevel(level);
-
-    if (mounted) {
-      setState(() {});
-    }
-
     // Nếu môi trường thuần Demo tĩnh (chạy không có máy chủ backend thật)
     if (ApiConstants.isDemoMode) {
       _syncProfileWithStoredSession();
       return;
     }
 
-    // 2. Đồng bộ ngầm với Backend (Progressive Live Sync)
+    // Đồng bộ ngầm với Backend (Progressive Live Sync)
     // Phần nào có API thật trả về sẽ cập nhật đè lên giao diện; nếu offline, giữ nguyên fallback an toàn.
     try {
       await Future.wait([
