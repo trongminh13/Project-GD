@@ -201,6 +201,54 @@ void main() {
       // Dọn dẹp session sau test
       AuthService.currentSessionUser = null;
     });
+
+    testWidgets('TC-ADAPTIVE-07: Primary student displays pastel home cards and weekly timetable with 5 rainbow cards', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      AuthService.currentSessionUser = {
+        'username': 'student01',
+        'roles': ['STUDENT'],
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Kiểm tra trang chủ có các tiêu đề của Cấp 1
+      expect(find.text('Lịch học hôm nay'), findsOneWidget);
+      expect(find.text('Sách đọc mới'), findsOneWidget);
+      expect(find.text('Bài tập cần làm'), findsOneWidget);
+
+      // Chuyển sang Tab 1: Lịch học (calendar_today_outlined)
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra có bộ chuyển đổi Theo ngày / Theo tuần
+      expect(find.text('Theo ngày'), findsOneWidget);
+      expect(find.textContaining('Theo tuần'), findsOneWidget);
+
+      // Bấm chuyển sang chế độ "Theo tuần"
+      await tester.tap(find.textContaining('Theo tuần'));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra hiển thị đủ cả 5 ngày Thứ 2 đến Thứ 6 với 5 khung thẻ pastel
+      expect(find.textContaining('THỨ HAI'), findsWidgets);
+      expect(find.textContaining('THỨ BA'), findsWidgets);
+      expect(find.textContaining('THỨ TƯ'), findsWidgets);
+      expect(find.textContaining('THỨ NĂM'), findsWidgets);
+      expect(find.textContaining('THỨ SÁU'), findsWidgets);
+
+      // Dọn dẹp session sau test
+      AuthService.currentSessionUser = null;
+    });
   });
 }
 

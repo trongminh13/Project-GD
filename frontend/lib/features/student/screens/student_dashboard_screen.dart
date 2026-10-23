@@ -82,9 +82,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final level = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
-      try {
-        Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
-      } catch (_) {}
+      Future.microtask(() {
+        if (!mounted) return;
+        try {
+          final theme = Provider.of<ThemeManager>(context, listen: false);
+          if (theme.educationLevel != level) {
+            theme.setEducationLevel(level);
+          }
+        } catch (_) {}
+      });
       _loadAllData();
     });
   }
@@ -92,9 +98,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   void _safeUpdateThemeEducationLevel(EducationLevel level) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      try {
-        Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level);
-      } catch (_) {}
+      Future.microtask(() {
+        if (!mounted) return;
+        try {
+          final theme = Provider.of<ThemeManager>(context, listen: false);
+          if (theme.educationLevel != level) {
+            theme.setEducationLevel(level);
+          }
+        } catch (_) {}
+      });
     });
   }
 
@@ -2148,7 +2160,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               icon: Icons.menu_book_outlined,
             )
           else
-            ..._materials.take(2).map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
+            ..._materials.take(2).toList().asMap().entries.map(
+                  (entry) => MaterialCard(
+                    data: Map<String, dynamic>.from(entry.value as Map),
+                    isPrimary: educationLevel == EducationLevel.primary,
+                    paletteIndex: entry.key,
+                  ),
+                ),
           const SizedBox(height: 20),
 
           // Section 2: Bài tập cần làm
@@ -2170,12 +2188,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               icon: Icons.check_circle_outline,
             )
           else
-            ..._todoHomework.take(3).map(
-                  (hw) => HomeworkCard(
-                    data: Map<String, dynamic>.from(hw as Map),
+            ..._todoHomework.take(3).toList().asMap().entries.map(
+                  (entry) => HomeworkCard(
+                    data: Map<String, dynamic>.from(entry.value as Map),
                     mode: HomeworkCardMode.studentTake,
-                    onPrimaryAction: () => _onOpenTakeHomework(hw),
-                    onCardTap: () => _onOpenTakeHomework(hw),
+                    isPrimary: educationLevel == EducationLevel.primary,
+                    paletteIndex: entry.key,
+                    onPrimaryAction: () => _onOpenTakeHomework(entry.value),
+                    onCardTap: () => _onOpenTakeHomework(entry.value),
                   ),
                 ),
           const SizedBox(height: 20),
@@ -2197,9 +2217,21 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppColors.cardBorderRadius,
-                border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
+                color: educationLevel == EducationLevel.primary ? const Color(0xFFFCFDFE) : Colors.white,
+                borderRadius: educationLevel == EducationLevel.primary ? BorderRadius.circular(16) : AppColors.cardBorderRadius,
+                border: Border.all(
+                  color: educationLevel == EducationLevel.primary ? const Color(0xFF93C5FD) : AppColors.cardBorder,
+                  width: educationLevel == EducationLevel.primary ? 1.5 : AppColors.cardBorderWidth,
+                ),
+                boxShadow: educationLevel == EducationLevel.primary
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF93C5FD).withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 children: todayLessons.asMap().entries.map((entry) {
@@ -2212,6 +2244,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     teacher: l['teacher']!,
                     room: l['room']!,
                     isCompact: true,
+                    isPrimary: educationLevel == EducationLevel.primary,
+                    paletteIndex: i,
                     hasDivider: i < todayLessons.length - 1,
                     onTap: () => _showLessonDetailModal(
                       lessonIndex: i + 1,
@@ -2276,6 +2310,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   // ===================== TAB 1: LỊCH HỌC =====================
   Widget _buildTimeTab() {
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+    final isPrimary = educationLevel == EducationLevel.primary;
     final weekLabel = DateTimeUtils.getWeekLabel(_weekOffset);
     final lessons = FeatureFlags.useDemoFallback ? _getLessonsForDay(_selectedDay) : <Map<String, String>>[];
 
@@ -2309,16 +2345,19 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
         ),
 
-        // 2. Bộ chuyển đổi chế độ xem: Theo ngày vs Theo tuần (Flat Square Design)
+        // 2. Bộ chuyển đổi chế độ xem: Theo ngày vs Theo tuần (Flat Square Design cho Cấp 2/3, Bo tròn pastel cho Cấp 1)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: Colors.white,
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: AppColors.surfaceAlt,
-              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-              borderRadius: AppColors.cardBorderRadius,
+              color: isPrimary ? const Color(0xFFF0F7FF) : AppColors.surfaceAlt,
+              border: Border.all(
+                color: isPrimary ? const Color(0xFF93C5FD) : AppColors.cardBorder,
+                width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+              ),
+              borderRadius: isPrimary ? BorderRadius.circular(12) : AppColors.cardBorderRadius,
             ),
             child: Row(
               children: [
@@ -2327,7 +2366,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     onTap: () => setState(() => _isWeeklyView = false),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      color: !_isWeeklyView ? AppColors.primary : Colors.transparent,
+                      color: !_isWeeklyView
+                          ? (isPrimary ? const Color(0xFF3B82F6) : AppColors.primary)
+                          : Colors.transparent,
                       alignment: Alignment.center,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -2335,7 +2376,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           Icon(
                             Icons.view_day_outlined,
                             size: 16,
-                            color: !_isWeeklyView ? Colors.white : AppColors.textSub,
+                            color: !_isWeeklyView ? Colors.white : (isPrimary ? const Color(0xFF1E40AF) : AppColors.textSub),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -2343,7 +2384,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: !_isWeeklyView ? FontWeight.bold : FontWeight.w500,
-                              color: !_isWeeklyView ? Colors.white : AppColors.textMain,
+                              color: !_isWeeklyView ? Colors.white : (isPrimary ? const Color(0xFF1E40AF) : AppColors.textMain),
                             ),
                           ),
                         ],
@@ -2351,13 +2392,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     ),
                   ),
                 ),
-                Container(width: 1, height: 28, color: AppColors.border),
+                Container(width: 1, height: 28, color: isPrimary ? const Color(0xFF93C5FD) : AppColors.border),
                 Expanded(
                   child: InkWell(
                     onTap: () => setState(() => _isWeeklyView = true),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      color: _isWeeklyView ? AppColors.primary : Colors.transparent,
+                      color: _isWeeklyView
+                          ? (isPrimary ? const Color(0xFF3B82F6) : AppColors.primary)
+                          : Colors.transparent,
                       alignment: Alignment.center,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -2365,7 +2408,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           Icon(
                             Icons.calendar_view_week_outlined,
                             size: 16,
-                            color: _isWeeklyView ? Colors.white : AppColors.textSub,
+                            color: _isWeeklyView ? Colors.white : (isPrimary ? const Color(0xFF1E40AF) : AppColors.textSub),
                           ),
                           const SizedBox(width: 6),
                           Text(
@@ -2373,7 +2416,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: _isWeeklyView ? FontWeight.bold : FontWeight.w500,
-                              color: _isWeeklyView ? Colors.white : AppColors.textMain,
+                              color: _isWeeklyView ? Colors.white : (isPrimary ? const Color(0xFF1E40AF) : AppColors.textMain),
                             ),
                           ),
                         ],
@@ -2389,107 +2432,126 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         // 3. Nội dung theo chế độ xem
         if (!_isWeeklyView) ...[
           // Tabs Thứ 2 – Thứ 6
-        Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
-          child: Row(
-            children: List.generate(DateTimeUtils.schoolDays.length, (i) {
-              final isSelected = _selectedDay == i;
-              return Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _selectedDay = i),
-                  child: Container(
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: isSelected ? AppColors.primary : AppColors.border,
-                          width: isSelected ? 3.0 : 1.0,
+          Container(
+            decoration: BoxDecoration(
+              color: isPrimary ? const Color(0xFFFCFDFE) : Colors.white,
+              border: Border(bottom: BorderSide(color: isPrimary ? const Color(0xFF93C5FD).withValues(alpha: 0.5) : AppColors.border)),
+            ),
+            child: Row(
+              children: List.generate(DateTimeUtils.schoolDays.length, (i) {
+                final isSelected = _selectedDay == i;
+                final dayStyle = PrimaryPalette.getStyle(i);
+                return Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _selectedDay = i),
+                    child: Container(
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isPrimary && isSelected ? dayStyle.bgColor : Colors.white,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isSelected
+                                ? (isPrimary ? dayStyle.accentColor : AppColors.primary)
+                                : (isPrimary ? Colors.transparent : AppColors.border),
+                            width: isSelected ? 3.0 : 1.0,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        DateTimeUtils.schoolDays[i],
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? (isPrimary ? dayStyle.textColor : AppColors.primary)
+                              : AppColors.textMain,
                         ),
                       ),
                     ),
-                    child: Text(
-                      DateTimeUtils.schoolDays[i],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : AppColors.textMain,
-                      ),
-                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
-        ),
 
-        // Danh sách tiết học của ngày đã chọn
-        Expanded(
-          child: RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: _loadAllData,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (lessons.isEmpty)
-                  const AppEmptyCard(
-                    title: 'Chưa có lịch học',
-                    message: 'Thời khóa biểu cho ngày này chưa được cập nhật.',
-                    icon: Icons.calendar_today_outlined,
-                  )
-                else
-                  Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppColors.cardBorderRadius,
-                      border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-                    ),
-                    child: Column(
-                      children: lessons.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final l = entry.value;
-                        return LessonRow(
-                          lessonIndex: i + 1,
-                          subject: l['subj']!,
-                          time: l['time']!,
-                          teacher: l['teacher']!,
-                          room: l['room']!,
-                          isCompact: false,
-                          hasDivider: i < lessons.length - 1,
-                          onTap: () => _showLessonDetailModal(
+          // Danh sách tiết học của ngày đã chọn
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _loadAllData,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (lessons.isEmpty)
+                    const AppEmptyCard(
+                      title: 'Chưa có lịch học',
+                      message: 'Thời khóa biểu cho ngày này chưa được cập nhật.',
+                      icon: Icons.calendar_today_outlined,
+                    )
+                  else
+                    Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: isPrimary ? const Color(0xFFFCFDFE) : Colors.white,
+                        borderRadius: isPrimary ? BorderRadius.circular(16) : AppColors.cardBorderRadius,
+                        border: Border.all(
+                          color: isPrimary ? const Color(0xFF93C5FD) : AppColors.cardBorder,
+                          width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+                        ),
+                        boxShadow: isPrimary
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF93C5FD).withValues(alpha: 0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Column(
+                        children: lessons.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final l = entry.value;
+                          return LessonRow(
                             lessonIndex: i + 1,
                             subject: l['subj']!,
                             time: l['time']!,
                             teacher: l['teacher']!,
                             room: l['room']!,
-                          ),
-                        );
-                      }).toList(),
+                            isCompact: false,
+                            isPrimary: isPrimary,
+                            paletteIndex: i,
+                            hasDivider: i < lessons.length - 1,
+                            onTap: () => _showLessonDetailModal(
+                              lessonIndex: i + 1,
+                              subject: l['subj']!,
+                              time: l['time']!,
+                              teacher: l['teacher']!,
+                              room: l['room']!,
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ] else ...[
-        // Chế độ 2: Lịch theo tuần toàn bộ (Weekly Full View)
-        Expanded(
-          child: _buildWeeklyTimetable(),
-        ),
+        ] else ...[
+          // Chế độ 2: Lịch theo tuần toàn bộ (Weekly Full View)
+          Expanded(
+            child: _buildWeeklyTimetable(isPrimary: isPrimary),
+          ),
+        ],
       ],
-    ],
-  );
-}
+    );
+  }
 
   /// Giao diện Lịch học toàn bộ tuần (Weekly Full View):
-  /// Hiển thị 5 ngày từ Thứ 2 đến Thứ 6 dạng thẻ phẳng vuông vức,
+  /// Hiển thị 5 ngày từ Thứ 2 đến Thứ 6 dạng thẻ phẳng vuông vức (Cấp 2/3) hoặc 5 thẻ Pastel cầu vồng (Cấp 1),
   /// nhận diện ngày hôm nay và cho phép chạm vào từng tiết để xem chi tiết.
-  Widget _buildWeeklyTimetable() {
+  Widget _buildWeeklyTimetable({bool isPrimary = false}) {
     final now = DateTime.now();
     final todayWeekday = now.weekday - 1; // 0: Thứ 2 ... 6: Chủ Nhật
     final base = DateTime(2026, 10, 12);
@@ -2498,131 +2560,154 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       color: AppColors.primary,
       onRefresh: _loadAllData,
       child: ListView(
-      padding: const EdgeInsets.all(16),
-      children: List.generate(DateTimeUtils.schoolDays.length, (dayIndex) {
-        final dayDate = base.add(Duration(days: 7 * _weekOffset + dayIndex));
-        final dateStr = '${dayDate.day.toString().padLeft(2, '0')}/${dayDate.month.toString().padLeft(2, '0')}/${dayDate.year}';
-        final isToday = (todayWeekday == dayIndex && _weekOffset == 0);
-        final dayLessons = FeatureFlags.useDemoFallback ? _getLessonsForDay(dayIndex) : <Map<String, String>>[];
+        padding: const EdgeInsets.all(16),
+        children: List.generate(DateTimeUtils.schoolDays.length, (dayIndex) {
+          final dayDate = base.add(Duration(days: 7 * _weekOffset + dayIndex));
+          final dateStr = '${dayDate.day.toString().padLeft(2, '0')}/${dayDate.month.toString().padLeft(2, '0')}/${dayDate.year}';
+          final isToday = (todayWeekday == dayIndex && _weekOffset == 0);
+          final dayLessons = FeatureFlags.useDemoFallback ? _getLessonsForDay(dayIndex) : <Map<String, String>>[];
+          final dayStyle = PrimaryPalette.getStyle(dayIndex);
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppColors.cardBorderRadius,
-            border: Border.all(
-              color: isToday ? AppColors.primary : AppColors.cardBorder,
-              width: isToday ? 1.5 : AppColors.cardBorderWidth,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: isPrimary ? dayStyle.bgColor : Colors.white,
+              borderRadius: isPrimary ? BorderRadius.circular(16) : AppColors.cardBorderRadius,
+              border: Border.all(
+                color: isPrimary
+                    ? (isToday ? dayStyle.accentColor : dayStyle.borderColor)
+                    : (isToday ? AppColors.primary : AppColors.cardBorder),
+                width: isToday ? 2.0 : (isPrimary ? 1.5 : AppColors.cardBorderWidth),
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header ngày
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isToday ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceAlt,
-                  border: const Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),
+              boxShadow: [
+                BoxShadow(
+                  color: isPrimary
+                      ? dayStyle.borderColor.withValues(alpha: 0.20)
+                      : Colors.black.withValues(alpha: 0.03),
+                  blurRadius: isPrimary ? 8 : 6,
+                  offset: const Offset(0, 2),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 15,
-                          color: isToday ? AppColors.primary : AppColors.textSub,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${DateTimeUtils.dayNames[dayIndex].toUpperCase()} · $dateStr',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isToday ? AppColors.primary : AppColors.textMainOf(context),
-                          ),
-                        ),
-                      ],
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header ngày
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isPrimary
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : (isToday ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceAlt),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isPrimary ? dayStyle.borderColor.withValues(alpha: 0.5) : AppColors.border,
+                        width: 1.0,
+                      ),
                     ),
-                    Row(
-                      children: [
-                        if (isToday) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.zero,
-                            ),
-                            child: const Text(
-                              'Hôm nay',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 15,
+                            color: isPrimary
+                                ? dayStyle.accentColor
+                                : (isToday ? AppColors.primary : AppColors.textSub),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${DateTimeUtils.dayNames[dayIndex].toUpperCase()} · $dateStr',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isPrimary
+                                  ? dayStyle.textColor
+                                  : (isToday ? AppColors.primary : AppColors.textMainOf(context)),
                             ),
                           ),
                         ],
-                        Text(
-                          '${dayLessons.length} tiết',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSub),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Danh sách tiết học của ngày
-              if (dayLessons.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  child: Center(
-                    child: Text(
-                      'Không có tiết học nào được xếp lịch cho ngày này.',
-                      style: TextStyle(fontSize: 12.5, color: AppColors.textSub),
-                    ),
+                      ),
+                      Row(
+                        children: [
+                          if (isToday) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: isPrimary ? dayStyle.accentColor : AppColors.primary,
+                                borderRadius: BorderRadius.circular(isPrimary ? 6 : 0),
+                              ),
+                              child: Text(
+                                isPrimary ? 'Hôm nay ✨' : 'Hôm nay',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ),
+                          ],
+                          Text(
+                            '${dayLessons.length} tiết',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isPrimary ? dayStyle.textColor.withValues(alpha: 0.85) : AppColors.textSub,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                )
-              else
-                ...dayLessons.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final l = entry.value;
-                  return LessonRow(
-                    lessonIndex: i + 1,
-                    subject: l['subj']!,
-                    time: l['time']!,
-                    teacher: l['teacher']!,
-                    room: l['room']!,
-                    isCompact: true,
-                    hasDivider: i < dayLessons.length - 1,
-                    onTap: () => _showLessonDetailModal(
+                ),
+
+                // Danh sách tiết học của ngày
+                if (dayLessons.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    child: Center(
+                      child: Text(
+                        'Không có tiết học nào được xếp lịch cho ngày này.',
+                        style: TextStyle(fontSize: 12.5, color: AppColors.textSub),
+                      ),
+                    ),
+                  )
+                else
+                  ...dayLessons.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final l = entry.value;
+                    return LessonRow(
                       lessonIndex: i + 1,
                       subject: l['subj']!,
                       time: l['time']!,
                       teacher: l['teacher']!,
                       room: l['room']!,
-                    ),
-                  );
-                }),
-            ],
-          ),
-        );
-      }),
-    ),
-  );
-}
+                      isCompact: true,
+                      isPrimary: isPrimary,
+                      paletteIndex: dayIndex,
+                      hasDivider: i < dayLessons.length - 1,
+                      onTap: () => _showLessonDetailModal(
+                        lessonIndex: i + 1,
+                        subject: l['subj']!,
+                        time: l['time']!,
+                        teacher: l['teacher']!,
+                        room: l['room']!,
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
 
   // ===================== TAB 2: SÁCH HỌC =====================
   Widget _buildMatTab() {
     final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+    final isPrimary = educationLevel == EducationLevel.primary;
     final subjects = EducationLevelHelper.getDefaultSubjects(educationLevel);
     final levelTitle = EducationLevelHelper.getTitle(educationLevel);
     final filtered = _selectedSubjectFilter == 'Tất cả'
@@ -2639,13 +2724,20 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-            borderRadius: AppColors.cardBorderRadius,
-            color: Colors.white,
+            border: Border.all(
+              color: isPrimary ? const Color(0xFF93C5FD) : AppColors.cardBorder,
+              width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+            ),
+            borderRadius: isPrimary ? BorderRadius.circular(14) : AppColors.cardBorderRadius,
+            color: isPrimary ? const Color(0xFFF0F7FF) : Colors.white,
           ),
           child: Text(
             'Sách giáo khoa và tài liệu học tập $levelTitle được chia sẻ cho lớp ${_profile?['className'] ?? '3A'}.',
-            style: const TextStyle(fontSize: 13, color: AppColors.textSub),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+              color: isPrimary ? const Color(0xFF1E40AF) : AppColors.textSub,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -2664,15 +2756,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedSubjectFilter = subj);
                   },
-                  selectedColor: AppColors.primary,
+                  selectedColor: isPrimary ? const Color(0xFF3B82F6) : AppColors.primary,
                   labelStyle: TextStyle(
-                    color: isSel ? Colors.white : AppColors.textMain,
+                    color: isSel ? Colors.white : (isPrimary ? const Color(0xFF1E40AF) : AppColors.textMain),
                     fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                     fontSize: 13,
                   ),
-                  shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
-                  side: BorderSide(color: isSel ? AppColors.primary : AppColors.cardBorder, width: AppColors.cardBorderWidth),
-                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: isPrimary ? BorderRadius.circular(10) : AppColors.cardBorderRadius,
+                  ),
+                  side: BorderSide(
+                    color: isSel
+                        ? (isPrimary ? const Color(0xFF3B82F6) : AppColors.primary)
+                        : (isPrimary ? const Color(0xFF93C5FD) : AppColors.cardBorder),
+                    width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+                  ),
+                  backgroundColor: isPrimary ? const Color(0xFFF0F7FF) : Colors.white,
                 ),
               );
             }).toList(),
@@ -2693,7 +2792,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             icon: Icons.menu_book_outlined,
           )
         else
-          ...filtered.map((m) => MaterialCard(data: Map<String, dynamic>.from(m as Map))),
+          ...filtered.toList().asMap().entries.map(
+                (entry) => MaterialCard(
+                  data: Map<String, dynamic>.from(entry.value as Map),
+                  isPrimary: isPrimary,
+                  paletteIndex: entry.key,
+                ),
+              ),
       ],
     ),
   );
@@ -2701,6 +2806,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   // ===================== TAB 3: BÀI TẬP (LMS) =====================
   Widget _buildHwTab() {
+    final educationLevel = EducationLevelHelper.fromGrade(_profile?['grade'], _profile?['educationLevel']);
+    final isPrimary = educationLevel == EducationLevel.primary;
+
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _loadAllData,
@@ -2711,13 +2819,20 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-              borderRadius: AppColors.cardBorderRadius,
-              color: Colors.white,
+              border: Border.all(
+                color: isPrimary ? const Color(0xFFFCD34D) : AppColors.cardBorder,
+                width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+              ),
+              borderRadius: isPrimary ? BorderRadius.circular(14) : AppColors.cardBorderRadius,
+              color: isPrimary ? const Color(0xFFFFFBEB) : Colors.white,
             ),
-            child: const Text(
+            child: Text(
               'Làm bài ngay trong ứng dụng. Bài làm được lưu nháp tự động, hạn nộp tính theo giờ máy chủ.',
-              style: TextStyle(fontSize: 13, color: AppColors.textSub),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+                color: isPrimary ? const Color(0xFF92400E) : AppColors.textSub,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -2738,12 +2853,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 icon: Icons.check_circle_outline,
               )
             else
-              ..._todoHomework.map(
-                    (hw) => HomeworkCard(
-                      data: Map<String, dynamic>.from(hw as Map),
+              ..._todoHomework.toList().asMap().entries.map(
+                    (entry) => HomeworkCard(
+                      data: Map<String, dynamic>.from(entry.value as Map),
                       mode: HomeworkCardMode.studentTake,
-                      onPrimaryAction: () => _onOpenTakeHomework(hw),
-                      onCardTap: () => _onOpenTakeHomework(hw),
+                      isPrimary: isPrimary,
+                      paletteIndex: entry.key,
+                      onPrimaryAction: () => _onOpenTakeHomework(entry.value),
+                      onCardTap: () => _onOpenTakeHomework(entry.value),
                     ),
                   ),
             const SizedBox(height: 24),
@@ -2758,12 +2875,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 icon: Icons.history_edu_outlined,
               )
             else
-              ..._submittedHomework.map(
-                    (hw) => HomeworkCard(
-                      data: Map<String, dynamic>.from(hw as Map),
+              ..._submittedHomework.toList().asMap().entries.map(
+                    (entry) => HomeworkCard(
+                      data: Map<String, dynamic>.from(entry.value as Map),
                       mode: HomeworkCardMode.studentTake,
-                      onPrimaryAction: () => _onOpenHomeworkResult(hw),
-                      onCardTap: () => _onOpenHomeworkResult(hw),
+                      isPrimary: isPrimary,
+                      paletteIndex: entry.key,
+                      onPrimaryAction: () => _onOpenHomeworkResult(entry.value),
+                      onCardTap: () => _onOpenHomeworkResult(entry.value),
                     ),
                   ),
           ],

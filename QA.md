@@ -3053,4 +3053,112 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Học sinh Cấp 1 (`student01`): Đỉnh thẻ con vật nhô lên nửa vòm Mặt Trời cười tỏa nắng (buổi sáng) hoặc Trăng sao lấp lánh (buổi tối) cực kỳ sinh động, bên cạnh là lời chào `"Chào buổi sáng, [Tên học sinh]!"` với màu sắc tươi vui, ấm áp.
   + Học sinh Cấp 2 (`student02`) và Cấp 3 (`student03`): Trang chủ vẫn hiển thị Card học thuật chuẩn mực, sạch sẽ, không có hoạt hình.
 
+---
+
+### GIAI ĐOẠN 48: THIẾT KẾ KHUNG BOX BO GÓC ĐA SẮC PASTEL (NHẠT, KHÔNG ĐỔ MÀU 1 HƯỚNG) CHO THẺ HỌC SINH CẤP 1
+
+**1. Vấn Đề Người Dùng Yêu Cầu & Phân Tích Thiết Kế (Senior QA & Senior Design):**
+- **Yêu cầu người dùng**:
+  *"ok ở phần các khung box bo góc tôi nghĩ senior nên thiết kế box và viền box có màu sách(nhạt và không đổ màu theo 1 hướng) sao cho nền tảng cấp 1 sinh động và vui nhộn. senior design lên /plan đi"*.
+- **Phân tích thiết kế chuyên sâu (Senior UI/UX Guidelines cho Tiểu học)**:
+  * **Tránh đơn điệu 1 màu (Monochromatic)**: Trước đây, thẻ con vật sử dụng viền đơn sắc dồn về một tông màu của con vật trên nền trắng phẳng, tạo cảm giác "đổ màu theo 1 hướng".
+  * **Hệ thống Đa sắc Pastel Vui Nhộn (Playful Multi-Tone Pastel Palette)**:
+    - **Box 1 (TÊN LỚP)**: Xanh Da Trời Pastel (`bgColor: #F0F7FF`, `borderColor: #93C5FD`, `tagBgColor: #3B82F6`, `textColor: #1E40AF`).
+    - **Box 2 (NGÀY)**: Vàng Mật Ong / Cam Đào Pastel (`bgColor: #FFFBEB`, `borderColor: #FCD34D`, `tagBgColor: #F59E0B`, `textColor: #92400E`).
+    - **Box 3 (HỌC SINH - Hero Highlight)**: Hồng Phấn / Dâu Mộng Mơ Pastel (`bgColor: #FDF2F8`, `borderColor: #F472B6`, `tagBgColor: #EC4899`, `textColor: #9D174D`).
+    - **Box 4 (GIÁO VIÊN)**: Xanh Bạc Hà Mint Tươi Mát (`bgColor: #F0FDF4`, `borderColor: #6EE7B7`, `tagBgColor: #10B981`, `textColor: #065F46`).
+  * **Các khung tác vụ chân thẻ**:
+    - **Khẩu hiệu bạn đồng hành**: Dải Capsule bo tròn 20px, nền vàng bơ `#FEF9C3`, viền `#FDE047`, chữ nâu vàng `#A16207`, icon sao vàng lấp lánh `#D97706`.
+    - **Nút Tiện ích**: Bo góc 8px, nền tím Lavender `#F5F3FF`, viền `#C4B5FD`, chữ và icon `#6D28D9`.
+    - **Nút Đăng xuất**: Bo góc 8px, nền hồng Soft Rose `#FFF1F2`, viền `#FECDD3`, chữ và icon `#BE123C`.
+  * **Khung thẻ ngoài (Outer Container)**: Bo góc 16px, nền trắng ngà kem mềm mại `#FCFDFE`, viền màu linh vật 1.5px làm dịu `alpha: 0.55`, đổ bóng êm ái `alpha: 0.08`.
+  * **Bảo vệ luồng Theme Lifecycle**: Thêm kiểm tra và bọc `Future.microtask` khi cập nhật `setEducationLevel` để triệt tiêu hoàn toàn cảnh báo `setState() or markNeedsBuild() called during build`.
+  * **Bảo toàn 100% Cấp 2 và Cấp 3**: Card học thuật nền trắng chuẩn mực của THCS và THPT giữ nguyên vẹn 100%.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+1. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
+   - Thêm lớp `PrimaryBoxStyle` chuẩn hóa 4 thông số: `bgColor`, `borderColor`, `tagBgColor`, `textColor`.
+   - Cung cấp 4 style hằng số: `classStyle`, `dateStyle`, `studentStyle`, `teacherStyle`.
+   - Cập nhật `_buildInfoBox` vẽ nền màu pastel nhạt và viền bo góc 8px tiệp màu sắc nét 1.5px.
+   - Nâng cấp dải khẩu hiệu capsule và 2 nút bấm Tiện ích / Đăng xuất với màu pastel tương ứng.
+2. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+   - Đồng bộ ThemeManager trong `initState` và `_safeUpdateThemeEducationLevel` bằng `Future.microtask` tránh xung đột build phase.
+3. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
+   - Kiểm tra chính xác bảng màu Pastel của 4 box con, viền 1.5px, thẻ ngoài nền kem và các nút tác vụ.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
+- **Phân tích tĩnh Frontend (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** (No issues found in 4.6s).
+- **Kiểm thử Widget Test Cấp 1 (`primary_animal_card_test.dart`)**:
+  + ✅ **10 / 10 tests PASSED (100% pass)**.
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **143 / 143 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+- **Biên dịch Production Web (`flutter build web`)**:
+  + ✅ **✓ Built build/web** thành công 100% trong 91.8s.
+- **Trải nghiệm thực tế**:
+  + Giao diện Cấp 1 trở nên cực kỳ sinh động, vui nhộn với 4 ô box đa sắc (Xanh biển, Vàng mật, Hồng dâu, Xanh mint) kết hợp cùng Mặt Trời nhô nửa trên rạng rỡ và linh vật vẫy tay tinh nghịch.
+  + Chữ và số trên nền pastel cực kỳ sắc nét, độ tương phản tuyệt đối, đúng chuẩn thiết kế giáo dục thiếu nhi cao cấp.
+
+---
+
+### GIAI ĐOẠN 49: THIẾT KẾ ĐỒNG BỘ TOÀN DIỆN CÁC THẺ SÁCH ĐỌC MỚI, BÀI TẬP CẦN LÀM, LỊCH HỌC HÔM NAY VÀ LỊCH HỌC TUẦN CẦU VỒNG PASTEL CHO HỌC SINH CẤP 1
+
+**1. Vấn Đề Người Dùng Yêu Cầu & Phân Tích Thiết Kế (Senior QA & Senior Design):**
+- **Yêu cầu người dùng**:
+  *"tốt . giờ đến các cái box sách đọc mới, bài tập cần làm....... ở các trang chủ, lịch học.... ở cấp 1. senior design lên /plan nhỉ"*
+- **Phân tích thiết kế chuyên sâu (Senior UI/UX Guidelines cho Tiểu học)**:
+  * **Hệ Thống Đa Sắc Pastel Tuần Hoàn (5-Tone Rainbow Pastel Palette)**: Tạo mới [`PrimaryPalette`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/primary_palette.dart) làm Single Source of Truth cho toàn bộ ứng dụng:
+    - Tone 0: Xanh Da Trời Pastel (`skyBlue`: `#F0F7FF` / `#93C5FD` / `#3B82F6` / `#1E40AF`).
+    - Tone 1: Vàng Mật Ong Pastel (`warmAmber`: `#FFFBEB` / `#FCD34D` / `#F59E0B` / `#92400E`).
+    - Tone 2: Hồng Dâu Pastel (`sweetBlossom`: `#FDF2F8` / `#F472B6` / `#EC4899` / `#9D174D`).
+    - Tone 3: Xanh Bạc Hà Mint Pastel (`freshMint`: `#F0FDF4` / `#6EE7B7` / `#10B981` / `#065F46`).
+    - Tone 4: Tím Oải Hương Lavender Pastel (`lavender`: `#F5F3FF` / `#C4B5FD` / `#8B5CF6` / `#6D28D9`).
+  * **Đồng bộ hóa Card & Row dùng chung**:
+    - [`MaterialCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nền pastel dịu nhẹ theo tone, icon PDF container bo tròn 10px nền trắng nổi bật.
+    - [`HomeworkCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nút "Làm bài" bo tròn dạng viên kẹo (pill) 20px xinh xắn, nút "Đã nộp" viền xanh lá mint.
+    - [`LessonRow`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Khi `isPrimary == true`, badge "Tiết X" bo góc 6px với nền pastel của tiết, viền sắc nét, chữ đậm, đường kẻ phân cách pastel dịu nhẹ.
+  * **Trang chủ & Lịch học Cấp 1 ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+    - **Trang chủ (Tab 0)**: Cả 3 khối Sách đọc mới, Bài tập cần làm, Lịch học hôm nay đều có viền khung ngoài pastel `#93C5FD` bo góc 16px, các thẻ bài/sách bên trong luân phiên đổi màu sắc cầu vồng sinh động.
+    - **Trang Lịch học (Tab 1)**: Bộ chuyển đổi chế độ xem bo cong 12px, tab Thứ 2 - Thứ 6 highlight pastel bo tròn. Chế độ "Theo tuần (Toàn bộ)" hiển thị 5 ngày từ Thứ 2 đến Thứ 6 thành 5 khung thẻ Pastel Cầu Vồng rực rỡ, ngày hiện tại có huy hiệu `Hôm nay ✨` và viền nổi bật.
+    - **Trang Sách học (Tab 2) & Bài tập (Tab 3)**: Tự động đồng bộ luân phiên đa sắc pastel khi `isPrimary == true`.
+  * **Bảo toàn 100% Cấp 2 và Cấp 3 (Zero Regression)**:
+    - Tất cả các tham số `isPrimary` đều mặc định là `false`. Học sinh Cấp 2, Cấp 3 và các role Giáo viên, Phụ huynh giữ nguyên 100% Card học thuật viền đen phẳng (`AppColors.cardBorder`), không có bất kỳ ảnh hưởng nào.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+1. **Tạo mới [`primary_palette.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/primary_palette.dart)**:
+   - Cung cấp `PrimaryBoxStyle` và `PrimaryPalette` với 5 màu chuẩn tuần hoàn và hàm `getStyle(index)`.
+2. **Cập nhật [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart)**:
+   - Thêm `isPrimary` và `paletteIndex`. Tách biệt hoàn toàn nhánh render Cấp 1 và Cấp 2/3.
+3. **Cập nhật [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart)**:
+   - Thêm `isPrimary` và `paletteIndex`. Nâng cấp nút "Làm bài" thành pill button đa sắc khi ở Cấp 1.
+4. **Cập nhật [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart)**:
+   - Thêm `isPrimary` và `paletteIndex`. Render badge tiết học pastel bo góc 6px.
+5. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+   - Tích hợp `isPrimary` và truyền tuần tự `paletteIndex` vào các danh sách ở Tab 0, Tab 1, Tab 2, Tab 3.
+   - Nâng cấp `_buildWeeklyTimetable` với 5 khung thẻ Pastel Cầu Vồng cho 5 ngày học.
+6. **Bổ sung Widget Test toàn diện**:
+   - [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart): Test `isPrimary: true` render đúng màu pastel và bo góc 14px.
+   - [`homework_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/homework_card_test.dart): Test `isPrimary: true` render đúng màu pastel và pill button.
+   - [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/lesson_row_test.dart): Test `isPrimary: true` render đúng màu badge pastel.
+   - [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart): Thêm `TC-ADAPTIVE-07` kiểm thử Cấp 1 hiển thị thẻ trang chủ và lịch tuần 5 ngày cầu vồng.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
+- **Phân tích tĩnh Frontend (`flutter analyze`)**:
+  + ✅ **0 errors** (No issues found in 5.1s).
+- **Kiểm thử Widget Test Cấp 1 & Timetable**:
+  + ✅ `material_card_test.dart`: **5 / 5 tests PASSED**.
+  + ✅ `homework_card_test.dart`: **5 / 5 tests PASSED**.
+  + ✅ `lesson_row_test.dart`: **3 / 3 tests PASSED**.
+  + ✅ `primary_animal_card_test.dart`: **10 / 10 tests PASSED**.
+  + ✅ `student_adaptive_dashboard_test.dart`: **7 / 7 tests PASSED**.
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **147 / 147 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+- **Biên dịch Production Web (`flutter build web`)**:
+  + ✅ **✓ Built build/web** thành công 100% trong 88.4s.
+- **Trải nghiệm thực tế**:
+  + Giao diện Cấp 1 giờ đây đồng bộ tuyệt đối về ngôn ngữ thiết kế đa sắc Pastel: Từ Thẻ con vật, Lời chào Mặt Trời, Sách đọc mới, Bài tập cần làm, đến Lịch học hôm nay và Lịch tuần 5 ngày cầu vồng đều ngập tràn sắc màu vui tươi, dịu mắt, cực kỳ hấp dẫn và thân thiện với học sinh Tiểu học.
+  + Giao diện Cấp 2 và Cấp 3 hoàn toàn giữ vững tính nghiêm túc, học thuật chuẩn mực với viền đen sắc nét.
+
+
+
 

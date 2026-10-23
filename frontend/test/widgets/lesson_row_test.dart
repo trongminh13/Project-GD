@@ -53,5 +53,37 @@ void main() {
 
       expect(tapped, isTrue);
     });
+
+    testWidgets('isPrimary: true renders colored badge with palette styling', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: LessonRow(
+              lessonIndex: 1,
+              subject: 'Toán học',
+              time: '07:30–08:15',
+              teacher: 'Cô Mai',
+              room: 'Lớp 1A',
+              isPrimary: true,
+              paletteIndex: 1, // Warm Amber
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Tiết 1'), findsOneWidget);
+      expect(find.text('Toán học'), findsOneWidget);
+      expect(find.text('Cô Mai · Lớp 1A'), findsOneWidget);
+
+      // Verify badge container decoration has Warm Amber background (#FFFBEB) and border (#FCD34D)
+      final badgeContainerFinder = find.ancestor(
+        of: find.text('Tiết 1'),
+        matching: find.byType(Container),
+      ).first;
+      final decoration = tester.widget<Container>(badgeContainerFinder).decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFFFFBEB));
+      expect(decoration.borderRadius, BorderRadius.circular(6));
+      expect(decoration.border?.top.color, const Color(0xFFFCD34D));
+    });
   });
 }

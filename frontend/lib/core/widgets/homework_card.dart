@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
+import 'package:ashadeep/core/theme/primary_palette.dart';
 import 'package:ashadeep/utils/format_utils.dart';
 
 enum HomeworkCardMode {
@@ -14,6 +15,8 @@ class HomeworkCard extends StatelessWidget {
   final HomeworkCardMode mode;
   final VoidCallback? onPrimaryAction;
   final VoidCallback? onCardTap;
+  final bool isPrimary;
+  final int paletteIndex;
 
   const HomeworkCard({
     super.key,
@@ -21,6 +24,8 @@ class HomeworkCard extends StatelessWidget {
     this.mode = HomeworkCardMode.viewOnly,
     this.onPrimaryAction,
     this.onCardTap,
+    this.isPrimary = false,
+    this.paletteIndex = 0,
   });
 
   bool get _isSubmitted {
@@ -34,14 +39,27 @@ class HomeworkCard extends StatelessWidget {
     final subject = data['subjectName'] ?? data['subject'] ?? 'Môn học';
     final dueDate = data['dueDate'] != null ? 'Hạn: ${data['dueDate']}' : 'Hạn hôm nay';
     final score = data['finalScore'] ?? data['autoScore'] ?? data['score'];
+    final style = PrimaryPalette.getStyle(paletteIndex);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.cardBorder, width: AppColors.cardBorderWidth),
-        borderRadius: AppColors.cardBorderRadius,
-        color: AppColors.cardBg,
+        border: Border.all(
+          color: isPrimary ? style.borderColor : AppColors.cardBorder,
+          width: isPrimary ? 1.5 : AppColors.cardBorderWidth,
+        ),
+        borderRadius: BorderRadius.circular(isPrimary ? 14 : AppColors.cardRadius),
+        color: isPrimary ? style.bgColor : AppColors.cardBg,
+        boxShadow: isPrimary
+            ? [
+                BoxShadow(
+                  color: style.borderColor.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
@@ -53,18 +71,19 @@ class HomeworkCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMain,
+                      fontWeight: FontWeight.w700,
+                      color: isPrimary ? style.textColor : AppColors.textMain,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '$subject · $dueDate',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSub,
+                      fontWeight: isPrimary ? FontWeight.w500 : FontWeight.normal,
+                      color: isPrimary ? style.textColor.withValues(alpha: 0.8) : AppColors.textSub,
                     ),
                   ),
                 ],
@@ -72,13 +91,13 @@ class HomeworkCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          _buildActionWidget(context, score),
+          _buildActionWidget(context, score, style),
         ],
       ),
     );
   }
 
-  Widget _buildActionWidget(BuildContext context, dynamic score) {
+  Widget _buildActionWidget(BuildContext context, dynamic score, PrimaryBoxStyle style) {
     switch (mode) {
       case HomeworkCardMode.studentTake:
         if (_isSubmitted) {
@@ -87,16 +106,16 @@ class HomeworkCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.success),
-                borderRadius: AppColors.cardBorderRadius,
-                color: Colors.white,
+                border: Border.all(color: isPrimary ? const Color(0xFF10B981) : AppColors.success),
+                borderRadius: BorderRadius.circular(isPrimary ? 10 : AppColors.cardRadius),
+                color: isPrimary ? const Color(0xFFECFDF5) : Colors.white,
               ),
               child: Text(
                 score != null ? 'Đã nộp · ${FormatUtils.formatScore(score)}' : 'Đã nộp',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.success,
+                  color: isPrimary ? const Color(0xFF065F46) : AppColors.success,
                 ),
               ),
             ),
@@ -105,11 +124,13 @@ class HomeworkCard extends StatelessWidget {
           return ElevatedButton(
             onPressed: onPrimaryAction,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: isPrimary ? style.accentColor : AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: const RoundedRectangleBorder(borderRadius: AppColors.cardBorderRadius),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(isPrimary ? 10 : AppColors.cardRadius),
+              ),
             ),
             child: const Text('Làm bài', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           );

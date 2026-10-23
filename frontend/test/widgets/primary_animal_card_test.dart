@@ -191,6 +191,49 @@ void main() {
       );
       expect(find.text('Chào buổi tối 🌙'), findsOneWidget);
     });
+
+    testWidgets('Các khung box con và nút bấm có màu sắc đa sắc Pastel nhạt, không đổ màu 1 hướng', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PrimaryAnimalIdentityCard(
+              studentName: 'Nguyễn Văn An',
+              className: '1A',
+              dateStr: '23/10/2026',
+              dobDMY: '15/08/2019',
+              teacherName: 'Cô Nguyễn Thị Lan',
+              onTapMore: () {},
+              onLogout: () {},
+            ),
+          ),
+        ),
+      );
+
+      // Kiểm tra cấu hình màu sắc Pastel của 4 box con
+      expect(PrimaryAnimalIdentityCard.classStyle.bgColor, const Color(0xFFF0F7FF)); // Sky Blue pastel
+      expect(PrimaryAnimalIdentityCard.dateStyle.bgColor, const Color(0xFFFFFBEB)); // Warm Amber pastel
+      expect(PrimaryAnimalIdentityCard.studentStyle.bgColor, const Color(0xFFFDF2F8)); // Sweet Blossom Pink pastel
+      expect(PrimaryAnimalIdentityCard.teacherStyle.bgColor, const Color(0xFFF0FDF4)); // Fresh Mint pastel
+
+      // Kiểm tra viền sắc nét 1.5px tiệp màu tương ứng
+      expect(PrimaryAnimalIdentityCard.classStyle.borderColor, const Color(0xFF93C5FD));
+      expect(PrimaryAnimalIdentityCard.dateStyle.borderColor, const Color(0xFFFCD34D));
+      expect(PrimaryAnimalIdentityCard.studentStyle.borderColor, const Color(0xFFF472B6));
+      expect(PrimaryAnimalIdentityCard.teacherStyle.borderColor, const Color(0xFF6EE7B7));
+
+      // Kiểm tra thẻ ngoài có nền kem ấm áp
+      final containerFinder = find.byType(Container).first;
+      final outerDecoration = tester.widget<Container>(containerFinder).decoration as BoxDecoration;
+      expect(outerDecoration.color, const Color(0xFFFCFDFE));
+
+      // Kiểm tra sự xuất hiện của các nút và text
+      expect(find.text('TÊN LỚP'), findsOneWidget);
+      expect(find.text('NGÀY'), findsOneWidget);
+      expect(find.text('HỌC SINH'), findsOneWidget);
+      expect(find.text('GIÁO VIÊN'), findsOneWidget);
+      expect(find.text('Tiện ích'), findsOneWidget);
+      expect(find.text('Đăng xuất'), findsOneWidget);
+    });
   });
 }
 

@@ -123,5 +123,43 @@ void main() {
       expect(find.text('Chưa nộp'), findsOneWidget);
       expect(find.text('Làm bài'), findsNothing);
     });
+
+    testWidgets('isPrimary: true renders pastel card and rounded pill action button', (tester) async {
+      final mockData = {
+        'id': 201,
+        'title': 'Tập viết chữ đẹp bài 3',
+        'subjectName': 'Tiếng Việt',
+        'dueDate': '25/10/2026',
+        'submissionStatus': 'PENDING',
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HomeworkCard(
+              data: mockData,
+              mode: HomeworkCardMode.studentTake,
+              isPrimary: true,
+              paletteIndex: 0, // Sky Blue
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Tập viết chữ đẹp bài 3'), findsOneWidget);
+      expect(find.text('Tiếng Việt · Hạn: 25/10/2026'), findsOneWidget);
+      expect(find.text('Làm bài'), findsOneWidget);
+
+      // Verify outer container decoration: Sky Blue (#F0F7FF) and border (#93C5FD)
+      final containerFinder = find.descendant(
+        of: find.byType(HomeworkCard),
+        matching: find.byType(Container),
+      ).first;
+      final decoration = tester.widget<Container>(containerFinder).decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFF0F7FF));
+      expect(decoration.borderRadius, BorderRadius.circular(14));
+      expect(decoration.border?.top.color, const Color(0xFF93C5FD));
+      expect(decoration.border?.top.width, 1.5);
+    });
   });
 }

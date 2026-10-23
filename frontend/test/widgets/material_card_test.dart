@@ -170,5 +170,47 @@ void main() {
 
       expect(find.textContaining('Đang đọc trang 24 / 118'), findsOneWidget);
     });
+
+    testWidgets('isPrimary: true renders pastel background and rounded 14px border', (tester) async {
+      final mockData = {
+        'id': 10,
+        'title': 'Vở bài tập Toán 1',
+        'subjectName': 'Toán',
+        'teacherName': 'Cô Trần Thu Thảo',
+        'fileType': 'PDF',
+        'fileSize': '2.1 MB',
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MaterialCard(
+              data: mockData,
+              isPrimary: true,
+              paletteIndex: 2, // Sweet Blossom Pink
+            ),
+          ),
+        ),
+      );
+
+      // Verify widget renders
+      expect(find.text('Vở bài tập Toán 1'), findsOneWidget);
+      expect(find.text('Toán · Cô Trần Thu Thảo · 2.1 MB'), findsOneWidget);
+
+      // Verify decoration: Sweet Blossom background (#FDF2F8) and border (#F472B6)
+      final inkWellFinder = find.byType(InkWell);
+      final inkWell = tester.widget<InkWell>(inkWellFinder);
+      expect(inkWell.borderRadius, BorderRadius.circular(14));
+
+      final containerFinder = find.descendant(
+        of: find.byType(MaterialCard),
+        matching: find.byType(Container),
+      ).first;
+      final decoration = tester.widget<Container>(containerFinder).decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFFDF2F8));
+      expect(decoration.borderRadius, BorderRadius.circular(14));
+      expect(decoration.border?.top.color, const Color(0xFFF472B6));
+      expect(decoration.border?.top.width, 1.5);
+    });
   });
 }
