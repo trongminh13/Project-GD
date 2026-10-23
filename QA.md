@@ -2522,5 +2522,120 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Kiểm tra cú pháp & tĩnh ([`flutter analyze`])**:
   + ✅ **No issues found (0 warnings, 0 errors)** trên toàn bộ các file mới và các module liên quan.
 
+---
+
+### GIAI ĐOẠN 36: CHUẨN HÓA VÀ NÂNG CẤP TOÀN DIỆN HỆ THỐNG BO GÓC KHUNG HỘP (BOX BORDER RADIUS) TỪ 4PX LÊN 16PX TINH TẾ & PHÂN CẤP HÌNH HỌC (NESTED RADIUS)
+
+**1. Mục Tiêu & Yêu Cầu Thiết Kế (Senior Design, Senior Dev & Senior QA):**
+- **Senior Design**:
+  + Chuyển đổi toàn diện hệ thống khung hộp, thẻ Card, hộp thoại Dialog, Bottom Sheet và Banner từ góc bo kỹ thuật sắc nhọn `4px` sang đường cong hữu cơ hiện đại **`16px`** mang lại cảm giác thân thiện, nhẹ nhàng tinh tế phù hợp với môi trường giáo dục.
+  + **Quy tắc phân cấp hình học (Nested Radius Hierarchy)**:
+    - Khung bao ngoài (Cards, Dialogs, BottomSheet, Containers chính): **`16px`** (`AppColors.cardBorderRadius`).
+    - Khối con nhỏ lồng bên trong (Badges, Chips demo, Tag trạng thái, Indicator): **`8px`** (tránh biến dạng hình viên thuốc hoặc góc méo khi lồng vào card 16px).
+    - Lưới ô sổ điểm Bộ GD&ĐT (`TableCell`): Giữ nguyên góc vuông $90^\circ$ để các đường kẻ bảng sắc nét, liền mạch, không đứt đoạn.
+- **Senior Dev**:
+  + Đổi giá trị token trung tâm `AppColors.cardRadius = 16.0` và `AppConstants.cardRadius = 16.0`, tự động đồng bộ hóa hơn 70+ components trên toàn bộ ứng dụng mà không gây phân mảnh hay phát sinh mã lặp.
+  + Chuẩn hóa các widget trước đó viết cứng `BorderRadius.circular(4.0)` sang token hoặc theo phân cấp hình học:
+    - `AppShimmer` & `AppShimmerCard`: Sử dụng `AppColors.cardBorderRadius` (16px) để hiệu ứng skeleton skeleton khớp 100% với card thật.
+    - `NetworkStatusBanner`: Sử dụng `AppColors.cardBorderRadius` (16px) cho banner nổi thông báo trạng thái mạng.
+    - `LoginScreen`: Chuyển các chip demo vai trò lồng trong card sang `BorderRadius.circular(8.0)`.
+    - `TeacherProfileScreen`: Chuyển badge điểm danh sang `BorderRadius.circular(8.0)` và sửa lỗi argument type của `FutureBuilder` (`[TeacherService().getAttendance('T001')]`).
+    - `TeacherFullReportScreen`: Chuyển badge trạng thái phê duyệt sang `BorderRadius.circular(8.0)`.
+- **Senior QA**:
+  + Rà soát kiểm tra hồi quy: Đảm bảo không có widget nào bị méo viền hay lệch lề.
+  + Cập nhật kỳ vọng test case trong `student_dashboard_nav_test.dart` từ `BorderRadius.circular(4)` sang `BorderRadius.circular(AppColors.cardRadius)` (16px).
+  + Chạy kiểm thử toàn diện toàn bộ test suite dự án.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+- **Token Trung Tâm**:
+  + [`frontend/lib/core/theme/app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart): `static const double cardRadius = 16.0;`
+  + [`frontend/lib/utils/constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart): `static const double cardRadius = 16.0;`
+- **Chuẩn Hóa Widget Viết Cứng & Phân Cấp**:
+  + [`frontend/lib/core/widgets/app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Dùng `AppColors.cardBorderRadius`.
+  + [`frontend/lib/core/widgets/network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Dùng `AppColors.cardBorderRadius`.
+  + [`frontend/lib/screens/login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart): Chip demo dùng `BorderRadius.circular(8.0)`.
+  + [`frontend/lib/features/teacher/screens/teacher_profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/teacher/screens/teacher_profile_screen.dart): Badge điểm danh dùng `BorderRadius.circular(8.0)`.
+  + [`frontend/lib/features/admin/screens/teacher_full_report_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/admin/screens/teacher_full_report_screen.dart): Badge phê duyệt dùng `BorderRadius.circular(8.0)`.
+- **Cập Nhật Test Suite**:
+  + [`frontend/test/widgets/student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật kiểm tra `AppColors.cardRadius` (16.0).
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- **Phân tích tĩnh (`flutter analyze lib/`)**:
+  + ✅ **0 errors, 0 warnings** (sạch lỗi biên dịch 100%).
+- **Kiểm thử Widget Test (`flutter test test/widgets/student_dashboard_nav_test.dart`)**:
+  + ✅ **17 / 17 tests PASSED**.
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **132 / 132 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
+- **Trải nghiệm Thẩm mỹ**: Giao diện các Card, Dialog, Box bao ngoài trên Dashboard Học sinh, Giáo viên, Quản trị viên đạt độ mềm mại, hiện đại, thanh thoát và vô cùng tinh tế; các phần tử con có phân cấp bo góc tự nhiên không bị gãy nét.
+
+---
+
+### GIAI ĐOẠN 37: TÁI CẤU TRÚC BẢNG TIÊU CHUẨN DANH HIỆU THPT: ĐƯỜNG PHÂN CỘT DỌC, BỎ BOX MÀU, BỎ ICON CÚP & ĐÁNH GIÁ ĐỘNG MỌI DIỆN HỌC SINH THEO THÔNG TƯ 22
+
+**1. Mục Tiêu & Yêu Cầu Thiết Kế (Senior Design, Senior Dev & Senior QA):**
+- **Senior Design**:
+  + Thêm đường phân cách dọc 1px sắc nét (`Container(width: 1, color: AppColors.cardBorder)`) kết hợp `IntrinsicHeight` và `CrossAxisAlignment.stretch` phân chia rành mạch giữa 2 cột "TIÊU CHÍ XÉT DANH HIỆU (TT 22/2021)" và "KẾT QUẢ ĐỐI SOÁT".
+  + Loại bỏ hoàn toàn các box màu (hộp nền màu xanh lá, màu vàng nhạt, viền con bo góc) bao quanh kết quả đối soát. Hiển thị text trực tiếp (clean typography), căn giữa, thanh lịch, trang nhã.
+  + Loại bỏ hoàn toàn icon cúp `🏆` và icon sao `🌟` ở các dòng kết quả danh hiệu; giữ text phẳng thuần túy chuẩn văn bản hành chính giáo dục.
+  + Chuẩn hóa text kết quả: "Đạt chuẩn" $\rightarrow$ **"Đạt"**; "Đạt học sinh giỏi" $\rightarrow$ **"Học sinh giỏi"**; "Đạt học sinh xuất sắc" $\rightarrow$ **"Học sinh xuất sắc"**.
+- **Senior Dev**:
+  + Tích hợp đánh giá động theo đúng dữ liệu học bạ thực tế và chuẩn pháp lý Thông tư 22/2021/TT-BGDĐT:
+    - Nhận diện linh hoạt hạnh kiểm `markbook.conduct` (chứa `tốt` bao gồm cả `Tốt (Xuất sắc)`).
+    - Tính toán điểm môn thấp nhất `minScore` thực tế để kiểm tra tiêu chí khống chế $\ge 6.5$.
+    - Tự động hiển thị chính xác cho mọi diện học sinh: Học sinh Xuất sắc, Học sinh Giỏi, Học sinh Khá, Học sinh Đạt và Chưa đạt (các tiêu chí không thỏa mãn tự động hiển thị **"Chưa đạt"** thay vì viết cứng).
+- **Senior QA**:
+  + Cập nhật test case `TC-ADAPTIVE-03` trong [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart) khớp với text mới "Học sinh giỏi".
+  + Chạy kiểm thử tự động toàn diện toàn bộ test suite dự án.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+  + Xây dựng đường thẳng dọc chia 2 cột từ Header xuống toàn bộ các hàng đối soát qua `IntrinsicHeight`.
+  + Thay thế widget container box màu cũ ở cột kết quả bằng text trực tiếp căn giữa (`Alignment.center`).
+  + Đổi toàn bộ nhãn: "Đạt", "Học sinh giỏi", "Học sinh xuất sắc", "Chưa đạt" (hoàn toàn không có icon cúp hay sao).
+- **Kiểm Thử Frontend ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+  + Cập nhật kỳ vọng test case TC-ADAPTIVE-03 sang `find.textContaining('Học sinh giỏi')`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- **Phân tích tĩnh (`flutter analyze lib/`)**:
+  + ✅ **0 errors, 0 warnings** (sạch lỗi 100%).
+- **Kiểm thử Widget Test (`flutter test test/widgets/student_adaptive_dashboard_test.dart`)**:
+  + ✅ **5 / 5 tests PASSED (100%)**.
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **132 / 132 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
+- **Trải nghiệm Thẩm mỹ**: Bảng tiêu chí xét danh hiệu đạt độ cân đối, sắc nét, đường kẻ dọc phân cách rành mạch, kết quả đối soát thanh thoát không bị rối mắt bởi các hộp màu con.
+
+---
+
+### GIAI ĐOẠN 38: TINH GỌN MÀN HÌNH ĐĂNG NHẬP: TẠM THỜI COMMENT ẨN THANH VAI TRÒ & THU GỌN CHIP DEMO HỌC SINH
+
+**1. Mục Tiêu & Yêu Cầu Kỹ Thuật (Senior Dev & Senior QA):**
+- **Yêu cầu người dùng**:
+  + Tạm thời comment ẩn tiêu đề *"Vui lòng chọn vai trò và đăng nhập vào hệ thống"*.
+  + Tạm thời comment ẩn thanh bar chọn 4 vai trò (Học sinh, Phụ huynh, Giáo viên, Quản trị).
+  + Thu gọn thanh chạm điền nhanh tài khoản demo: tạm thời ẩn 3 chip Giáo viên, Admin và Phụ huynh; chỉ giữ lại 3 chip Học sinh (HS Cấp 1, HS Cấp 2, HS Cấp 3).
+- **Senior Dev**:
+  + Dùng comment dạng khối `/* ... */` và dòng `//` trong [`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart) để bảo toàn 100% mã nguồn, sẵn sàng mở lại bất cứ khi nào cần.
+  + Thêm annotation `// ignore: unused_element` trên `_buildRoleButton` để đảm bảo code sạch 100% không cảnh báo linter.
+  + Giá trị mặc định `_selectedRole = UserRole.student` được giữ nguyên vẹn, đảm bảo luồng đăng nhập học sinh hoạt động hoàn hảo.
+- **Senior QA**:
+  + Chạy `flutter analyze lib/` chứng thực 0 lỗi biên dịch / cảnh báo.
+  + Chạy toàn bộ test suite `flutter test` chứng thực không có hồi quy.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+- **Màn Hình Đăng Nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart))**:
+  + Comment ẩn dòng 435-465: Tiêu đề chọn vai trò và Container thanh bar 4 vai trò.
+  + Comment ẩn dòng 499-501: 3 chip demo `Giáo viên`, `Admin`, `Phụ huynh`.
+  + Bổ sung `// ignore: unused_element` trước `_buildRoleButton`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
+- **Phân tích tĩnh (`flutter analyze lib/`)**:
+  + ✅ **0 errors, 0 warnings** (sạch lỗi biên dịch 100%).
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **132 / 132 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
+- **Trải nghiệm Giao diện**: Form đăng nhập trở nên vô cùng gọn gàng, thanh thoát; người dùng tập trung ngay vào form nhập liệu và chỉ thấy các tài khoản demo Học sinh tiện lợi.
+
+
+
+
 
 

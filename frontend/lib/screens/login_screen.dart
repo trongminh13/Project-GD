@@ -431,6 +431,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 18),
 
+                    // Tạm thời comment ẩn tiêu đề chọn vai trò và thanh vai trò theo yêu cầu
+                    /*
                     // Label: Vai trò
                     const Text(
                       'Vui lòng chọn vai trò và đăng nhập vào hệ thống',
@@ -463,6 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    */
 
                     // Thanh chạm điền nhanh tài khoản Demo khi ở môi trường Demo/Web
                     if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) ...[
@@ -498,9 +501,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _buildDemoChip('HS Cấp 1', 'student01', 'student123', UserRole.student),
                                 _buildDemoChip('HS Cấp 2', 'student02', 'student123', UserRole.student),
                                 _buildDemoChip('HS Cấp 3', 'student03', 'student123', UserRole.student),
-                                _buildDemoChip('Giáo viên', 'T001', 'teacher123', UserRole.teacher),
-                                _buildDemoChip('Admin', 'admin', 'admin123', UserRole.admin),
-                                _buildDemoChip('Phụ huynh', '9910157611', '123456', UserRole.parent),
+                                // Tạm thời ẩn các tài khoản demo Giáo viên, Admin, Phụ huynh theo yêu cầu
+                                // _buildDemoChip('Giáo viên', 'T001', 'teacher123', UserRole.teacher),
+                                // _buildDemoChip('Admin', 'admin', 'admin123', UserRole.admin),
+                                // _buildDemoChip('Phụ huynh', '9910157611', '123456', UserRole.parent),
                               ],
                             ),
                           ],
@@ -573,6 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildRoleButton(String text, UserRole role, {bool isLast = false}) {
     final isSelected = _selectedRole == role;
 
@@ -637,12 +642,12 @@ class _LoginScreenState extends State<LoginScreen> {
           _selectedRole = role;
         });
       },
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: isMatching ? _kPrimaryBlue : Colors.white,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kPrimaryBlue.withValues(alpha: 0.35)),
         ),
         child: Row(

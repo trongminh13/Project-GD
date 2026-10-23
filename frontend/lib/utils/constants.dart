@@ -41,7 +41,7 @@ class AppColors {
   static const Color splashText = Color(0xFFC0C0C0);
 
   // Card & Box Radius
-  static const double cardRadius = 4.0;
+  static const double cardRadius = 16.0;
   static const BorderRadius cardBorderRadius = BorderRadius.all(Radius.circular(cardRadius));
 
   // Backward Compatibility (light mode defaults)

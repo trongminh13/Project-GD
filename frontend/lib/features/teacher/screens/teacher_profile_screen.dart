@@ -126,7 +126,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                         // Show mock active record for current month
                         if (monthKey == 'Feb 2025')
                           FutureBuilder<List<Map<String, String>>>(
-                            future: Future.value(TeacherService().getAttendance('T001')), // Mock Async
+                            future: Future.value([TeacherService().getAttendance('T001')]), // Mock Async
                             builder: (context, snapshot) {
                               if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
                               final todayRecord = snapshot.data!.last;
@@ -169,7 +169,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: isAbsent ? AppColors.error.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(status, style: TextStyle(color: isAbsent ? AppColors.error : AppColors.success, fontWeight: FontWeight.bold, fontSize: 12)),
           ),

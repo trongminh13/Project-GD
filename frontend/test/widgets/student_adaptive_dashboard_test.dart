@@ -77,7 +77,7 @@ void main() {
 
       // Check TT22 Criteria Card for High School
       expect(find.text('TIÊU CHUẨN DANH HIỆU THPT (TT 22/2021)'), findsOneWidget);
-      expect(find.textContaining('HỌC SINH GIỎI'), findsWidgets);
+      expect(find.textContaining('Học sinh giỏi'), findsWidgets);
     });
 
     testWidgets('TC-ADAPTIVE-04: Toggle between Accordion View and Grid Table View', (tester) async {

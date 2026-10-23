@@ -65,7 +65,7 @@ class NetworkStatusBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFDE8E8),
         border: Border.all(color: const Color(0xFFF8B4B4)),
-        borderRadius: BorderRadius.circular(4.0),
+        borderRadius: AppColors.cardBorderRadius,
       ),
       child: Row(
         children: [

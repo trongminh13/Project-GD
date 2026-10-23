@@ -339,11 +339,11 @@ void main() {
       expect(find.text('Đăng xuất?'), findsOneWidget);
       expect(find.text('Em có chắc chắn muốn đăng xuất khỏi hệ thống không?'), findsOneWidget);
 
-      // Verify logout dialog has 4px rounded border radius
+      // Verify logout dialog has rounded border radius (16px)
       final alertDialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
       expect(alertDialog.shape, isA<RoundedRectangleBorder>());
       final shape = alertDialog.shape as RoundedRectangleBorder;
-      expect(shape.borderRadius, BorderRadius.circular(4));
+      expect(shape.borderRadius, BorderRadius.circular(AppColors.cardRadius));
 
       // Dismiss dialog
       await tester.tap(find.text('Hủy'));

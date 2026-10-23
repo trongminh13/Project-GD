@@ -168,16 +168,25 @@ class MarksCriteriaCard extends StatelessWidget {
   Widget _buildHighSchoolHonorSimulatorCard(BuildContext context) {
     int count8 = 0;
     int count9 = 0;
+    double minScore = 10.0;
+    bool hasScore = false;
+
     for (final s in markbook.subjects) {
       final calculatedYearAvg = s.yearAvg ??
           (s.semester1?.avg != null && s.semester2?.avg != null
               ? ((s.semester1!.avg! + 2 * s.semester2!.avg!) / 3.0)
               : (s.semester2?.avg ?? s.semester1?.avg));
       if (calculatedYearAvg != null) {
+        hasScore = true;
+        if (calculatedYearAvg < minScore) minScore = calculatedYearAvg;
         if (calculatedYearAvg >= 8.0) count8++;
         if (calculatedYearAvg >= 9.0) count9++;
       }
     }
+    if (!hasScore) minScore = 0.0;
+
+    final isConductGood = markbook.conduct == null || markbook.conduct!.toLowerCase().contains('tốt');
+    final isMinScorePass = hasScore && minScore >= 6.5;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -228,69 +237,79 @@ class MarksCriteriaCard extends StatelessWidget {
                 // Hàng Header của bảng lưới
                 Container(
                   color: AppColors.surfaceAlt,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: const Row(
-                    children: [
-                      Expanded(
-                        flex: 65,
-                        child: Text(
-                          'TIÊU CHÍ XÉT DANH HIỆU (TT 22/2021)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                            color: AppColors.textSub,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Expanded(
+                          flex: 65,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Text(
+                              'TIÊU CHÍ XÉT DANH HIỆU (TT 22/2021)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                                color: AppColors.textSub,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        flex: 35,
-                        child: Text(
-                          'KẾT QUẢ ĐỐI SOÁT',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                            color: AppColors.textSub,
+                        Container(width: 1, color: AppColors.cardBorder),
+                        const Expanded(
+                          flex: 35,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Text(
+                              'KẾT QUẢ ĐỐI SOÁT',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                                color: AppColors.textSub,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          textAlign: TextAlign.end,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
                 // 5 Hàng dữ liệu đối soát
                 _buildGridRow(
                   criteria: '1. Kết quả Rèn luyện đạt mức TỐT',
-                  result: 'Đạt chuẩn',
-                  isPass: true,
+                  result: isConductGood ? 'Đạt' : 'Chưa đạt',
+                  isPass: isConductGood,
                 ),
                 const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
                 _buildGridRow(
                   criteria: '2. 100% môn nhận xét (Thể dục, QP-AN, HĐTN) đạt mức ĐẠT',
-                  result: 'Đạt chuẩn',
+                  result: 'Đạt',
                   isPass: true,
                 ),
                 const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
                 _buildGridRow(
-                  criteria: '3. Không có môn học nào dưới 6.5 (Môn thấp nhất: 8.6)',
-                  result: 'Đạt chuẩn',
-                  isPass: true,
+                  criteria: '3. Không có môn học nào dưới 6.5 (Môn thấp nhất: ${minScore.toStringAsFixed(1)})',
+                  result: isMinScorePass ? 'Đạt' : 'Chưa đạt',
+                  isPass: isMinScorePass,
                 ),
                 const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
                 _buildGridRow(
                   criteria: '4. Có ít nhất 06 môn đạt ĐTB ≥ 8.0 (Hiện có: $count8/6 môn)',
-                  result: count8 >= 6 ? 'ĐẠT HỌC SINH GIỎI 🏆' : 'Chưa đủ',
-                  isPass: count8 >= 6,
+                  result: (count8 >= 6 && isMinScorePass && isConductGood) ? 'Học sinh giỏi' : 'Chưa đạt',
+                  isPass: count8 >= 6 && isMinScorePass && isConductGood,
                   isHighlight: true,
                 ),
                 const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
                 _buildGridRow(
                   criteria: '5. Có ít nhất 06 môn đạt ĐTB ≥ 9.0 (Hiện có: $count9/6 môn)',
-                  result: count9 >= 6 ? 'ĐẠT HỌC SINH XUẤT SẮC 🌟' : 'Cần thêm 2 môn ≥ 9.0',
-                  isPass: count9 >= 6,
+                  result: (count9 >= 6 && isMinScorePass && isConductGood)
+                      ? 'Học sinh xuất sắc'
+                      : (count9 < 6 ? 'Cần thêm ${6 - count9} môn ≥ 9.0' : 'Chưa đạt'),
+                  isPass: count9 >= 6 && isMinScorePass && isConductGood,
                   isHighlight: false,
                 ),
               ],
@@ -307,53 +326,41 @@ class MarksCriteriaCard extends StatelessWidget {
     required bool isPass,
     bool isHighlight = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             flex: 65,
-            child: Text(
-              criteria,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
-                color: AppColors.textMain,
-                height: 1.3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Text(
+                criteria,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
+                  color: AppColors.textMain,
+                  height: 1.3,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          Container(width: 1, color: AppColors.cardBorder),
           Expanded(
             flex: 35,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Text(
+                result,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
                   color: isPass
-                      ? (isHighlight ? const Color(0xFFFFF8E1) : const Color(0xFFE8F5E9))
-                      : AppColors.surfaceAlt,
-                  borderRadius: AppColors.cardBorderRadius,
-                  border: Border.all(
-                    color: isPass
-                        ? (isHighlight ? const Color(0xFFFFB300) : const Color(0xFFA5D6A7))
-                        : AppColors.cardBorder,
-                    width: 0.8,
-                  ),
+                      ? (isHighlight ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32))
+                      : AppColors.textSub,
                 ),
-                child: Text(
-                  result,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isPass
-                        ? (isHighlight ? const Color(0xFFE65100) : const Color(0xFF2E7D32))
-                        : AppColors.textSub,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),

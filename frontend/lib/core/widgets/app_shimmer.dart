@@ -122,7 +122,7 @@ class AppShimmerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: AppColors.cardBorderRadius,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
