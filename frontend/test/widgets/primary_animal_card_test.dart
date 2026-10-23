@@ -78,7 +78,7 @@ void main() {
       // Kiểm tra giá trị
       expect(find.text('Lớp 1A'), findsOneWidget);
       expect(find.text('23/10/2026'), findsOneWidget);
-      expect(find.text('Hoàng Văn Thư'), findsOneWidget);
+      expect(find.text('Hoàng Văn Thư'), findsNWidgets(2)); // 1 ở banner bầu trời, 1 ở ô HỌC SINH
       expect(find.text('Cô Nguyễn Thị Lan'), findsOneWidget);
 
       // Kiểm tra tên linh vật bạn đồng hành (Cá sấu)
@@ -137,5 +137,60 @@ void main() {
       expect(decoration.borderRadius, BorderRadius.circular(16));
       expect(decoration.border?.top.width, 1.5);
     });
+
+    testWidgets('PrimarySkyGreetingHeader hiển thị chính xác theo thời gian sáng, chiều, tối', (tester) async {
+      // 1. Buổi sáng (08:30)
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PrimaryAnimalIdentityCard(
+              studentName: 'Hoàng Văn Thư',
+              className: '1A',
+              dateStr: '23/10/2026',
+              dobDMY: '20/10/2026',
+              teacherName: 'Cô Nguyễn Thị Lan',
+              timeOverride: DateTime(2026, 10, 23, 8, 30),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Chào buổi sáng ✨'), findsOneWidget);
+      expect(find.text('Hoàng Văn Thư'), findsNWidgets(2)); // 1 ở banner bầu trời, 1 ở ô HỌC SINH
+
+      // 2. Buổi chiều (14:30)
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PrimaryAnimalIdentityCard(
+              studentName: 'Hoàng Văn Thư',
+              className: '1A',
+              dateStr: '23/10/2026',
+              dobDMY: '20/10/2026',
+              teacherName: 'Cô Nguyễn Thị Lan',
+              timeOverride: DateTime(2026, 10, 23, 14, 30),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Chào buổi chiều 🌤️'), findsOneWidget);
+
+      // 3. Buổi tối (20:00)
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PrimaryAnimalIdentityCard(
+              studentName: 'Hoàng Văn Thư',
+              className: '1A',
+              dateStr: '23/10/2026',
+              dobDMY: '20/10/2026',
+              teacherName: 'Cô Nguyễn Thị Lan',
+              timeOverride: DateTime(2026, 10, 23, 20, 0),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Chào buổi tối 🌙'), findsOneWidget);
+    });
   });
 }
+

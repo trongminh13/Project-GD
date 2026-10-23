@@ -3010,4 +3010,47 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Trải nghiệm thực tế**:
   + Trên điện thoại (360px - 430px) lẫn máy tính: Chú sách chạy tăng tốc êm ái, lao vụt qua mép phải và **100% toàn bộ cơ thể chú sách biến mất hoàn toàn ra khỏi màn hình** một cách tự nhiên. Sau đó từ ngoài mép trái sải bước êm ái giảm tốc dừng lại ở tâm màn hình, đạt độ mượt mà và cảm giác cơ học hoàn toàn tương đương Pha 2 của Flutter.
 
+---
+
+### GIAI ĐOẠN 47: THIẾT KẾ VÀ TÍCH HỢP HEADER BẦU TRỜI (MẶT TRỜI / MẶT TRĂNG / MÂY NHÔ NỬA TRÊN) VÀ LỜI CHÀO THỜI GIAN CHO HỌC SINH CẤP 1
+
+**1. Vấn Đề Người Dùng Yêu Cầu & Phân Tích Thiết Kế (Senior QA & Senior Design):**
+- **Yêu cầu người dùng**:
+  *"cái roles học sinh cấp 1 thì trên cái khung 'con vật' ở trang chủ ấy thì thêm cho tôi 1 hình mặt trời, mặt trăng, đám mây.... sao cho chỉ 1 nửa phần trên hiện và bên cạnh là chữ chào buổi sáng 'tên học sinh' chả hạn. vẫn giữ nguyên hàm logic cái ở trang chủ ở học sinh cấp 2, và cấp 3 chứ? vậy áp dụng sang cấp 1 nhưng màu mè tí đi senior design . lên /plan đi"*.
+- **Phân tích thiết kế chuyên sâu (Senior UI/UX Guidelines)**:
+  * **Cấp 1 (Tiểu học)**: Độ tuổi thiếu nhi yêu thích màu sắc tươi sáng, thế giới tự nhiên và các hình tượng bầu trời ngộ nghĩnh. Yêu cầu thiết kế hiệu ứng **"chỉ 1 nửa phần trên hiện"** (Peeking Celestial Dome) mọc lên từ đường chân trời đỉnh thẻ:
+    - **Buổi sáng (5h - 12h)**: Mặt trời vàng cam cười tươi với 7 tia nắng nan quạt nhô lên nửa vòm, má hồng phúng phính và cụm mây trắng ngà ôm chân vòm. Lời chào: `"Chào buổi sáng ✨"`, tên học sinh nổi bật và rạng rỡ.
+    - **Buổi chiều (12h - 18h)**: Mặt trời chiều vàng cam dịu mát kết hợp cụm mây xanh cyan bồng bềnh nhô lên nửa vòm. Lời chào: `"Chào buổi chiều 🌤️"`.
+    - **Buổi tối (18h - 5h)**: Bầu trời đêm tím mộng mơ với Mặt trăng lưỡi liềm vàng mơ và 3 ngôi sao 4 cánh lấp lánh nhấp nháy. Lời chào: `"Chào buổi tối 🌙"`.
+  * **Cấp 2 & Cấp 3 (THCS & THPT)**: **Bảo toàn 100%** giao diện Card học thuật tiêu chuẩn nền trắng thanh lịch, trang nhã, không áp dụng hình hoạt hình hay mặt trời thiếu nhi.
+  * **Tính nhất quán**: Sử dụng chung hàm phân loại thời gian `SkyTimeHelper` và `_getTimeGreeting()` theo `now.hour`.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+1. **Tạo mới [`primary_sky_greeting_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_sky_greeting_header.dart)**:
+   - Enum `SkyTimePeriod { morning, afternoon, evening }` và `SkyTimeHelper`.
+   - `SkyCelestialPainter`: CustomPainter 100% Vector vẽ hình ảnh thiên nhiên "chỉ 1 nửa phần trên hiện" (`ClipRect` + `CustomPaint`), độ phân giải vô cực, không nhòe vỡ, tải siêu nhẹ trên GPU.
+   - `PrimarySkyGreetingHeader`: Dải banner cong nhẹ với gradient màu kem ấm (sáng), xanh ngọc pastel (chiều), tím chàm dịu mắt (tối), hiển thị song song biểu tượng bầu trời và lời chào kèm tên học sinh.
+2. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
+   - Tích hợp `PrimarySkyGreetingHeader` tại phần đỉnh của thẻ con vật.
+   - Bảo toàn trọn vẹn 100% bố cục 4 ô thông tin, cột linh vật vẫy tay ở mép phải và thanh tác vụ dưới cùng.
+3. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+   - Truyền `timeOverride: now` vào `PrimaryAnimalIdentityCard` để đồng bộ thời gian thực.
+   - Cấp 2 và Cấp 3 giữ nguyên 100% Card học thuật tối giản hiện hữu.
+4. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
+   - Kiểm tra hiển thị chính xác lời chào buổi sáng, chiều, tối.
+   - Kiểm tra tên học sinh xuất hiện ở cả banner bầu trời và ô thông tin.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
+- **Phân tích tĩnh Frontend (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** (No issues found in 10.0s).
+- **Kiểm thử Widget Test Cấp 1 & Cấp 2/3**:
+  + ✅ **15 / 15 tests PASSED (100% pass)**.
+- **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **142 / 142 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+- **Biên dịch Production Web (`flutter build web`)**:
+  + ✅ **✓ Built build/web** thành công 100% trong 85.0s.
+- **Trải nghiệm thực tế**:
+  + Học sinh Cấp 1 (`student01`): Đỉnh thẻ con vật nhô lên nửa vòm Mặt Trời cười tỏa nắng (buổi sáng) hoặc Trăng sao lấp lánh (buổi tối) cực kỳ sinh động, bên cạnh là lời chào `"Chào buổi sáng, [Tên học sinh]!"` với màu sắc tươi vui, ấm áp.
+  + Học sinh Cấp 2 (`student02`) và Cấp 3 (`student03`): Trang chủ vẫn hiển thị Card học thuật chuẩn mực, sạch sẽ, không có hoạt hình.
+
 

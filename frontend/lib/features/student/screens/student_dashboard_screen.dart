@@ -1968,6 +1968,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               dateStr: '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}',
               dobDMY: _extractDobDMY(_profile),
               teacherName: classTeacher,
+              timeOverride: now,
               onTapMore: _showMoreBottomSheet,
               onLogout: _logout,
             )

@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
 import 'animal_mascot_data.dart';
 import 'animal_mascot_painter.dart';
+import 'primary_sky_greeting_header.dart';
 
 /// Thẻ Con Vật Nhận Diện Lớp Học (Dành riêng cho học sinh Cấp 1)
 /// Thiết kế chuẩn mực Senior Design: Bo góc 16px, ô con 8px, viền 1.5px, 100% Vector Canvas
+/// Tích hợp Header Bầu Trời (Mặt trời/Mặt trăng nhô nửa trên) và Lời chào thời gian sinh động
 class PrimaryAnimalIdentityCard extends StatelessWidget {
   final String studentName;
   final String className;
   final String dateStr;
   final String dobDMY;
   final String teacherName;
+  final DateTime? timeOverride;
   final VoidCallback? onTapMore;
   final VoidCallback? onLogout;
 
@@ -21,6 +24,7 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
     required this.dateStr,
     required this.dobDMY,
     required this.teacherName,
+    this.timeOverride,
     this.onTapMore,
     this.onLogout,
   });
@@ -51,6 +55,13 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 0. Banner Bầu Trời: Hình tượng Mặt Trời/Mặt Trăng nhô nửa trên & Lời chào theo thời gian
+          PrimarySkyGreetingHeader(
+            studentName: studentName,
+            primaryColor: color,
+            timeOverride: timeOverride,
+          ),
+
           // Phần nội dung chính: Bố cục 2 cột (Cột thông tin 62% + Cột linh vật 38%)
           InkWell(
             onTap: onTapMore,
