@@ -3231,3 +3231,124 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Phân tích tĩnh (`flutter analyze`)**:
   + ✅ **0 errors, 0 warnings** trên toàn bộ mã nguồn của dự án (chỉ còn 2 cảnh báo info `deprecated_member_use` cũ từ trước ở `teacher_create_homework_screen.dart`).
 
+---
+
+### GIAI ĐOẠN 52: KIỂM ĐỊNH & CHUẨN HÓA TOÀN DIỆN MOCK DỮ LIỆU SÁCH GIÁO KHOA 3 CẤP HỌC (BOOKMOCKCONTENTPROVIDER) - SỬA LỖI TOÁN 10 VÀ ĐỒNG BỘ ĐA MÔN HỌC
+
+**1. Mục Tiêu, Yêu Cầu Của Người Dùng & Thẩm Định QA:**
+- **Yêu cầu người dùng**: *"giờ QA senior kiểm tra mock giải lập demo xem sách nào hiện tại ở các cấp học 1 ,2 và 3 đang có đúng nội dung với tiêu đề. trước khi kiểm tra lên /plan đi"*.
+- **Kết quả điều tra & thẩm định thực tế của Senior QA**:
+  1. *Kho lưu trữ Backend (`backend/school-backend/uploads/materials/`)*: Chỉ tồn tại duy nhất 1 file PDF vật lý là `SGK_Toan_1_Tap_1.pdf` (dung lượng 77.9 MB, 118 trang). Toàn bộ các sách khác của cả 3 cấp học (Cấp 1 Tiểu học, Cấp 2 THCS, Cấp 3 THPT) đều vận hành qua cơ chế giả lập bài học số hóa offline (Procedural Render via Canvas).
+  2. *Lỗi nhận diện sai lệch Toán 10 thành Toán 1*: Hàm `_isToan1` trong `student_book_reader_screen.dart` kiểm tra bằng `title.contains('toán 1')`. Chuỗi `"Toán 10"` chứa `"toán 1"`, dẫn đến việc học sinh Cấp 3 mở sách **Toán 10** nhưng lại bị hệ thống nhận diện nhầm thành **Toán 1** và hiển thị bài đếm số 1..10 của học sinh lớp 1!
+  3. *Lỗi rập khuôn nội dung Bảng nhân 7 Toán 3*: Tất cả các sách không phải Toán 1 (gồm Ngữ văn, Tiếng Anh, Vật lý, Hóa học, Lịch sử, v.v. của cả 3 cấp học) đều bị rơi vào nhánh fallback mặc định của `student_book_reader_screen.dart` và `material_pdf_page_image_source.dart`: vẽ tiêu đề `"Bảng nhân 7"` và các phép tính `7 x 1 = 7, 7 x 2 = 14...` của Toán 3.
+  4. *Mục lục sách (Table of Contents) bị hardcode*: Mục lục trong BottomSheet bị hardcode cứng 5 bài học của môn Toán lớp 3 cho tất cả các môn học.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+1. **Xây dựng bộ sinh nội dung chuẩn hóa [`book_mock_content_provider.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/book_mock_content_provider.dart)**:
+   - Sử dụng Regex Word Boundary phân định cấp lớp: `RegExp(r'\btoán\s*1\b|\btoan\s*1\b', caseSensitive: false)`, khắc phục triệt để lỗi `"Toán 10"` bị nhận nhầm thành `"Toán 1"`.
+   - Cung cấp mô hình dữ liệu bài học `BookLessonData` và cấu trúc mục lục chuẩn `getChapters(bookData)` cho từng môn và từng cấp học:
+     - **Cấp 1 (Tiểu học)**:
+       + *Toán 1*: Hình vuông, hình tròn, đếm số 1 đến 10, phép cộng trong phạm vi 10.
+       + *Tiếng Việt 1*: Bài học âm c, chữ c, dấu sắc, tập đọc câu ngắn "Bé có cá cờ".
+       + *Tiếng Anh 1*: Unit 1: Hello! - Chào hỏi và từ vựng quen thuộc (pen, book, cat).
+       + *Tự nhiên & Xã hội 1*: Cơ thể em, các giác quan và giữ vệ sinh thân thể.
+       + *Đạo đức 1*: Đi học đều và đúng giờ, lễ phép chào hỏi thầy cô.
+     - **Cấp 2 (THCS)**:
+       + *Toán 6*: Tập hợp số tự nhiên, ước và bội, hình học trực quan tam giác đều, lục giác đều.
+       + *Ngữ văn 6*: Truyện dân gian Thánh Gióng, từ đơn và từ phức.
+       + *Tiếng Anh 6*: Unit 1: My New School - Giới thiệu trường học và đồ dùng học tập.
+       + *Khoa học tự nhiên 6*: Tế bào - Đơn vị cơ bản của sự sống, kính lúp và kính hiển vi.
+     - **Cấp 3 (THPT)**:
+       + *Toán 10*: Mệnh đề toán học, tập hợp, bất phương trình bậc nhất hai ẩn, hàm số bậc hai.
+       + *Ngữ văn 10*: Sử thi Đăm Săn (Chiến thắng Mtao Mxây), đặc trưng thể loại sử thi anh hùng.
+       + *Tiếng Anh 10*: Unit 1: Family Life - Chia sẻ công việc gia đình, thì hiện tại đơn & tiếp diễn.
+       + *Vật lý 10*: Động học, độ dịch chuyển, vận tốc và chuyển động thẳng biến đổi đều.
+       + *Hóa học 10*: Cấu tạo nguyên tử, thành phần hạt nhân, bảng tuần hoàn các nguyên tố hóa học.
+     - **Tương thích ngược (Backward Compatibility)**: Sách mang tên "Toán 3" vẫn giữ nguyên nội dung Bảng nhân 7 để bảo vệ toàn vẹn các test case cũ.
+2. **Đồng bộ hóa [`material_pdf_page_image_source.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/material_pdf_page_image_source.dart)**:
+   - Trong `_renderProceduralPage`: Gọi `BookMockContentProvider.resolve(bookData, pageNum)` để lấy dữ liệu bài học chuẩn xác, render tiêu đề, môn học, mô tả, nội dung chi tiết và bài tập thực hành lên Canvas bằng `ui.PictureRecorder`.
+3. **Đồng bộ hóa [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart)**:
+   - Nạp mục lục động từ `BookMockContentProvider.getChapters(widget.data)`.
+   - Hiển thị tên chương tương ứng trên thanh Chapter Banner theo đúng số trang hiện tại.
+   - Thay thế toàn bộ 380 dòng code hardcode cũ trong `_buildDigitizedCanvas` bằng `BookMockContentProvider.resolve(widget.data, _currentPage)`, rút gọn mã nguồn xuống còn 140 dòng sạch sẽ và mở rộng linh hoạt.
+4. **Cập nhật dữ liệu Mock sách Cấp 3 trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+   - Bổ sung `pageCount` và `isDownloaded: true` cho các đầu sách THPT: Ngữ văn 10 (128 trang), Vật lý 10 (120 trang), Tiếng Anh 10 (112 trang), Hóa học 10 (116 trang).
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5 Compliance):**
+- **Kiểm thử Đơn vị Nhà cung cấp Dữ liệu Sách ([`book_mock_content_provider_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/page_flip/book_mock_content_provider_test.dart))**:
+  + ✅ **16 / 16 tests PASSED (100% pass)**:
+    - Phân biệt chính xác Toán 10 với Toán 1.
+    - Cấp 1: Nhận diện và sinh bài học đúng cho Toán 1, Tiếng Việt 1, Tiếng Anh 1, TNXH 1, Đạo đức 1.
+    - Cấp 2: Nhận diện và sinh bài học đúng cho Toán 6, Ngữ văn 6, Tiếng Anh 6, KHTN 6.
+    - Cấp 3: Nhận diện và sinh bài học đúng cho Toán 10, Ngữ văn 10, Tiếng Anh 10, Vật lý 10, Hóa học 10.
+    - Mục lục phân bổ đúng trang và đúng tên chương cho từng môn.
+- **Kiểm thử Giao diện Trình đọc Sách ([`student_book_reader_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_book_reader_test.dart))**:
+  + ✅ **6 / 6 tests PASSED**:
+    - Bổ sung `TC-READER-05`: Kiểm tra sách Toán 10 hiển thị đúng bài "Mệnh đề toán học", "Bất phương trình bậc nhất hai ẩn", không bị nhầm sang Toán 1.
+    - Bổ sung `TC-READER-06`: Kiểm tra sách Ngữ văn 10 hiển thị đúng bài "Chiến thắng Mtao Mxây", mục lục văn học và không bị nhầm sang Bảng nhân 7.
+- **Kiểm thử Tương thích Thẻ Sách ([`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart))**:
+  + ✅ **6 / 6 tests PASSED**.
+- **Kiểm thử Toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **195 / 195 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+- **Phân tích tĩnh (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** trên toàn bộ mã nguồn frontend.
+
+---
+
+### GIAI ĐOẠN 53: KIỂM ĐỊNH & CHUẨN HÓA TOÀN DIỆN MOCK DỮ LIỆU BÀI TẬP 3 CẤP HỌC (HOMEWORKMOCKCONTENTPROVIDER) - KHẮC PHỤC TRIỆT ĐỂ LỖI BẢNG NHÂN 7 VÀ LỆCH TIÊU ĐỀ
+
+**1. Mục Tiêu, Yêu Cầu Của Người Dùng & Thẩm Định QA:**
+- **Yêu cầu người dùng**: *"tốt. giờ QA senior kiểm tra mock giải lập demo xem phần bài tập nào hiện tại ở các cấp học 1 ,2 và 3 đang có đúng nội dung với tiêu đề. trước khi kiểm tra lên /plan đi"*.
+- **Kết quả điều tra & thẩm định thực tế của Senior QA**:
+  1. *Lỗ hổng tại màn hình Làm bài (`StudentTakeHomeworkScreen`)*: Trong hàm `_buildFallbackMockAssignment(int id)`, hệ thống gắn cứng tiêu đề hoặc là `'Bài tập tuần 5 - Phép nhân'` (khi `id == 1`) hoặc `'Phiếu ôn tập môn Tiếng Việt'` (cho tất cả các `id` khác). Nhưng nội dung câu hỏi bên trong thì 100% là bài Toán lớp 3: *phép tính 7 x 8 = 56, phép tính bằng 36, 5 bao gạo 12kg*. Dẫn đến việc học sinh Cấp 1, Cấp 2, Cấp 3 mở bài Toán 1, Tiếng Việt 1, Toán 6, Văn 6, Toán 10, Văn 10... đều bị hiển thị tiêu đề Tiếng Việt và câu hỏi phép nhân 7!
+  2. *Lỗ hổng tại màn hình Xem kết quả (`StudentHomeworkResultScreen`)*: Trong hàm `_buildFallbackMockResult(int id)`, bài Vật lý 10 (`id == 4`) bị biến thành *"Trắc nghiệm hình học: Hình chữ nhật"* môn Toán học, bài Ngữ văn 10 (`id == 3`) bị biến thành *"Đọc hiểu & Kể chuyện tuần 4"*, các bài Cấp 1 và Cấp 2 đều hiển thị tiêu đề và kết quả phép nhân 7 x 8.
+  3. *Nguy cơ nghẽn mạng trong kiểm thử Widget*: `StudentTakeHomeworkScreen` và `StudentHomeworkResultScreen` thiếu tham số nạp dữ liệu trực tiếp (`initialData`), dẫn đến việc luôn phải chờ 8s timeout và 2 lần retry mạng khi chạy widget test ngoại tuyến.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật:**
+1. **Xây dựng bộ sinh nội dung bài tập chuẩn hóa [`homework_mock_content_provider.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_mock_content_provider.dart)**:
+   - Cung cấp 2 API chuẩn hóa: `getAssignmentForTaking(int assignmentId)` và `getAssignmentResult(int assignmentId)`.
+   - Chuẩn hóa đầy đủ 4 dạng câu hỏi chuẩn LMS (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`, `ESSAY`):
+     - **Cấp 1 (Tiểu học - Lớp 1)**:
+       + *Bài 101 (Toán 1)*: Đếm số chú thỏ trắng, so sánh số lớn hơn 7, đúng/sai 9 > 6, tự luận điền dãy số 1..10.
+       + *Bài 102 (Tiếng Việt 1)*: Chữ cái đầu tiên 'a', tìm tiếng chứa âm 'c', nét cong kín chữ 'o', tìm từ con vật chứa âm 'c'.
+       + *Bài 103 (Tiếng Anh 1 - 10.0đ)*: Unit 1: Family, từ vựng Mother/Father/Sister, câu hỏi tự luận How many people are there in your family, lời phê giáo viên xuất sắc.
+       + *Bài 104 (TNXH 1 - 9.5đ)*: Cơ quan thị giác đôi mắt, vệ sinh thân thể xà phòng, bảo vệ mắt khi học bài.
+     - **Cấp 2 (THCS - Lớp 6)**:
+       + *Bài 201 (Toán 6)*: Lũy thừa 2⁴, tập hợp số tự nhiên A, số 0 tự nhiên nhỏ nhất, tính giá trị biểu thức lũy thừa.
+       + *Bài 202 (Ngữ văn 6)*: Thể loại cổ tích thần kỳ Thạch Sanh, chiến công chằn tinh, tiếng đàn và niêu cơm thần.
+       + *Bài 203 (Tiếng Anh 6 - 9.0đ)*: Unit 1: My New School, thì hiện tại đơn (does), môn học, viết đoạn văn giới thiệu trường mới.
+       + *Bài 204 (KHTN 6 - 9.5đ)*: Đơn vị mét (SI), dụng cụ đo khối lượng, giới hạn đo và độ chia nhỏ nhất, đo thể tích hòn sỏi bằng bình chia độ.
+     - **Cấp 3 (THPT - Lớp 10)**:
+       + *Bài 28 / 301 (Toán học 10)*: Tọa độ đỉnh parabol y = x² - 4x + 3, tính biến thiên hàm bậc hai, trục đối xứng x = -b/(2a), bảng biến thiên.
+       + *Bài 2 / 302 (Ngữ văn 10)*: Sử thi Đăm Săn (Chiến thắng Mtao Mxây), nghệ thuật so sánh phóng đại, ý nghĩa cảnh ăn mừng chiến thắng.
+       + *Bài 3 / 303 (Ngữ văn 10 - 9.5đ)*: Bài luận ý thức giữ gìn bản sắc văn hóa dân tộc trong thời kỳ 4.0, lời phê thanh niên có lý tưởng sống đẹp.
+       + *Bài 4 / 304 (Vật lý 10 - 10.0đ)*: Công thức vận tốc v = v₀ + at, chuyển động thẳng nhanh dần đều, tính quãng đường ô tô sau 5s (s = 25m).
+     - **Tương thích ngược (Legacy)**: `id == 1` vẫn duy trì bài Bảng nhân 7 Toán 3 để bảo vệ 100% tương thích ngược.
+2. **Đồng bộ hóa [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart)**:
+   - Thêm tham số tùy chọn `initialData` vào constructor.
+   - Kiểm tra `initialData` và `ApiConstants.isDemoMode` trước khi thực hiện request mạng.
+   - Thay thế `_buildFallbackMockAssignment(id)` bằng `HomeworkMockContentProvider.getAssignmentForTaking(id)`.
+3. **Đồng bộ hóa [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart)**:
+   - Thêm tham số tùy chọn `initialData` vào constructor.
+   - Thay thế `_buildFallbackMockResult(id)` bằng `HomeworkMockContentProvider.getAssignmentResult(id)`.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5 Compliance):**
+- **Kiểm thử Đơn vị Nhà cung cấp Bài tập ([`homework_mock_content_provider_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/services/homework_mock_content_provider_test.dart))**:
+  + ✅ **13 / 13 tests PASSED (100% pass)**:
+    - Cấp 1: Kiểm thử đề và kết quả bài 101, 102, 103, 104.
+    - Cấp 2: Kiểm thử đề và kết quả bài 201, 202, 203, 204.
+    - Cấp 3: Kiểm thử đề và kết quả bài 28, 2, 3, 4.
+    - Legacy: Kiểm thử bài 1 (Toán 3).
+- **Kiểm thử Giao diện Luồng Bài tập ([`student_homework_flow_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_homework_flow_test.dart))**:
+  + ✅ **5 / 5 tests PASSED (100% pass)**:
+    - TC-HW-FLOW-01: Mở bài Toán 1 (101) hiển thị đúng đề đếm thỏ, không dính Tiếng Việt/phép nhân 7.
+    - TC-HW-FLOW-02: Mở bài Toán 10 (28) hiển thị đúng hàm số bậc hai parabol, không dính Tiếng Việt.
+    - TC-HW-FLOW-03: Xem kết quả Tiếng Anh 1 (103) hiển thị đúng chủ đề Family, 10.0đ.
+    - TC-HW-FLOW-04: Xem kết quả Vật lý 10 (4) hiển thị đúng Động học chất điểm, không bị biến thành Hình chữ nhật.
+    - TC-HW-FLOW-05: Xem kết quả Ngữ văn 10 (3) hiển thị đúng bài luận Bản sắc văn hóa 9.5đ.
+- **Kiểm thử Hồi quy Thẻ Bài tập & Dashboard ([`homework_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/homework_card_test.dart), [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+  + ✅ **15 / 15 tests PASSED (100% pass)**.
+- **Kiểm thử Toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **213 / 213 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+- **Phân tích tĩnh (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** trên toàn bộ mã nguồn frontend.

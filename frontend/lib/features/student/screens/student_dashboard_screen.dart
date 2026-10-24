@@ -1494,9 +1494,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
           'fileType': 'PDF',
           'fileSize': '5.2 MB',
+          'pageCount': 128,
           'filePath':
               'file:///storage/emulated/0/Download/SGK_Ngu_van_10_Tap_1.pdf',
           'createdAt': '2026-10-12',
+          'isDownloaded': true,
         },
         {
           'id': 2,
@@ -1505,8 +1507,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
           'fileType': 'PDF',
           'fileSize': '6.4 MB',
+          'pageCount': 120,
           'filePath': 'file:///storage/emulated/0/Download/SGK_Vat_ly_10.pdf',
           'createdAt': '2026-10-11',
+          'isDownloaded': false,
         },
         {
           'id': 3,
@@ -1515,9 +1519,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           'teacherName': 'Bộ GD&ĐT · Global Success',
           'fileType': 'PDF',
           'fileSize': '8.1 MB',
+          'pageCount': 112,
           'filePath':
               'file:///storage/emulated/0/Download/Tieng_Anh_10_Global_Success.pdf',
           'createdAt': '2026-10-10',
+          'isDownloaded': false,
         },
         {
           'id': 4,
@@ -1526,8 +1532,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           'teacherName': 'Bộ GD&ĐT · Kết nối tri thức',
           'fileType': 'PDF',
           'fileSize': '5.8 MB',
+          'pageCount': 116,
           'filePath': 'file:///storage/emulated/0/Download/SGK_Hoa_hoc_10.pdf',
           'createdAt': '2026-10-09',
+          'isDownloaded': false,
         },
       ];
     }

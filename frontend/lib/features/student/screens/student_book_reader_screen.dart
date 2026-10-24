@@ -4,6 +4,7 @@ import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:ashadeep/core/page_flip/page_flip_view.dart';
 import 'package:ashadeep/core/page_flip/material_pdf_page_image_source.dart';
+import 'package:ashadeep/core/page_flip/book_mock_content_provider.dart';
 
 class StudentBookReaderScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -31,83 +32,17 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
   bool _isZoomMode = false;
   String? _jwtToken;
 
-  bool get _isToan1 {
-    final title = (widget.data['title'] ?? '').toString().toLowerCase();
-    return title.contains('toán 1') || title.contains('toan 1');
-  }
+  List<Map<String, dynamic>> get _chapters =>
+      BookMockContentProvider.getChapters(widget.data);
 
-  List<Map<String, dynamic>> get _chapters {
-    if (_isToan1) {
-      return [
-        {
-          'title': 'Chủ đề 1: Làm quen với một số hình',
-          'startPage': 4,
-          'endPage': 23,
-        },
-        {
-          'title': 'Chủ đề 2: Làm quen với chữ số & phép so sánh',
-          'startPage': 24,
-          'endPage': 49,
-        },
-        {
-          'title': 'Chủ đề 3: Phép cộng & phép trừ trong phạm vi 10',
-          'startPage': 50,
-          'endPage': 81,
-        },
-        {
-          'title': 'Chủ đề 4: Làm quen với hình khối và thời gian',
-          'startPage': 82,
-          'endPage': 99,
-        },
-        {
-          'title': 'Chủ đề 5: Ôn tập học kì 1 & ứng dụng thực hành',
-          'startPage': 100,
-          'endPage': 118,
-        },
-      ];
-    } else {
-      return [
-        {
-          'title': 'Chương 1: Ôn tập và bổ sung kiến thức đầu năm',
-          'startPage': 4,
-          'endPage': 28,
-        },
-        {
-          'title': 'Chương 2: Bảng nhân và bảng chia cơ bản',
-          'startPage': 29,
-          'endPage': 56,
-        },
-        {
-          'title': 'Chương 3: Làm quen với hình phẳng và hình khối',
-          'startPage': 57,
-          'endPage': 82,
-        },
-        {
-          'title': 'Chương 4: Phép tính có nhớ trong phạm vi 1000',
-          'startPage': 83,
-          'endPage': 110,
-        },
-      ];
-    }
-  }
-
-  String get _currentChapterTitle {
-    if (_isToan1) {
-      if (_currentPage < 24) return 'CHỦ ĐỀ 1: LÀM QUEN VỚI MỘT SỐ HÌNH';
-      if (_currentPage < 50) return 'CHỦ ĐỀ 2: CHỮ SỐ VÀ PHÉP SO SÁNH';
-      if (_currentPage < 82) {
-        return 'CHỦ ĐỀ 3: PHÉP CỘNG VÀ PHÉP TRỪ TRONG PHẠM VI 10';
-      }
-      return 'CHỦ ĐỀ 4: HÌNH KHỐI VÀ THỜI GIAN THỰC TẾ';
-    }
-    return 'CHƯƠNG 2: BẢNG NHÂN & BẢNG CHIA CƠ BẢN';
-  }
+  String get _currentChapterTitle =>
+      BookMockContentProvider.resolve(widget.data, _currentPage).chapterTitle;
 
   @override
   void initState() {
     super.initState();
-    final total = widget.data['pageCount'] as int? ?? (_isToan1 ? 118 : 110);
-    _totalPages = total > 0 ? total : 118;
+    final total = widget.data['pageCount'] as int? ?? 110;
+    _totalPages = total > 0 ? total : 110;
     _currentPage = widget.initialPage.clamp(1, _totalPages);
     _pageController = PageController(initialPage: _currentPage - 1);
     _flipController = PageFlipController();
@@ -266,224 +201,8 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
         ? const Color(0xFF333333)
         : const Color(0xFFE8E5DD);
 
-    if (_isToan1) {
-      String chapterTitle = 'CHỦ ĐỀ 1: LÀM QUEN VỚI MỘT SỐ HÌNH';
-      String lessonTitle =
-          'BÀI 1: HÌNH VUÔNG - HÌNH TRÒN - HÌNH TAM GIÁC - HÌNH CHỮ NHẬT';
-      String tipText =
-          '• Quan sát các đồ vật trong lớp học và nhận biết các hình học cơ bản.\n'
-          '• Hình tròn không có góc, lăn được dễ dàng.\n'
-          '• Hình vuông có 4 cạnh bằng nhau, hình tam giác có 3 góc và 3 cạnh.';
-      String exTitle = '1. Đố vui nhận diện hình học:';
-      String exContent =
-          'a) Mặt trời, chiếc đĩa ăn cơm có hình: [ ? ]\n'
-          'b) Khung tranh gia đình, viên gạch hoa có hình: [ ? ]\n'
-          'c) Chiếc cờ đuôi nheo, biển báo giao thông có hình: [ ? ]';
-      String exTitle2 = '2. Trò chơi ghép hình sáng tạo:';
-      String exContent2 =
-          'Em hãy dùng các miếng ghép hình tam giác và hình vuông để ghép thành một ngôi nhà mái đỏ và một chiếc thuyền buồm rực rỡ.';
+    final lesson = BookMockContentProvider.resolve(widget.data, pageNum);
 
-      if (pageNum >= 24 && pageNum < 50) {
-        chapterTitle = 'CHỦ ĐỀ 2: CHỮ SỐ VÀ PHÉP SO SÁNH';
-        lessonTitle = 'BÀI 8: CÁC SỐ TỪ 1 ĐẾN 10 VÀ SO SÁNH SỐ';
-        tipText =
-            '• Đếm xuôi: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.\n'
-            '• Đếm ngược: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1.\n'
-            '• Dấu > (lớn hơn), dấu < (bé hơn), dấu = (bằng nhau).';
-        exTitle = '1. Điền dấu so sánh thích hợp (> , < , =):';
-        exContent =
-            'a) 5 ... 3       b) 8 ... 9       c) 6 ... 6\n'
-            'd) 10 ... 7      e) 4 ... 2       g) 1 ... 0';
-        exTitle2 = '2. Tập đếm số lượng:';
-        exContent2 =
-            'Trên cành có 4 chú chim, 2 chú chim khác bay đến. Hỏi có tất cả bao nhiêu chú chim đang đậu trên cành?';
-      } else if (pageNum >= 50 && pageNum < 82) {
-        chapterTitle = 'CHỦ ĐỀ 3: PHÉP CỘNG VÀ PHÉP TRỪ TRONG PHẠM VI 10';
-        lessonTitle = 'BÀI 15: PHÉP CỘNG VÀ PHÉP TRỪ CƠ BẢN';
-        tipText =
-            '• Thêm vào tức là làm phép tính cộng (+).\n'
-            '• Bớt đi hoặc cho đi tức là làm phép tính trừ (-).\n'
-            '• 5 + 5 = 10 ; 10 - 4 = 6 ; 7 + 3 = 10.';
-        exTitle = '1. Tính nhẩm nhanh:';
-        exContent =
-            'a) 4 + 3 = ?       b) 6 + 2 = ?       c) 5 + 5 = ?\n'
-            'd) 9 - 4 = ?       e) 10 - 3 = ?      g) 7 - 0 = ?';
-        exTitle2 = '2. Bài toán lời văn:';
-        exContent2 =
-            'Mẹ mua cho An 6 quả cam, An biếu bà 2 quả. Hỏi An còn lại bao nhiêu quả cam?\n'
-            'Bài giải: Số quả cam An còn lại là: 6 - 2 = 4 (quả). Đáp số: 4 quả cam.';
-      } else if (pageNum >= 82) {
-        chapterTitle = 'CHỦ ĐỀ 4: HÌNH KHỐI VÀ THỜI GIAN THỰC TẾ';
-        lessonTitle = 'BÀI 25: KHỐI HỘP VÀ XEM ĐỒNG HỒ ĐÚNG GIỜ';
-        tipText =
-            '• Khối hộp chữ nhật có các mặt bao quanh là hình chữ nhật.\n'
-            '• Khối lập phương có 6 mặt đều là các hình vuông.\n'
-            '• Đồng hồ chỉ đúng giờ khi kim dài (kim phút) chỉ thẳng vào số 12.';
-        exTitle = '1. Xem đồng hồ và đọc giờ:';
-        exContent =
-            'a) Kim ngắn chỉ số 7, kim dài chỉ số 12: [ 7 giờ đúng ]\n'
-            'b) Kim ngắn chỉ số 8, kim dài chỉ số 12: [ 8 giờ đúng ]';
-        exTitle2 = '2. Nhận biết khối vật dụng:';
-        exContent2 =
-            'Hộp sữa tươi là khối hộp chữ nhật. Viên xúc xắc trò chơi cá ngựa là khối lập phương.';
-      }
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  chapterTitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    color: _isDarkMode ? Colors.grey[400] : AppColors.textSub,
-                  ),
-                ),
-              ),
-              Text(
-                'TRANG $pageNum',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Divider(height: 1, color: paperBorder),
-          const SizedBox(height: 16),
-          Text(
-            lessonTitle,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: paperText,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _isDarkMode
-                  ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.primary.withValues(alpha: 0.06),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.auto_stories,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Kiến thức trọng tâm',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  tipText,
-                  style: TextStyle(fontSize: 12, height: 1.5, color: paperText),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            exTitle,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: paperText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _isDarkMode ? const Color(0xFF252525) : Colors.white,
-              border: Border.all(color: paperBorder),
-            ),
-            child: Text(
-              exContent,
-              style: TextStyle(
-                fontSize: 12,
-                fontFamily: 'monospace',
-                height: 1.6,
-                color: paperText,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            exTitle2,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: paperText,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            exContent2,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.5,
-              fontStyle: FontStyle.italic,
-              color: paperText,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Divider(height: 1, color: paperBorder),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Sách giáo khoa Toán 1 - Đại Việt EdTech',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: _isDarkMode ? Colors.grey[500] : AppColors.textSub,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '- $pageNum -',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: _isDarkMode ? Colors.grey[400] : AppColors.textMain,
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    // Default template (matching tests looking for Chương 2: Bảng nhân & Bảng chia cơ bản)
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -492,7 +211,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           children: [
             Expanded(
               child: Text(
-                'CHƯƠNG 2: BẢNG NHÂN & BẢNG CHIA CƠ BẢN',
+                lesson.chapterTitle,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -515,7 +234,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
         Divider(height: 1, color: paperBorder),
         const SizedBox(height: 16),
         Text(
-          'BÀI 12: BẢNG NHÂN 7 VÀ ỨNG DỤNG THỰC HÀNH',
+          lesson.lessonTitle,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -529,22 +248,24 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             color: _isDarkMode
                 ? AppColors.primary.withValues(alpha: 0.15)
                 : AppColors.primary.withValues(alpha: 0.06),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.3),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(
-                    Icons.lightbulb_outline,
+                  const Icon(
+                    Icons.auto_stories,
                     size: 16,
                     color: AppColors.primary,
                   ),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   Text(
-                    'Ghi nhớ kiến thức',
-                    style: TextStyle(
+                    lesson.tipTitle,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -554,9 +275,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '• 7 × 1 = 7 ; 7 × 2 = 14 ; 7 × 3 = 21 ; 7 × 4 = 28\n'
-                '• Muốn gấp một số lên nhiều lần, ta lấy số đó nhân với số lần.\n'
-                '• Thứ tự thực hiện: Trong biểu thức có phép nhân và cộng/trừ, ta ưu tiên nhân trước.',
+                lesson.tipText,
                 style: TextStyle(fontSize: 12, height: 1.5, color: paperText),
               ),
             ],
@@ -564,7 +283,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          '1. Tính nhẩm nhanh:',
+          lesson.exTitle,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -580,8 +299,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             border: Border.all(color: paperBorder),
           ),
           child: Text(
-            'a) 7 × 5 = ?          b) 7 × 8 = ?          c) 7 × 9 = ?\n'
-            'd) 42 : 7 = ?        e) 56 : 7 = ?        g) 63 : 7 = ?',
+            lesson.exContent,
             style: TextStyle(
               fontSize: 12,
               fontFamily: 'monospace',
@@ -590,29 +308,27 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Text(
-          '2. Bài toán có lời văn:',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: paperText,
+        if (lesson.exTitle2.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            lesson.exTitle2,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: paperText,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Một tuần lễ có 7 ngày. Hỏi 4 tuần lễ như thế có tất cả bao nhiêu ngày?\n\n'
-          'Bài giải:\n'
-          'Số ngày trong 4 tuần lễ là:\n'
-          '      7 × 4 = 28 (ngày)\n'
-          '                   Đáp số: 28 ngày.',
-          style: TextStyle(
-            fontSize: 13,
-            height: 1.5,
-            fontStyle: FontStyle.italic,
-            color: paperText,
+          const SizedBox(height: 6),
+          Text(
+            lesson.exContent2,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              fontStyle: FontStyle.italic,
+              color: paperText,
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 24),
         Divider(height: 1, color: paperBorder),
         const SizedBox(height: 10),
@@ -621,7 +337,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           children: [
             Expanded(
               child: Text(
-                'Đại Việt EdTech Digital Library',
+                '${lesson.footerBookName} - Đại Việt EdTech',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10,

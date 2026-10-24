@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
+import 'package:ashadeep/core/services/homework_mock_content_provider.dart';
 import 'package:ashadeep/features/student/screens/student_homework_result_screen.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:ashadeep/core/widgets/app_loading_button.dart';
 
 import 'package:ashadeep/core/theme/app_colors.dart';
@@ -13,8 +15,13 @@ import 'package:ashadeep/core/enums/education_level.dart';
 
 class StudentTakeHomeworkScreen extends StatefulWidget {
   final int assignmentId;
+  final Map<String, dynamic>? initialData;
 
-  const StudentTakeHomeworkScreen({super.key, required this.assignmentId});
+  const StudentTakeHomeworkScreen({
+    super.key,
+    required this.assignmentId,
+    this.initialData,
+  });
 
   @override
   State<StudentTakeHomeworkScreen> createState() => _StudentTakeHomeworkScreenState();
@@ -62,14 +69,19 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
 
   Future<void> _fetchAssignment() async {
     setState(() => _isLoading = true);
-    Map<String, dynamic>? res;
-    try {
-      res = await _service.getAssignmentForTaking(widget.assignmentId);
-    } catch (_) {}
+    Map<String, dynamic>? res = widget.initialData;
 
-    // Fallback Mock nếu bật Demo mode và backend chưa có bài tập hoặc chạy offline
-    if (res == null && FeatureFlags.useDemoFallback) {
+    if (res == null && ApiConstants.isDemoMode) {
       res = _buildFallbackMockAssignment(widget.assignmentId);
+    } else if (res == null) {
+      try {
+        res = await _service.getAssignmentForTaking(widget.assignmentId);
+      } catch (_) {}
+
+      // Fallback Mock nếu bật Demo mode và backend chưa có bài tập hoặc chạy offline
+      if (res == null && FeatureFlags.useDemoFallback) {
+        res = _buildFallbackMockAssignment(widget.assignmentId);
+      }
     }
 
     if (!mounted) return;
@@ -110,58 +122,7 @@ class _StudentTakeHomeworkScreenState extends State<StudentTakeHomeworkScreen> {
   }
 
   Map<String, dynamic> _buildFallbackMockAssignment(int id) {
-    return {
-      'assignmentId': id,
-      'submissionId': id * 100,
-      'homeworkTitle': id == 1 ? 'Bài tập tuần 5 - Phép nhân' : 'Phiếu ôn tập môn Tiếng Việt',
-      'subjectName': id == 1 ? 'Toán học' : 'Tiếng Việt',
-      'totalPoints': 10.0,
-      'submissionStatus': 'IN_PROGRESS',
-      'questions': [
-        {
-          'id': 101,
-          'content': 'Kết quả của phép tính 7 x 8 là bao nhiêu?',
-          'questionType': 'SINGLE_CHOICE',
-          'points': 2.5,
-          'options': [
-            {'id': 1001, 'content': '54'},
-            {'id': 1002, 'content': '56'},
-            {'id': 1003, 'content': '64'},
-            {'id': 1004, 'content': '48'},
-          ]
-        },
-        {
-          'id': 102,
-          'content': 'Chọn các phép tính có kết quả bằng 36:',
-          'questionType': 'MULTIPLE_CHOICE',
-          'points': 2.5,
-          'options': [
-            {'id': 1005, 'content': '6 x 6'},
-            {'id': 1006, 'content': '4 x 9'},
-            {'id': 1007, 'content': '5 x 7'},
-            {'id': 1008, 'content': '3 x 12'},
-          ]
-        },
-        {
-          'id': 103,
-          'content': 'Phép tính 9 x 0 có kết quả bằng 9 đúng hay sai?',
-          'questionType': 'TRUE_FALSE',
-          'points': 2.0,
-          'options': [
-            {'id': 1009, 'content': 'Đúng'},
-            {'id': 1010, 'content': 'Sai'},
-          ]
-        },
-        {
-          'id': 104,
-          'content': 'Một cửa hàng có 5 bao gạo, mỗi bao cân nặng 12kg. Hỏi cửa hàng có tất cả bao nhiêu ki-lô-gam gạo? Hãy trình bày lời giải của em.',
-          'questionType': 'ESSAY',
-          'points': 3.0,
-          'options': []
-        },
-      ],
-      'savedAnswers': []
-    };
+    return HomeworkMockContentProvider.getAssignmentForTaking(id);
   }
 
   List<Map<String, dynamic>> _collectAnswers() {

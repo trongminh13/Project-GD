@@ -115,5 +115,64 @@ void main() {
       await tester.pump();
       expect(find.byIcon(Icons.light_mode_outlined), findsOneWidget);
     });
+
+    testWidgets('TC-READER-05: Sách Toán 10 Cấp 3 hiển thị đúng Mệnh đề toán học, không bị nhận nhầm thành Toán 1', (tester) async {
+      final toan10Data = {
+        'id': 101,
+        'title': 'Sách giáo khoa Toán 10 - Tập 1',
+        'subjectName': 'Toán',
+        'pageCount': 124,
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentBookReaderScreen(
+            data: toan10Data,
+            initialPage: 1,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Banner chương hiển thị đúng Toán 10
+      expect(find.text('CHƯƠNG 1: MỆNH ĐỀ TOÁN HỌC VÀ TẬP HỢP'), findsOneWidget);
+      expect(find.textContaining('Đang đọc trang 1 / 124'), findsOneWidget);
+
+      // Mở mục lục: Hiển thị đúng 4 chương của Toán 10
+      await tester.tap(find.byIcon(Icons.menu_book_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Chương 1: Mệnh đề toán học và Tập hợp'), findsOneWidget);
+      expect(find.text('Chương 2: Bất phương trình bậc nhất hai ẩn'), findsOneWidget);
+      expect(find.text('Chủ đề 1: Làm quen với một số hình'), findsNothing);
+    });
+
+    testWidgets('TC-READER-06: Sách Ngữ văn 10 Cấp 3 hiển thị đúng Sử thi Đăm Săn, không bị biến thành Bảng nhân 7', (tester) async {
+      final van10Data = {
+        'id': 1,
+        'title': 'Sách giáo khoa Ngữ văn 10 - Tập 1',
+        'subjectName': 'Ngữ văn',
+        'pageCount': 128,
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentBookReaderScreen(
+            data: van10Data,
+            initialPage: 1,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Chuyển sang chế độ Phóng to chi tiết để kiểm tra widget bài đọc số hóa
+      await tester.tap(find.byIcon(Icons.zoom_in));
+      await tester.pumpAndSettle();
+
+      expect(find.text('BÀI 1: SỨC SỐNG CỦA SỬ THI VÀ THẦN THOẠI'), findsWidgets);
+      expect(find.text('VĂN BẢN: ĐĂM SĂN CHIẾN THẮNG MTAO MXÂY (Trích sử thi Đăm Săn)'), findsOneWidget);
+      expect(find.textContaining('Đăm Săn trước tù trưởng Mtao Mxây'), findsOneWidget);
+      expect(find.textContaining('7 × 1 = 7'), findsNothing);
+    });
   });
 }

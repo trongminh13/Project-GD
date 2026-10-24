@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ashadeep/core/services/homework_service.dart';
+import 'package:ashadeep/core/services/homework_mock_content_provider.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
 import 'package:ashadeep/core/config/feature_flags.dart';
+import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'package:provider/provider.dart';
 import 'package:ashadeep/core/theme/theme_manager.dart';
 import 'package:ashadeep/core/theme/app_typography.dart';
@@ -9,8 +11,13 @@ import 'package:ashadeep/core/enums/education_level.dart';
 
 class StudentHomeworkResultScreen extends StatefulWidget {
   final int assignmentId;
+  final Map<String, dynamic>? initialData;
 
-  const StudentHomeworkResultScreen({super.key, required this.assignmentId});
+  const StudentHomeworkResultScreen({
+    super.key,
+    required this.assignmentId,
+    this.initialData,
+  });
 
   @override
   State<StudentHomeworkResultScreen> createState() => _StudentHomeworkResultScreenState();
@@ -39,14 +46,19 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
 
   Future<void> _fetchResult() async {
     setState(() => _isLoading = true);
-    Map<String, dynamic>? res;
-    try {
-      res = await _service.getAssignmentForTaking(widget.assignmentId);
-    } catch (_) {}
+    Map<String, dynamic>? res = widget.initialData;
 
-    // Fallback mock result nếu bật Demo mode và offline hoặc chưa có submission từ server
-    if (res == null && FeatureFlags.useDemoFallback) {
+    if (res == null && ApiConstants.isDemoMode) {
       res = _buildFallbackMockResult(widget.assignmentId);
+    } else if (res == null) {
+      try {
+        res = await _service.getAssignmentForTaking(widget.assignmentId);
+      } catch (_) {}
+
+      // Fallback mock result nếu bật Demo mode và offline hoặc chưa có submission từ server
+      if (res == null && FeatureFlags.useDemoFallback) {
+        res = _buildFallbackMockResult(widget.assignmentId);
+      }
     }
 
     if (!mounted) return;
@@ -57,93 +69,7 @@ class _StudentHomeworkResultScreenState extends State<StudentHomeworkResultScree
   }
 
   Map<String, dynamic> _buildFallbackMockResult(int id) {
-    return {
-      'assignmentId': id,
-      'homeworkTitle': id == 4
-          ? 'Trắc nghiệm hình học: Hình chữ nhật'
-          : (id == 3 ? 'Đọc hiểu & Kể chuyện tuần 4' : 'Bài tập tuần 5 - Phép nhân'),
-      'subjectName': id == 4 || id == 1 ? 'Toán học' : 'Tiếng Việt',
-      'totalPoints': 10.0,
-      'submissionStatus': 'GRADED',
-      'finalScore': id == 4 ? 10.0 : (id == 3 ? 9.5 : 8.5),
-      'autoScore': 6.0,
-      'teacherFeedback': 'Em làm bài rất tốt, các bước tính toán chính xác và trình bày rõ ràng. Cần phát huy hơn nữa ở phần câu hỏi tư duy nâng cao!',
-      'isLate': false,
-      'questions': [
-        {
-          'id': 101,
-          'content': 'Kết quả của phép tính 7 x 8 là bao nhiêu?',
-          'questionType': 'SINGLE_CHOICE',
-          'points': 2.5,
-          'explanation': 'Bảng nhân 7: 7 x 8 = 56.',
-          'options': [
-            {'id': 1001, 'content': '54', 'isCorrect': false},
-            {'id': 1002, 'content': '56', 'isCorrect': true},
-            {'id': 1003, 'content': '64', 'isCorrect': false},
-            {'id': 1004, 'content': '48', 'isCorrect': false},
-          ]
-        },
-        {
-          'id': 102,
-          'content': 'Chọn các phép tính có kết quả bằng 36:',
-          'questionType': 'MULTIPLE_CHOICE',
-          'points': 2.5,
-          'explanation': '6 x 6 = 36; 4 x 9 = 36; 3 x 12 = 36.',
-          'options': [
-            {'id': 1005, 'content': '6 x 6', 'isCorrect': true},
-            {'id': 1006, 'content': '4 x 9', 'isCorrect': true},
-            {'id': 1007, 'content': '5 x 7', 'isCorrect': false},
-            {'id': 1008, 'content': '3 x 12', 'isCorrect': true},
-          ]
-        },
-        {
-          'id': 103,
-          'content': 'Phép tính 9 x 0 có kết quả bằng 9 đúng hay sai?',
-          'questionType': 'TRUE_FALSE',
-          'points': 2.0,
-          'explanation': 'Bất kỳ số nào nhân với 0 cũng có kết quả bằng 0.',
-          'options': [
-            {'id': 1009, 'content': 'Đúng', 'isCorrect': false},
-            {'id': 1010, 'content': 'Sai', 'isCorrect': true},
-          ]
-        },
-        {
-          'id': 104,
-          'content': 'Một cửa hàng có 5 bao gạo, mỗi bao cân nặng 12kg. Hỏi cửa hàng có tất cả bao nhiêu ki-lô-gam gạo? Hãy trình bày lời giải của em.',
-          'questionType': 'ESSAY',
-          'points': 3.0,
-          'correctAnswerText': 'Lời giải:\nCửa hàng có tất cả số ki-lô-gam gạo là:\n12 x 5 = 60 (kg)\nĐáp số: 60 kg gạo.',
-          'explanation': 'Muốn tìm số kg của 5 bao, lấy khối lượng 1 bao nhân với 5.',
-          'options': []
-        },
-      ],
-      'savedAnswers': [
-        {
-          'questionId': 101,
-          'selectedOptionIds': [1002],
-          'score': 2.5,
-          'teacherNote': null,
-        },
-        {
-          'questionId': 102,
-          'selectedOptionIds': [1005, 1006, 1008],
-          'score': 2.5,
-          'teacherNote': null,
-        },
-        {
-          'questionId': 103,
-          'selectedOptionIds': [1010],
-          'score': 2.0,
-          'teacherNote': null,
-        },
-        {
-          'questionId': 104,
-          'answerText': 'Cửa hàng có số kg gạo là:\n12 x 5 = 60 kg\nĐáp số: 60 kg.',
-          'score': 2.5,
-          'teacherNote': 'Lời giải đúng và ngắn gọn, chú ý ghi đầy đủ đơn vị phép tính.',
-        },
-      ]
-    };
+    return HomeworkMockContentProvider.getAssignmentResult(id);
   }
 
   @override

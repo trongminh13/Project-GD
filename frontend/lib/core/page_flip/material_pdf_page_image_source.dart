@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:ashadeep/utils/constants.dart' show ApiConstants;
 import 'page_image_window.dart';
 
+import 'book_mock_content_provider.dart';
+
 /// Nguồn ảnh Hybrid cho sách điện tử:
 /// - Khi có `fileId` và kết nối mạng: Tải ảnh trang PDF thật từ backend qua API Streaming (`?dpi=...`)
 /// - Khi offline hoặc chạy Demo: Tự động dùng `ui.PictureRecorder` vẽ trang bài học số hóa chuẩn đẹp.
@@ -21,11 +23,6 @@ class MaterialPdfPageImageSource implements PageImageSource {
     required this.bookData,
     this.isDarkMode = false,
   }) : baseUrl = baseUrl ?? ApiConstants.baseUrl;
-
-  bool get _isToan1 {
-    final title = (bookData['title'] ?? '').toString().toLowerCase();
-    return title.contains('toán 1') || title.contains('toan 1');
-  }
 
   @override
   Future<ui.Image> load(int index, {required int targetWidth, bool thumbnail = false}) async {
@@ -104,54 +101,8 @@ class MaterialPdfPageImageSource implements PageImageSource {
       return recorder.endRecording().toImage(targetWidth, h.round());
     }
 
-    // Xác định nội dung bài học theo SGK
-    String chapterTitle = 'CHỦ ĐỀ 1: LÀM QUEN VỚI MỘT SỐ HÌNH';
-    String lessonTitle = 'BÀI 1: HÌNH VUÔNG - TRÒN - TAM GIÁC - CHỮ NHẬT';
-    String tipText = '• Quan sát đồ vật trong lớp học và nhận biết các hình học cơ bản.\n'
-        '• Hình tròn không có góc, lăn được dễ dàng.\n'
-        '• Hình vuông có 4 cạnh bằng nhau, hình tam giác có 3 góc và 3 cạnh.';
-    String exTitle = '1. Đố vui nhận diện hình học:';
-    String exContent = 'a) Mặt trời, chiếc đĩa ăn cơm có hình: [ Hình tròn ]\n'
-        'b) Khung tranh gia đình, viên gạch hoa có hình: [ Hình vuông ]\n'
-        'c) Biển báo giao thông hình tam giác: [ Hình tam giác ]';
-
-    if (_isToan1) {
-      if (pageNum >= 24 && pageNum < 50) {
-        chapterTitle = 'CHỦ ĐỀ 2: CHỮ SỐ VÀ PHÉP SO SÁNH';
-        lessonTitle = 'BÀI 8: CÁC SỐ TỪ 1 ĐẾN 10 VÀ SO SÁNH SỐ';
-        tipText = '• Đếm xuôi: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.\n'
-            '• Đếm ngược: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1.\n'
-            '• Dấu > (lớn hơn), dấu < (bé hơn), dấu = (bằng nhau).';
-        exTitle = '1. Điền dấu so sánh thích hợp (> , < , =):';
-        exContent = 'a) 5 > 3       b) 8 < 9       c) 6 = 6\n'
-            'd) 10 > 7      e) 4 > 2       g) 1 > 0';
-      } else if (pageNum >= 50 && pageNum < 82) {
-        chapterTitle = 'CHỦ ĐỀ 3: PHÉP CỘNG VÀ TRỪ TRONG PHẠM VI 10';
-        lessonTitle = 'BÀI 15: PHÉP CỘNG VÀ PHÉP TRỪ CƠ BẢN';
-        tipText = '• Thêm vào tức là làm phép tính cộng (+).\n'
-            '• Bớt đi hoặc cho đi tức là làm phép tính trừ (-).\n'
-            '• 5 + 5 = 10 ; 10 - 4 = 6 ; 7 + 3 = 10.';
-        exTitle = '1. Tính nhẩm nhanh:';
-        exContent = 'a) 4 + 3 = 7       b) 6 + 2 = 8       c) 5 + 5 = 10\n'
-            'd) 9 - 4 = 5       e) 10 - 3 = 7      g) 7 - 0 = 7';
-      } else if (pageNum >= 82) {
-        chapterTitle = 'CHỦ ĐỀ 4: HÌNH KHỐI VÀ THỜI GIAN THỰC TẾ';
-        lessonTitle = 'BÀI 25: KHỐI HỘP VÀ XEM ĐỒNG HỒ ĐÚNG GIỜ';
-        tipText = '• Khối hộp chữ nhật có các mặt bao quanh là hình chữ nhật.\n'
-            '• Khối lập phương có 6 mặt đều là các hình vuông.\n'
-            '• Đồng hồ chỉ đúng giờ khi kim dài (kim phút) chỉ thẳng vào số 12.';
-        exTitle = '1. Xem đồng hồ và đọc giờ:';
-        exContent = 'a) Kim ngắn chỉ số 7, kim dài chỉ số 12: [ 7 giờ đúng ]\n'
-            'b) Kim ngắn chỉ số 8, kim dài chỉ số 12: [ 8 giờ đúng ]';
-      }
-    } else {
-      chapterTitle = 'CHƯƠNG ${((pageNum - 1) ~/ 25) + 1}: KIẾN THỨC BỔ TRỢ';
-      lessonTitle = 'BÀI HỌC TRỌNG TÂM - TRANG $pageNum';
-      tipText = '• Đọc kỹ định lý và làm bài tập thực hành theo hướng dẫn của giáo viên.\n'
-          '• Vận dụng kiến thức vào thực tế đời sống hàng ngày.';
-      exTitle = 'Bài tập thực hành:';
-      exContent = 'Học sinh thực hiện đầy đủ các câu hỏi và ghi chép vào vở bài tập.';
-    }
+    // Phân giải nội dung bài học số hóa chuẩn theo môn học và cấp học
+    final lesson = BookMockContentProvider.resolve(bookData, pageNum);
 
     var y = 20 * u;
 
@@ -175,7 +126,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
     }
 
     // Top Bar
-    drawText(chapterTitle, 10, FontWeight.bold, primary, maxWidth: w - 90 * u);
+    drawText(lesson.chapterTitle, 10, FontWeight.bold, primary, maxWidth: w - 90 * u);
     final pageNumPainter = TextPainter(
       text: TextSpan(
         text: 'TRANG $pageNum',
@@ -200,7 +151,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
     y += 16 * u;
 
     // Tiêu đề bài học
-    drawText(lessonTitle, 15, FontWeight.bold, textColor);
+    drawText(lesson.lessonTitle, 15, FontWeight.bold, textColor);
     y += 12 * u;
 
     // Box Kiến thức trọng tâm
@@ -210,7 +161,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
       text: TextSpan(
         children: [
           TextSpan(
-            text: '📖 Kiến thức trọng tâm:\n',
+            text: '📖 ${lesson.tipTitle}:\n',
             style: TextStyle(
               fontSize: 12 * u,
               fontWeight: FontWeight.bold,
@@ -220,7 +171,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
             ),
           ),
           TextSpan(
-            text: tipText,
+            text: lesson.tipText,
             style: TextStyle(
               fontSize: 11 * u,
               color: textColor,
@@ -247,13 +198,21 @@ class MaterialPdfPageImageSource implements PageImageSource {
         ..strokeWidth = 1 * u,
     );
     tipPainter.paint(canvas, Offset(20 * u + boxPadding, boxTop + boxPadding));
-    y += boxHeight + 20 * u;
+    y += boxHeight + 16 * u;
 
-    // Phần Bài tập
-    drawText(exTitle, 13, FontWeight.bold, textColor);
-    y += 6 * u;
-    drawText(exContent, 12, FontWeight.normal, textColor);
-    y += 24 * u;
+    // Phần Bài tập 1
+    drawText(lesson.exTitle, 13, FontWeight.bold, textColor);
+    y += 4 * u;
+    drawText(lesson.exContent, 11.5, FontWeight.normal, textColor);
+    y += 12 * u;
+
+    // Phần Bài tập 2 (nếu có)
+    if (lesson.exTitle2.isNotEmpty) {
+      drawText(lesson.exTitle2, 13, FontWeight.bold, textColor);
+      y += 4 * u;
+      drawText(lesson.exContent2, 11.5, FontWeight.normal, textColor);
+      y += 16 * u;
+    }
 
     // Footer: Logo nhà xuất bản & Số trang ở chân
     final footerY = h - 35 * u;
@@ -265,7 +224,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
 
     final footerLeft = TextPainter(
       text: TextSpan(
-        text: 'Đại Việt EdTech · Thư Viện Số Quốc Gia',
+        text: '${lesson.footerBookName} · Đại Việt EdTech',
         style: TextStyle(
           fontSize: 9 * u,
           color: textSub,
@@ -273,7 +232,7 @@ class MaterialPdfPageImageSource implements PageImageSource {
         ),
       ),
       textDirection: TextDirection.ltr,
-    )..layout();
+    )..layout(maxWidth: w - 90 * u);
     footerLeft.paint(canvas, Offset(20 * u, footerY));
 
     final footerRight = TextPainter(
