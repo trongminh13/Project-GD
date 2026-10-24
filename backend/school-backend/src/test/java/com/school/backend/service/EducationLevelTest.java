@@ -59,44 +59,56 @@ public class EducationLevelTest {
     @DisplayName("TC-LEVEL-05: Evaluate marks for PRIMARY level (Thông tư 27/2020: HTT, HT, CHT)")
     public void testPrimaryGradeCalculation() {
         // >= 80%: Hoàn thành tốt
-        assertEquals("Hoàn thành tốt (HTT)", studentPortalService.calculateGrade(BigDecimal.valueOf(9), BigDecimal.valueOf(10), EducationLevel.PRIMARY));
-        assertEquals("Hoàn thành tốt (HTT)", studentPortalService.calculateGrade(BigDecimal.valueOf(8), BigDecimal.valueOf(10), EducationLevel.PRIMARY));
+        assertEquals("Hoàn thành tốt (HTT)", studentPortalService.calculateGrade(BigDecimal.valueOf(9),
+                BigDecimal.valueOf(10), EducationLevel.PRIMARY));
+        assertEquals("Hoàn thành tốt (HTT)", studentPortalService.calculateGrade(BigDecimal.valueOf(8),
+                BigDecimal.valueOf(10), EducationLevel.PRIMARY));
 
         // 50% - 79%: Hoàn thành
-        assertEquals("Hoàn thành (HT)", studentPortalService.calculateGrade(BigDecimal.valueOf(6.5), BigDecimal.valueOf(10), EducationLevel.PRIMARY));
-        assertEquals("Hoàn thành (HT)", studentPortalService.calculateGrade(BigDecimal.valueOf(5), BigDecimal.valueOf(10), EducationLevel.PRIMARY));
+        assertEquals("Hoàn thành (HT)", studentPortalService.calculateGrade(BigDecimal.valueOf(6.5),
+                BigDecimal.valueOf(10), EducationLevel.PRIMARY));
+        assertEquals("Hoàn thành (HT)", studentPortalService.calculateGrade(BigDecimal.valueOf(5),
+                BigDecimal.valueOf(10), EducationLevel.PRIMARY));
 
         // < 50%: Chưa hoàn thành
-        assertEquals("Chưa hoàn thành (CHT)", studentPortalService.calculateGrade(BigDecimal.valueOf(4.5), BigDecimal.valueOf(10), EducationLevel.PRIMARY));
+        assertEquals("Chưa hoàn thành (CHT)", studentPortalService.calculateGrade(BigDecimal.valueOf(4.5),
+                BigDecimal.valueOf(10), EducationLevel.PRIMARY));
     }
 
     @Test
     @DisplayName("TC-LEVEL-06: Evaluate marks for SECONDARY & HIGH_SCHOOL level (Thông tư 22/2021: Tốt, Khá, Đạt, Chưa đạt)")
     public void testSecondaryAndHighSchoolGradeCalculation() {
         // >= 80%: Tốt
-        assertEquals("Tốt", studentPortalService.calculateGrade(BigDecimal.valueOf(8.5), BigDecimal.valueOf(10), EducationLevel.SECONDARY));
-        assertEquals("Tốt", studentPortalService.calculateGrade(BigDecimal.valueOf(10), BigDecimal.valueOf(10), EducationLevel.HIGH_SCHOOL));
+        assertEquals("Tốt", studentPortalService.calculateGrade(BigDecimal.valueOf(8.5), BigDecimal.valueOf(10),
+                EducationLevel.SECONDARY));
+        assertEquals("Tốt", studentPortalService.calculateGrade(BigDecimal.valueOf(10), BigDecimal.valueOf(10),
+                EducationLevel.HIGH_SCHOOL));
 
         // 65% - 79%: Khá
-        assertEquals("Khá", studentPortalService.calculateGrade(BigDecimal.valueOf(7.0), BigDecimal.valueOf(10), EducationLevel.SECONDARY));
+        assertEquals("Khá", studentPortalService.calculateGrade(BigDecimal.valueOf(7.0), BigDecimal.valueOf(10),
+                EducationLevel.SECONDARY));
 
         // 50% - 64%: Đạt
-        assertEquals("Đạt", studentPortalService.calculateGrade(BigDecimal.valueOf(5.5), BigDecimal.valueOf(10), EducationLevel.HIGH_SCHOOL));
+        assertEquals("Đạt", studentPortalService.calculateGrade(BigDecimal.valueOf(5.5), BigDecimal.valueOf(10),
+                EducationLevel.HIGH_SCHOOL));
 
         // < 50%: Chưa đạt
-        assertEquals("Chưa đạt", studentPortalService.calculateGrade(BigDecimal.valueOf(3.5), BigDecimal.valueOf(10), EducationLevel.SECONDARY));
+        assertEquals("Chưa đạt", studentPortalService.calculateGrade(BigDecimal.valueOf(3.5), BigDecimal.valueOf(10),
+                EducationLevel.SECONDARY));
 
         // Null / edge case: N/A
-        assertEquals("N/A", studentPortalService.calculateGrade(null, BigDecimal.valueOf(10), EducationLevel.HIGH_SCHOOL));
-        assertEquals("N/A", studentPortalService.calculateGrade(BigDecimal.valueOf(5), BigDecimal.ZERO, EducationLevel.SECONDARY));
+        assertEquals("N/A",
+                studentPortalService.calculateGrade(null, BigDecimal.valueOf(10), EducationLevel.HIGH_SCHOOL));
+        assertEquals("N/A",
+                studentPortalService.calculateGrade(BigDecimal.valueOf(5), BigDecimal.ZERO, EducationLevel.SECONDARY));
     }
 
     @Test
     @DisplayName("TC-LEVEL-07: Verify default school names for each education level")
     public void testDefaultSchoolNames() {
-        assertEquals("Trường Tiểu học Astra", EducationLevel.PRIMARY.getDefaultSchoolName());
-        assertEquals("Trường THCS Astra", EducationLevel.SECONDARY.getDefaultSchoolName());
-        assertEquals("Trường THPT Astra", EducationLevel.HIGH_SCHOOL.getDefaultSchoolName());
+        assertEquals("Trường Tiểu học Đại Việt", EducationLevel.PRIMARY.getDefaultSchoolName());
+        assertEquals("Trường THCS Đại Việt", EducationLevel.SECONDARY.getDefaultSchoolName());
+        assertEquals("Trường THPT Đại Việt", EducationLevel.HIGH_SCHOOL.getDefaultSchoolName());
     }
 
     @Test
@@ -115,7 +127,8 @@ public class EducationLevelTest {
     @Test
     @DisplayName("TC-LEVEL-09: Verify StudentProfileDto @Builder.Default fallback initialization")
     public void testStudentProfileDtoBuilderDefaults() {
-        com.school.backend.payload.dto.StudentProfileDto dto = com.school.backend.payload.dto.StudentProfileDto.builder()
+        com.school.backend.payload.dto.StudentProfileDto dto = com.school.backend.payload.dto.StudentProfileDto
+                .builder()
                 .id(100L)
                 .name("Nguyễn Văn A")
                 .build();
@@ -123,6 +136,6 @@ public class EducationLevelTest {
         assertNotNull(dto.getEducationLevel());
         assertEquals(EducationLevel.PRIMARY, dto.getEducationLevel());
         assertEquals("Tiểu học", dto.getEducationLevelName());
-        assertEquals("Trường Tiểu học Astra", dto.getSchoolName());
+        assertEquals("Trường Tiểu học Đại Việt", dto.getSchoolName());
     }
 }

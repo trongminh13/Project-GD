@@ -29,12 +29,12 @@ public class StudentProfileDto {
     private String educationLevelName = "Tiểu học";
 
     @Builder.Default
-    private String schoolName = "Trường Tiểu học Astra";
+    private String schoolName = "Trường Tiểu học Đại Việt";
 
     private String homeroomTeacherName;
 
     public StudentProfileDto(Long id, String admissionNumber, String name, String rollNo,
-                             String grade, String section, LocalDate dob, String gender, String photoUrl) {
+            String grade, String section, LocalDate dob, String gender, String photoUrl) {
         this.id = id;
         this.admissionNumber = admissionNumber;
         this.name = name;
@@ -46,12 +46,13 @@ public class StudentProfileDto {
         this.photoUrl = photoUrl;
         this.educationLevel = EducationLevel.fromGrade(grade);
         this.educationLevelName = this.educationLevel != null ? this.educationLevel.getDisplayName() : "Tiểu học";
-        this.schoolName = this.educationLevel != null ? this.educationLevel.getDefaultSchoolName() : "Trường Tiểu học Astra";
+        this.schoolName = this.educationLevel != null ? this.educationLevel.getDefaultSchoolName()
+                : "Trường Tiểu học Đại Việt";
     }
 
     public StudentProfileDto(Long id, String admissionNumber, String name, String rollNo,
-                             String grade, String section, LocalDate dob, String gender, String photoUrl,
-                             String homeroomTeacherName) {
+            String grade, String section, LocalDate dob, String gender, String photoUrl,
+            String homeroomTeacherName) {
         this(id, admissionNumber, name, rollNo, grade, section, dob, gender, photoUrl);
         this.homeroomTeacherName = homeroomTeacherName;
     }

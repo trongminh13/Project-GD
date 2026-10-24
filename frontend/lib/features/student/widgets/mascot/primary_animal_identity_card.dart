@@ -90,7 +90,9 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                               flex: 5,
                               child: _buildInfoBox(
                                 label: 'TÊN LỚP',
-                                value: className.isNotEmpty ? className : 'Lớp 1A',
+                                value: className.isNotEmpty
+                                    ? className
+                                    : 'Lớp 1A',
                                 style: classStyle,
                                 isCompact: true,
                               ),
@@ -112,7 +114,9 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                         // Hàng 2: HỌC SINH (Sweet Blossom Pink - Hero Highlight)
                         _buildInfoBox(
                           label: 'HỌC SINH',
-                          value: studentName.isNotEmpty ? studentName : 'Học sinh Astra',
+                          value: studentName.isNotEmpty
+                              ? studentName
+                              : 'Học sinh Đại Việt',
                           style: studentStyle,
                           isHighlight: true,
                         ),
@@ -121,7 +125,9 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                         // Hàng 3: GIÁO VIÊN (Fresh Mint Emerald)
                         _buildInfoBox(
                           label: 'GIÁO VIÊN',
-                          value: teacherName.isNotEmpty ? teacherName : 'Cô Nguyễn Thị Lan',
+                          value: teacherName.isNotEmpty
+                              ? teacherName
+                              : 'Cô Nguyễn Thị Lan',
                           style: teacherStyle,
                         ),
                       ],
@@ -150,11 +156,17 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                           left: 4,
                           bottom: 6,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3.5,
+                            ),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: color.withValues(alpha: 0.35), width: 1.0),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.35),
+                                width: 1.0,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -198,16 +210,26 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                 // Khẩu hiệu bạn đồng hành: Dải capsule vàng bơ pastel
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF9C3), // Vàng bơ nhạt
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFDE047), width: 1.0),
+                      border: Border.all(
+                        color: const Color(0xFFFDE047),
+                        width: 1.0,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.auto_awesome, size: 13, color: Color(0xFFD97706)),
+                        const Icon(
+                          Icons.auto_awesome,
+                          size: 13,
+                          color: Color(0xFFD97706),
+                        ),
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
@@ -236,16 +258,28 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                         onTap: onTapMore,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F3FF), // Tím Lavender pastel
+                            color: const Color(
+                              0xFFF5F3FF,
+                            ), // Tím Lavender pastel
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFC4B5FD), width: 1.0),
+                            border: Border.all(
+                              color: const Color(0xFFC4B5FD),
+                              width: 1.0,
+                            ),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.settings_outlined, size: 13, color: Color(0xFF6D28D9)),
+                              Icon(
+                                Icons.settings_outlined,
+                                size: 13,
+                                color: Color(0xFF6D28D9),
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 'Tiện ích',
@@ -266,16 +300,28 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
                         onTap: onLogout,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF1F2), // Hồng Soft Rose pastel
+                            color: const Color(
+                              0xFFFFF1F2,
+                            ), // Hồng Soft Rose pastel
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFFECDD3), width: 1.0),
+                            border: Border.all(
+                              color: const Color(0xFFFECDD3),
+                              width: 1.0,
+                            ),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.logout, size: 13, color: Color(0xFFBE123C)),
+                              Icon(
+                                Icons.logout,
+                                size: 13,
+                                color: Color(0xFFBE123C),
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 'Đăng xuất',
@@ -309,10 +355,7 @@ class PrimaryAnimalIdentityCard extends StatelessWidget {
     bool isCompact = false,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: isCompact ? 5 : 6,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: isCompact ? 5 : 6),
       decoration: BoxDecoration(
         color: style.bgColor,
         borderRadius: BorderRadius.circular(8),

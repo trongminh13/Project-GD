@@ -250,28 +250,15 @@ class _StudentBookDetailScreenState extends State<StudentBookDetailScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
+                SizedBox(
                   width: 64,
                   height: 80,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.picture_as_pdf, color: AppColors.primary, size: 36),
-                      SizedBox(height: 4),
-                      Text(
-                        'PDF',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
+                  child: const Center(
+                    child: Icon(
+                      Icons.menu_book_rounded,
+                      color: AppColors.primary,
+                      size: 48,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -340,6 +327,79 @@ class _StudentBookDetailScreenState extends State<StudentBookDetailScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Mô tả sách
+          const Text(
+            'Giới thiệu nội dung',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textMain),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              color: Colors.white,
+            ),
+            child: Text(
+              description,
+              style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.textMain),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Mục lục bài học
+          const Text(
+            'Mục lục bài học',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textMain),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              color: Colors.white,
+            ),
+            child: Column(
+              children: _tableOfContents.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final chapter = entry.value;
+                return InkWell(
+                  onTap: () {
+                    if (_isDownloaded) {
+                      _openReader(page: chapter['startPage'] as int);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Vui lòng tải sách về máy để mở đọc chương này!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: idx < _tableOfContents.length - 1
+                          ? const Border(bottom: BorderSide(color: AppColors.border))
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bookmark_outline, size: 16, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            chapter['title'] as String,
+                            style: const TextStyle(fontSize: 13, color: AppColors.textMain, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, size: 16, color: AppColors.textSub),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
           // KHỐI QUẢN LÝ TẢI THEO NHU CẦU & KIỂM SOÁT BỘ NHỚ
           if (_isDownloaded)
             // Trạng thái 1: ĐÃ TẢI VỀ MÁY (Sẵn sàng đọc offline & Quản lý bộ nhớ)
@@ -573,78 +633,6 @@ class _StudentBookDetailScreenState extends State<StudentBookDetailScreen> {
             ),
           const SizedBox(height: 20),
 
-          // Mô tả sách
-          const Text(
-            'Giới thiệu nội dung',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textMain),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              color: Colors.white,
-            ),
-            child: Text(
-              description,
-              style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.textMain),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Mục lục bài học
-          const Text(
-            'Mục lục bài học',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textMain),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              color: Colors.white,
-            ),
-            child: Column(
-              children: _tableOfContents.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final chapter = entry.value;
-                return InkWell(
-                  onTap: () {
-                    if (_isDownloaded) {
-                      _openReader(page: chapter['startPage'] as int);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Vui lòng tải sách về máy để mở đọc chương này!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: idx < _tableOfContents.length - 1
-                          ? const Border(bottom: BorderSide(color: AppColors.border))
-                          : null,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.bookmark_outline, size: 16, color: AppColors.primary),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            chapter['title'] as String,
-                            style: const TextStyle(fontSize: 13, color: AppColors.textMain, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        const Icon(Icons.chevron_right, size: 16, color: AppColors.textSub),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
         ],
       ),
       bottomNavigationBar: Container(

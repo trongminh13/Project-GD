@@ -231,33 +231,21 @@ class MarksAccordionList extends StatelessWidget {
                               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSub),
                             ),
                             const SizedBox(height: 8),
-                            Container(
-                              clipBehavior: Clip.antiAlias,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: AppColors.cardBorderRadius,
-                                border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                            _buildScoreTable([
+                              _ScoreTableRow(
+                                label: 'ĐTB Học kỳ I (x1)',
+                                value: sub.semester1?.avg != null ? sub.semester1!.avg!.toStringAsFixed(1) : '-',
                               ),
-                              child: Column(
-                                children: [
-                                  _buildScoreRow(
-                                    label: 'ĐTB Học kỳ I (x1)',
-                                    value: sub.semester1?.avg != null ? sub.semester1!.avg!.toStringAsFixed(1) : '-',
-                                  ),
-                                  const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
-                                  _buildScoreRow(
-                                    label: 'ĐTB Học kỳ II (x2)',
-                                    value: sub.semester2?.avg != null ? sub.semester2!.avg!.toStringAsFixed(1) : '-',
-                                  ),
-                                  const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
-                                  _buildScoreRow(
-                                    label: 'ĐTB Cả năm (Quy đổi)',
-                                    value: sub.yearAvg != null ? sub.yearAvg!.toStringAsFixed(1) : (avg != null ? avg.toStringAsFixed(1) : '-'),
-                                    isHighlight: true,
-                                  ),
-                                ],
+                              _ScoreTableRow(
+                                label: 'ĐTB Học kỳ II (x2)',
+                                value: sub.semester2?.avg != null ? sub.semester2!.avg!.toStringAsFixed(1) : '-',
                               ),
-                            ),
+                              _ScoreTableRow(
+                                label: 'ĐTB Cả năm (Quy đổi)',
+                                value: sub.yearAvg != null ? sub.yearAvg!.toStringAsFixed(1) : (avg != null ? avg.toStringAsFixed(1) : '-'),
+                                isHighlight: true,
+                              ),
+                            ]),
                             const SizedBox(height: 6),
                             const Text(
                               'Công thức: ĐTBmcn = (ĐTBmhk1 + 2 x ĐTBmhk2) / 3',
@@ -272,34 +260,22 @@ class MarksAccordionList extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             if (sem != null && (sem.txScores.isNotEmpty || sem.gkScore != null || sem.ckScore != null))
-                              Container(
-                                clipBehavior: Clip.antiAlias,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: AppColors.cardBorderRadius,
-                                  border: Border.all(color: AppColors.cardBorder, width: 1.0),
+                              _buildScoreTable([
+                                _ScoreTableRow(
+                                  label: 'ĐĐGtx (Đánh giá thường xuyên x1)',
+                                  value: (sem.txScores.isNotEmpty)
+                                      ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
+                                      : '-',
                                 ),
-                                child: Column(
-                                  children: [
-                                    _buildScoreRow(
-                                      label: 'ĐĐGtx (Đánh giá thường xuyên x1)',
-                                      value: (sem.txScores.isNotEmpty)
-                                          ? sem.txScores.map((e) => e != null ? e.toStringAsFixed(1) : '-').join(', ')
-                                          : '-',
-                                    ),
-                                    const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
-                                    _buildScoreRow(
-                                      label: 'ĐĐGgk (Đánh giá giữa kỳ x2)',
-                                      value: sem.gkScore != null ? sem.gkScore!.toStringAsFixed(1) : '-',
-                                    ),
-                                    const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
-                                    _buildScoreRow(
-                                      label: 'ĐĐGck (Đánh giá cuối kỳ x3)',
-                                      value: sem.ckScore != null ? sem.ckScore!.toStringAsFixed(1) : '-',
-                                    ),
-                                  ],
+                                _ScoreTableRow(
+                                  label: 'ĐĐGgk (Đánh giá giữa kỳ x2)',
+                                  value: sem.gkScore != null ? sem.gkScore!.toStringAsFixed(1) : '-',
                                 ),
-                              )
+                                _ScoreTableRow(
+                                  label: 'ĐĐGck (Đánh giá cuối kỳ x3)',
+                                  value: sem.ckScore != null ? sem.ckScore!.toStringAsFixed(1) : '-',
+                                ),
+                              ])
                             else
                               Container(
                                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -361,49 +337,85 @@ class MarksAccordionList extends StatelessWidget {
     return 'Học sinh nắm vững chuẩn kiến thức, tích cực phát biểu xây dựng bài.';
   }
 
-  Widget _buildScoreRow({
-    required String label,
-    required String value,
-    bool isHighlight = false,
-  }) {
+  Widget _buildScoreTable(List<_ScoreTableRow> rows) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: isHighlight ? const Color(0xFFE8F0FE) : Colors.white,
+        color: Colors.white,
+        borderRadius: AppColors.cardBorderRadius,
+        border: Border.all(color: AppColors.cardBorder, width: 1.0),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 62,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
-                color: isHighlight ? AppColors.primary : AppColors.textSub,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const horizontalInset = 10.0;
+          const dividerGap = 17.0;
+          final contentWidth = constraints.maxWidth - horizontalInset * 2 - dividerGap;
+          final labelWidth = contentWidth * 0.62;
+          final dividerLeft = horizontalInset + labelWidth + (dividerGap - 1) / 2;
+
+          return Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var index = 0; index < rows.length; index++) ...[
+                    Container(
+                      color: rows[index].isHighlight ? const Color(0xFFE8F0FE) : Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 8),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: labelWidth,
+                            child: Text(
+                              rows[index].label,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: rows[index].isHighlight ? FontWeight.bold : FontWeight.w500,
+                                color: rows[index].isHighlight ? AppColors.primary : AppColors.textSub,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: dividerGap),
+                          Expanded(
+                            child: Text(
+                              rows[index].value,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: rows[index].isHighlight ? AppColors.primary : AppColors.textMain,
+                              ),
+                              textAlign: TextAlign.end,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (index < rows.length - 1)
+                      const Divider(height: 1, thickness: 1, color: AppColors.cardBorder),
+                  ],
+                ],
               ),
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 16,
-            color: isHighlight ? AppColors.primary.withValues(alpha: 0.3) : AppColors.cardBorder.withValues(alpha: 0.4),
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-          ),
-          Expanded(
-            flex: 38,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: isHighlight ? AppColors.primary : AppColors.textMain,
+              Positioned(
+                left: dividerLeft,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: 1,
+                  color: AppColors.cardBorder.withValues(alpha: 0.65),
+                ),
               ),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+class _ScoreTableRow {
+  final String label;
+  final String value;
+  final bool isHighlight;
+
+  const _ScoreTableRow({required this.label, required this.value, this.isHighlight = false});
 }

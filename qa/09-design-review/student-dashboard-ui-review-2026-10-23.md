@@ -37,16 +37,16 @@ Mức độ dưới đây là mức ưu tiên product/QA đề xuất, không ph
 | UI-04 | **P2 – affordance** | Vùng nội dung chính của thẻ mascot mở Tiện ích khi chạm; bên dưới lại có nút Tiện ích riêng. | Người dùng không biết toàn bộ thẻ có thể bấm hay chỉ nút. Có thể mở nhầm bottom sheet. | Chỉ để nút có affordance mở Tiện ích; giữ phần thông tin là nội dung không tương tác. |
 | UI-05 | **P2 – thông tin mơ hồ** | Thẻ hiển thị nhãn “NGÀY” nhưng giá trị được truyền là ngày hiện tại. | Người dùng có thể hiểu nhầm là ngày sinh hoặc ngày liên quan đến hồ sơ. | Bỏ ngày khỏi thẻ nhận diện; nếu cần, đặt ngày trong tiêu đề lịch với định dạng rõ, ví dụ “Thứ Sáu, 23/10”. |
 | IA-01 | **P2 – ưu tiên nội dung** | Trang chủ hiển thị “Sách đọc mới” trước “Bài tập cần làm”. | Việc cần hoàn thành có thể bị đẩy xuống dưới nội dung ít cấp bách hơn. | Ưu tiên bài sắp đến hạn, sau đó lịch hôm nay; học liệu mới ở dưới. Xác nhận thứ tự qua nhu cầu học sinh/giáo viên. |
-| VIS-01 | **P3 – bản sắc thị giác** | 10 mascot dùng cùng cấu trúc/pose, màu gán theo hash tên + ngày sinh; nhãn và khẩu hiệu cũng theo mẫu. | Tạo cảm giác bộ minh họa template, màu sắc không gắn ý nghĩa rõ và chưa thành nhận diện Astra. | Dùng một bộ mascot Astra có quy tắc/biểu cảm riêng; màu thương hiệu ổn định; mascot hỗ trợ nội dung thay vì trang trí mọi chỗ. |
+| VIS-01 | **P3 – bản sắc thị giác** | 10 mascot dùng cùng cấu trúc/pose, màu gán theo hash tên + ngày sinh; nhãn và khẩu hiệu cũng theo mẫu. | Tạo cảm giác bộ minh họa template, màu sắc không gắn ý nghĩa rõ và chưa thành nhận diện Đại Việt. | Dùng một bộ mascot Đại Việt có quy tắc/biểu cảm riêng; màu thương hiệu ổn định; mascot hỗ trợ nội dung thay vì trang trí mọi chỗ. |
 | VIS-02 | **P3 – trang trí chồng lớp** | Nền ảnh trường làm mờ, phủ trắng, thẻ trắng có bóng/viền và các ô con tiếp tục có viền màu. | Nhiều lớp hiệu ứng nhưng không tăng thứ bậc thông tin; dễ tạo cảm giác giao diện ghép mẫu. | Thử nền trung tính, giảm bóng và bỏ các khung lồng nhau; chỉ dùng card khi nhóm nội dung hoặc hành động cần được tách. |
 
 ## Đề xuất hướng thiết kế
 
-### Hướng: “Sổ tay học tập Astra”
+### Hướng: “Sổ tay học tập Đại Việt”
 
 Đây là cổng học tập của trường, không phải game. Giữ nét vui vẻ cho học sinh nhỏ nhưng để bài tập/lịch học là nội dung chính.
 
-1. **Header:** “Chào Minh Anh!”; dòng phụ “Lớp 1A · Cô Lan”. Mascot Astra nhỏ bên cạnh lời chào. Không dùng bốn ô viền để trình bày thông tin hồ sơ.
+1. **Header:** “Chào Minh Anh!”; dòng phụ “Lớp 1A · Cô Lan”. Mascot Đại Việt nhỏ bên cạnh lời chào. Không dùng bốn ô viền để trình bày thông tin hồ sơ.
 2. **Khối đầu tiên:** “Bài tập cần làm” với số lượng, môn, hạn nộp và một nút chính như “Làm tiếp”.
 3. **Khối kế tiếp:** “Lịch học hôm nay”, lấy từ lịch thật và có trạng thái tải/lỗi/không có tiết riêng.
 4. **Khối sau:** “Sách của lớp” hoặc học liệu mới; ngắn gọn hơn việc cần làm.
@@ -54,7 +54,7 @@ Mức độ dưới đây là mức ưu tiên product/QA đề xuất, không ph
 
 ### Nguyên tắc thị giác để giảm cảm giác “AI/template”
 
-- Dùng màu Astra làm màu chủ đạo cố định. Dùng màu phụ có ý nghĩa trạng thái (ví dụ sắp đến hạn), không đổi toàn bộ giao diện theo linh vật được hash ngẫu nhiên.
+- Dùng màu Đại Việt làm màu chủ đạo cố định. Dùng màu phụ có ý nghĩa trạng thái (ví dụ sắp đến hạn), không đổi toàn bộ giao diện theo linh vật được hash ngẫu nhiên.
 - Chọn một họ mascot riêng, giữ nét vẽ, tỷ lệ, biểu cảm và cách dùng nhất quán. Không cần minh họa mọi thẻ.
 - Bỏ tổ hợp nhãn in hoa + viền dày + card lồng card. Dùng thứ bậc chữ, căn lề và khoảng trắng để phân nhóm.
 - Dùng câu chữ ngắn, thân thiện, gắn với dữ liệu thật: “Em còn 2 bài cần hoàn thành” thay vì khẩu hiệu chung như “Bạn Gấu Dũng Cảm”.
@@ -69,7 +69,7 @@ Mức độ dưới đây là mức ưu tiên product/QA đề xuất, không ph
 - [Apple Human Interface Guidelines – Layout](https://developer.apple.com/design/human-interface-guidelines/layout): tham khảo thứ bậc nội dung, grouping, progressive disclosure và khả năng thích ứng kích thước màn hình.
 - [Apple UI Design Dos and Don’ts](https://developer.apple.com/design/tips/): tham khảo vùng chạm, độ đọc, tương phản, căn chỉnh và bố cục vừa màn hình.
 
-Đây là nguyên tắc tham khảo để áp dụng vào Astra, không phải bằng chứng rằng một phong cách cụ thể sẽ phù hợp nếu chưa thử với học sinh/giáo viên của trường.
+Đây là nguyên tắc tham khảo để áp dụng vào Đại Việt, không phải bằng chứng rằng một phong cách cụ thể sẽ phù hợp nếu chưa thử với học sinh/giáo viên của trường.
 
 ## Checklist QA đề xuất
 

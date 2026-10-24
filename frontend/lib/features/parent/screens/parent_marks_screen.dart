@@ -35,8 +35,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
     _loadMarkbook();
   }
@@ -63,11 +62,14 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
         }
       });
       if (data != null) {
-        final level = EducationLevelHelper.fromString(data.educationLevel) ??
+        final level =
+            EducationLevelHelper.fromString(data.educationLevel) ??
             EducationLevel.primary;
         try {
-          Provider.of<ThemeManager>(context, listen: false)
-              .setEducationLevel(level);
+          Provider.of<ThemeManager>(
+            context,
+            listen: false,
+          ).setEducationLevel(level);
         } catch (_) {}
       }
     }
@@ -80,7 +82,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
   }
 
   void _showReportCardPreviewModal(StudentMarkbook markbook) {
-    final level = EducationLevelHelper.fromString(markbook.educationLevel) ??
+    final level =
+        EducationLevelHelper.fromString(markbook.educationLevel) ??
         EducationLevel.primary;
 
     showModalBottomSheet(
@@ -158,7 +161,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                     style: AppTypography.body(level, color: Colors.black87),
                   ),
                   Text(
-                    'Trường: ${markbook.schoolName ?? "Trường Astra"}',
+                    'Trường: ${markbook.schoolName ?? "Trường Đại Việt"}',
                     style: AppTypography.body(level, color: Colors.black87),
                   ),
                   const SizedBox(height: 14),
@@ -166,7 +169,9 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                     border: TableBorder.all(color: AppColors.borderOf(context)),
                     children: [
                       TableRow(
-                        decoration: const BoxDecoration(color: Color(0xFFF5F7FA)),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F7FA),
+                        ),
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(6),
@@ -216,9 +221,13 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                           avg = s.semester2?.avg;
                         } else {
                           // Cả năm (TT22): ĐTBmcn = (ĐTBmhk1 + 2 * ĐTBmhk2) / 3
-                          avg = s.yearAvg ??
-                              (s.semester1?.avg != null && s.semester2?.avg != null
-                                  ? ((s.semester1!.avg! + 2 * s.semester2!.avg!) / 3.0)
+                          avg =
+                              s.yearAvg ??
+                              (s.semester1?.avg != null &&
+                                      s.semester2?.avg != null
+                                  ? ((s.semester1!.avg! +
+                                            2 * s.semester2!.avg!) /
+                                        3.0)
                                   : null);
                         }
                         final classification = _classifyScore(avg);
@@ -278,7 +287,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
                     'Xếp loại học lực: ${markbook.overallClassification ?? "—"} • Rèn luyện: ${markbook.conduct ?? "Tốt"}',
                     style: AppTypography.body(level, color: Colors.black87),
                   ),
-                  if (markbook.honorTitle != null && markbook.honorTitle!.isNotEmpty) ...[
+                  if (markbook.honorTitle != null &&
+                      markbook.honorTitle!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       'Danh hiệu khen thưởng: ${markbook.honorTitle}',
@@ -366,8 +376,11 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.school_outlined,
-                  size: 64, color: AppColors.textSecondaryOf(context)),
+              Icon(
+                Icons.school_outlined,
+                size: 64,
+                color: AppColors.textSecondaryOf(context),
+              ),
               const SizedBox(height: 16),
               Text(
                 _errorMsg ?? 'Không có dữ liệu.',
@@ -381,7 +394,8 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
     }
 
     final markbook = _markbook!;
-    final level = EducationLevelHelper.fromString(markbook.educationLevel) ??
+    final level =
+        EducationLevelHelper.fromString(markbook.educationLevel) ??
         EducationLevel.primary;
 
     return Scaffold(
@@ -503,10 +517,7 @@ class _ParentMarksScreenState extends State<ParentMarksScreen>
 
   PreferredSizeWidget _buildAppBar(BuildContext context, String title) {
     return AppBar(
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       elevation: 0,
       centerTitle: true,
     );

@@ -17,6 +17,7 @@ analyzer:
     - macos/**
     - linux/**
     - intro_flutter/**
+    - page_flip_flutter/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

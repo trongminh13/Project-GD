@@ -76,7 +76,9 @@ class MarksHeroKpiCard extends StatelessWidget {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              avgScore != null ? avgScore!.toStringAsFixed(1) : '—',
+                              avgScore != null
+                                  ? avgScore!.toStringAsFixed(1)
+                                  : '—',
                               style: TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
@@ -100,7 +102,10 @@ class MarksHeroKpiCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   // Rank Box với Icon emoji_events_rounded và viền đen
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     constraints: const BoxConstraints(minWidth: 84),
                     decoration: BoxDecoration(
                       color: rankBg,
@@ -129,10 +134,7 @@ class MarksHeroKpiCard extends StatelessWidget {
             ),
           ),
           // Đường kẻ ngang màu đen ngăn cách
-          Container(
-            height: 1,
-            color: Colors.black,
-          ),
+          Container(height: 1, color: Colors.black),
           // 3 Chỉ số phụ với đường nối phẳng liền mạch và viền dọc đen
           IntrinsicHeight(
             child: Row(
@@ -140,35 +142,48 @@ class MarksHeroKpiCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 6,
+                    ),
                     child: _buildKpiMiniItem(
                       context,
                       label: 'Số môn đánh giá',
-                      value: '${markbook.subjects.length} môn',
+                      value: '${markbook.subjects.length}',
                     ),
                   ),
                 ),
                 Container(width: 1, color: Colors.black),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 6,
+                    ),
                     child: _buildKpiMiniItem(
                       context,
-                      label: level == 'PRIMARY' ? 'Hoàn thành môn' : 'Môn đạt Giỏi',
+                      label: level == 'PRIMARY'
+                          ? 'Hoàn thành môn'
+                          : 'Môn đạt Giỏi',
                       value: level == 'PRIMARY'
-                          ? '100% Tốt'
-                          : (perfectCount > 0 ? '$perfectCount môn 10' : '8 môn ≥ 8.0'),
+                          ? '100%'
+                          : (perfectCount > 0
+                                ? '$perfectCount môn 10'
+                                : '8 môn ≥ 8.0'),
                     ),
                   ),
                 ),
                 Container(width: 1, color: Colors.black),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 6,
+                    ),
                     child: _buildKpiMiniItem(
                       context,
                       label: 'Tiến độ học tập',
-                      value: '100% Hoàn thành',
+                      value: '100%',
                     ),
                   ),
                 ),

@@ -59,7 +59,7 @@ Chi tiết từng chuyển động:
 * **Chân:** mỗi chân nhấc lên 6 đơn vị rồi hạ xuống, chu kỳ 400 ms. Chân phải trễ chân trái 200 ms. Chỉ chuyển động khi đang đi.
 * **Tay trái:** đung đưa ±12° quanh gốc, chu kỳ 400 ms, chỉ khi đang đi.
 * **Tay phải (vẫy):** trong 600 ms của giai đoạn vẫy, quay theo các mốc 0 → −125° → −155° → −125° → −155° → 0 (tại 0%, 20%, 40%, 60%, 80%, 100% của giai đoạn). Góc âm là quay lên phía ngoài bên phải.
-* **Tên app và dòng phụ:** "Astra" (28 sp, đậm 600) và "Ứng dụng nhà trường" (14 sp, màu `#5F6368`) nằm dưới đường nền, **không di chuyển theo sách**. Độ mờ: 0 đến `value` 0,38; lên 1 tại 0,46; giữ 1 đến 0,72; về 0 tại 0,92. Tên và dòng phụ phải lấy từ cấu hình hoặc chuỗi bản địa hóa của app (xem mục 7), không viết cứng.
+* **Tên app và dòng phụ:** "Đại Việt" (28 sp, đậm 600) và "Ứng dụng nhà trường" (14 sp, màu `#5F6368`) nằm dưới đường nền, **không di chuyển theo sách**. Độ mờ: 0 đến `value` 0,38; lên 1 tại 0,46; giữ 1 đến 0,72; về 0 tại 0,92. Tên và dòng phụ phải lấy từ cấu hình hoặc chuỗi bản địa hóa của app (xem mục 7), không viết cứng.
 * **Đường nền:** vạch ngang cao 2 px, màu `#DADCE0`, rộng hết màn hình, nằm sát đáy bàn chân.
 * **Nền:** `#FFFFFF`.
 
@@ -71,7 +71,7 @@ Chi tiết từng chuyển động:
 * `BookMascotPainter extends CustomPainter`: nhận `Animation<double>` qua tham số `repaint` của `super`, nên chỉ vẽ lại, không dựng lại cây widget. `shouldRepaint` trả `false` nếu chỉ khác ở `value` (đã xử lý bằng `repaint`).
 * Dùng `RepaintBoundary` quanh `CustomPaint` để các phần khác của màn không bị vẽ lại.
 * Tạo sẵn các đối tượng `Paint` (một biến `static final` hoặc `final` trong lớp), không tạo `Paint` hay `Path` mới trong `paint()`.
-* Không dùng `AnimatedBuilder` bọc cả màn. Chữ "Astra" dùng một `AnimatedBuilder` nhỏ hoặc `FadeTransition` tính từ cùng controller.
+* Không dùng `AnimatedBuilder` bọc cả màn. Chữ "Đại Việt" dùng một `AnimatedBuilder` nhỏ hoặc `FadeTransition` tính từ cùng controller.
 * Hủy controller trong `dispose()`.
 * Dùng `Semantics` cho cả màn: nhãn "Ứng dụng nhà trường. Chạm để bỏ qua phần giới thiệu". Phần hình vẽ bọc trong `ExcludeSemantics`.
 
@@ -94,7 +94,7 @@ Chi tiết từng chuyển động:
 * Điều hướng sang màn kế tiếp chỉ khi **cả hai** đã xong: animation chạy hết (hoặc bị chạm bỏ qua) **và** khởi động xong.
 * Nếu animation hết mà khởi động chưa xong: sách đứng ở tư thế vẫy, nhún nhẹ, tối đa thêm 1 giây. Quá đó thì chuyển sang màn kế tiếp ở trạng thái đang tải (khung chờ/skeleton) của màn đó, không giữ intro thêm.
 * **Không giữ người dùng ở intro để chờ mạng.** Nếu bước khởi động có gọi mạng thì phải có timeout riêng của bước đó, độc lập với intro.
-* Tên app ("Astra") và dòng phụ lấy từ chuỗi bản địa hóa, không viết cứng trong painter. Nếu tên app thay đổi theo trường, lấy từ cấu hình trường.
+* Tên app ("Đại Việt") và dòng phụ lấy từ chuỗi bản địa hóa, không viết cứng trong painter. Nếu tên app thay đổi theo trường, lấy từ cấu hình trường.
 
 ## 8. Bản web (Flutter Web, đặc biệt trên iOS Safari)
 
@@ -164,7 +164,7 @@ Chạy `flutter analyze` và toàn bộ test hiện có. Báo kết quả thật
 
 ## 13. Câu hỏi còn mở cho người đặt yêu cầu
 
-1. Tên hiển thị trên intro có đúng là "Astra" không, hay tên trường?
+1. Tên hiển thị trên intro có đúng là "Đại Việt" không, hay tên trường?
 2. Có hiện intro cho cả Phụ huynh và Giáo viên, hay chỉ Học sinh (và lần đầu cài)?
 3. Bản web: dùng bản rút gọn 1 giây hay tắt hoàn toàn?
 4. Dòng phụ "Ứng dụng nhà trường" giữ hay bỏ?

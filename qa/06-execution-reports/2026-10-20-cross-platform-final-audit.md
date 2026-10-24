@@ -1,6 +1,6 @@
 # Báo cáo rà soát cuối: Web, iOS, Android và API
 
-**Dự án:** Project-GD / Astra  
+**Dự án:** Project-GD / Đại Việt  
 **Ngày rà soát:** 20/10/2026  
 **Phạm vi:** Mã Flutter dùng chung cho web, iOS, Android; cấu hình nền tảng; các luồng gọi backend liên quan.  
 **Loại rà soát:** Đọc mã nguồn và đối chiếu API tĩnh. Không chạy build, test, hoặc kiểm thử trên thiết bị trong lượt rà soát này.

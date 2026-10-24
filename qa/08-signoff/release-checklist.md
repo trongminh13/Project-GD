@@ -8,8 +8,8 @@
 
 - [ ] **100% Test Case mức P0 (Bảo mật, Dữ liệu, Thanh toán) đạt trạng thái PASS**
 - [ ] **≥ 90% Test Case mức P1 đạt trạng thái PASS**
-- [ ] **0 Bug mức Nghiêm trọng còn mở** (Bắt buộc sửa [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md))
-- [ ] **0 Bug mức Cao còn mở** (Bắt buộc sửa [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md))
+- [ ] **0 Bug mức Nghiêm trọng còn mở** (Bắt buộc sửa [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md))
+- [ ] **0 Bug mức Cao còn mở** (Bắt buộc sửa [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md))
 - [ ] Tất cả hành vi "Chặn - chờ quyết định" đã được Product Owner phê duyệt chính thức
 
 ---
@@ -29,7 +29,7 @@
 - [ ] **Migrations:** Toàn bộ script Flyway / Liquibase chạy an toàn, có khả năng chạy lại (idempotent)
 - [ ] **Toàn vẹn khóa ngoại:** Bảng `guardian_students`, `attendance`, `homework_submissions` có ràng buộc khóa ngoại và index tối ưu
 - [ ] **Chính sách Backup:** Cấu hình tự động sao lưu định kỳ hàng ngày (Automated daily snapshots) và đã diễn tập phục hồi thử
-- [ ] **Không có dữ liệu mồ côi:** Chạy script đối soát [01-endpoint-inventory.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/01-endpoint-inventory.md) xác nhận không còn tài khoản rác
+- [ ] **Không có dữ liệu mồ côi:** Chạy script đối soát [01-endpoint-inventory.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/01-endpoint-inventory.md) xác nhận không còn tài khoản rác
 
 ---
 

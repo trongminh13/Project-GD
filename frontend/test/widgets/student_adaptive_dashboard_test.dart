@@ -249,6 +249,139 @@ void main() {
       // Dọn dẹp session sau test
       AuthService.currentSessionUser = null;
     });
+
+    testWidgets('TC-ADAPTIVE-08: Primary student (student01) data isolation - ONLY grade 1 books, primary homework and 35min primary lessons', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      AuthService.currentSessionUser = {
+        'username': 'student01',
+        'roles': ['STUDENT'],
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Kiểm tra Trang chủ: Bài tập và Sách Cấp 1
+      expect(find.textContaining('Đếm và so sánh các số trong phạm vi 10'), findsWidgets);
+      expect(find.textContaining('Luyện viết chữ đẹp'), findsWidgets);
+      // Đảm bảo TUYỆT ĐỐI KHÔNG xuất hiện bài tập Lớp 10
+      expect(find.textContaining('Chiến thắng Mtao Mxây'), findsNothing);
+      expect(find.textContaining('hàm số bậc hai'), findsNothing);
+
+      // 2. Chuyển sang Tab 2: Sách học (Icons.menu_book_outlined)
+      await tester.tap(find.byIcon(Icons.menu_book_outlined));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra có sách Cấp 1
+      expect(find.text('Sách giáo khoa Toán 1 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Tiếng Việt 1 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Tự nhiên và Xã hội 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Đạo đức 1'), findsOneWidget);
+      // Đảm bảo TUYỆT ĐỐI KHÔNG xuất hiện sách Cấp 3 (Lớp 10)
+      expect(find.text('Sách giáo khoa Toán 10 - Tập 1'), findsNothing);
+      expect(find.text('Sách giáo khoa Ngữ văn 10 - Tập 1'), findsNothing);
+      expect(find.text('Sách giáo khoa Vật lý 10'), findsNothing);
+
+      // 3. Chuyển sang Tab 1: Lịch học (Icons.calendar_today_outlined)
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra có môn Tiểu học và phòng Lớp 1A
+      expect(find.textContaining('Lớp 1A'), findsWidgets);
+      // Đảm bảo TUYỆT ĐỐI KHÔNG xuất hiện môn Cấp 3
+      expect(find.text('GDQP-AN'), findsNothing);
+      expect(find.text('P.Lý'), findsNothing);
+      expect(find.text('P.Hóa'), findsNothing);
+
+      AuthService.currentSessionUser = null;
+    });
+
+    testWidgets('TC-ADAPTIVE-09: Secondary student (student02) data isolation - ONLY grade 6 books, secondary homework and secondary schedule', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      AuthService.currentSessionUser = {
+        'username': 'student02',
+        'roles': ['STUDENT'],
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Kiểm tra Trang chủ: Bài tập Cấp 2
+      expect(find.textContaining('Tập hợp các số tự nhiên và phép tính lũy thừa'), findsWidgets);
+      expect(find.textContaining('Thạch Sanh'), findsWidgets);
+      expect(find.textContaining('Đếm và so sánh các số trong phạm vi 10'), findsNothing);
+      expect(find.textContaining('Chiến thắng Mtao Mxây'), findsNothing);
+
+      // 2. Chuyển sang Tab 2: Sách học (Icons.menu_book_outlined)
+      await tester.tap(find.byIcon(Icons.menu_book_outlined));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra sách Cấp 2
+      expect(find.text('Sách giáo khoa Toán 6 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Ngữ văn 6 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Khoa học tự nhiên 6'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Lịch sử và Địa lí 6'), findsOneWidget);
+      // Đảm bảo KHÔNG có sách Cấp 1 hay Cấp 3
+      expect(find.text('Sách giáo khoa Toán 1 - Tập 1'), findsNothing);
+      expect(find.text('Sách giáo khoa Toán 10 - Tập 1'), findsNothing);
+
+      AuthService.currentSessionUser = null;
+    });
+
+    testWidgets('TC-ADAPTIVE-10: High School student (student03) - preserves 100% Grade 10 THPT books, homework and specialized schedule', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      AuthService.currentSessionUser = {
+        'username': 'student03',
+        'roles': ['STUDENT'],
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StudentDashboardScreen(key: UniqueKey()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Kiểm tra Trang chủ: Bài tập THPT Lớp 10
+      expect(find.textContaining('Khảo sát sự biến thiên hàm số bậc hai'), findsWidgets);
+      expect(find.textContaining('Chiến thắng Mtao Mxây'), findsWidgets);
+
+      // 2. Chuyển sang Tab 2: Sách học (Icons.menu_book_outlined)
+      await tester.tap(find.byIcon(Icons.menu_book_outlined));
+      await tester.pumpAndSettle();
+
+      // Kiểm tra sách Lớp 10 THPT
+      expect(find.text('Sách giáo khoa Toán 10 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Ngữ văn 10 - Tập 1'), findsOneWidget);
+      expect(find.text('Sách giáo khoa Vật lý 10'), findsOneWidget);
+
+      AuthService.currentSessionUser = null;
+    });
   });
 }
 

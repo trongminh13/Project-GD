@@ -13,13 +13,25 @@ class EducationLevelHelper {
   static EducationLevel? fromString(dynamic value) {
     if (value == null) return null;
     final str = value.toString().trim().toUpperCase();
-    if (str.contains('HIGH') || str.contains('THPT') || str.contains('CẤP 3') || str.contains('CAP 3') || str.contains('PHỔ THÔNG')) {
+    if (str.contains('HIGH') ||
+        str.contains('THPT') ||
+        str.contains('CẤP 3') ||
+        str.contains('CAP 3') ||
+        str.contains('PHỔ THÔNG')) {
       return EducationLevel.highSchool;
     }
-    if (str.contains('SECOND') || str.contains('THCS') || str.contains('CẤP 2') || str.contains('CAP 2') || str.contains('CƠ SỞ')) {
+    if (str.contains('SECOND') ||
+        str.contains('THCS') ||
+        str.contains('CẤP 2') ||
+        str.contains('CAP 2') ||
+        str.contains('CƠ SỞ')) {
       return EducationLevel.secondary;
     }
-    if (str.contains('PRIM') || str.contains('TIỂU') || str.contains('TIEU') || str.contains('CẤP 1') || str.contains('CAP 1')) {
+    if (str.contains('PRIM') ||
+        str.contains('TIỂU') ||
+        str.contains('TIEU') ||
+        str.contains('CẤP 1') ||
+        str.contains('CAP 1')) {
       return EducationLevel.primary;
     }
     return null;
@@ -69,17 +81,20 @@ class EducationLevelHelper {
   }
 
   /// Tên trường tương ứng theo từng cấp bậc học
-  static String getSchoolName(EducationLevel level, [String? customSchoolName]) {
+  static String getSchoolName(
+    EducationLevel level, [
+    String? customSchoolName,
+  ]) {
     if (customSchoolName != null && customSchoolName.trim().isNotEmpty) {
       return customSchoolName.trim();
     }
     switch (level) {
       case EducationLevel.primary:
-        return 'Trường Tiểu học Astra';
+        return 'Trường Tiểu học Đại Việt';
       case EducationLevel.secondary:
-        return 'Trường THCS Astra';
+        return 'Trường THCS Đại Việt';
       case EducationLevel.highSchool:
-        return 'Trường THPT Astra';
+        return 'Trường THPT Đại Việt';
     }
   }
 

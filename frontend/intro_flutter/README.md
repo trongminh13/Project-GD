@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: IntroGate(
         ready: bootstrap,
-        appName: 'Astra',                       // lấy từ chuỗi bản địa hóa
+        appName: 'Đại Việt',                       // lấy từ chuỗi bản địa hóa
         tagline: 'Ứng dụng nhà trường',          // có thể bỏ
         semanticsLabel: 'Ứng dụng nhà trường. Chạm để bỏ qua phần giới thiệu',
         skipHint: 'Chạm để bỏ qua',              // có thể bỏ

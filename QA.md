@@ -1,9 +1,9 @@
 # BÁO CÁO KIỂM ĐỊNH CHẤT LƯỢNG TOÀN DIỆN (SENIOR QA AUDIT REPORT)
-**Dự án**: Hệ thống Quản trị & Sổ liên lạc Giáo dục Astra (Project-GD)  
+**Dự án**: Hệ thống Quản trị & Sổ liên lạc Giáo dục Đại Việt (Project-GD)  
 **Phân hệ**: Backend (Spring Boot 3.5 / Java 21) & Frontend (Flutter)  
 **Phiên bản kiểm toán**: Phase 1 Foundation & LMS Hardened Release  
 **Người kiểm định**: Senior QA Engineer & Security Auditor  
-**Tài liệu đối soát kiến trúc**: [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/quan-he-du-lieu.md)  
+**Tài liệu đối soát kiến trúc**: [quan-he-du-lieu.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/quan-he-du-lieu.md)  
 **Thời gian cập nhật**: 15/10/2026 (Hoàn tất đóng 100% 5 Bugs QA, Khóa BOLA/ReBAC & 26/26 Tests PASS)  
 
 ---
@@ -13,11 +13,11 @@
 Đợt kiểm định chất lượng và gia cố hệ thống (Hardening) được triển khai nhằm giải quyết triệt để các rủi ro kiến trúc, an toàn bảo mật quan hệ (ReBAC/IDOR), tính toàn vẹn dữ liệu trong LMS và cơ chế di chuyển dữ liệu Flyway:
 
 1. **Gia cố bảo mật ReBAC (Relationship-Based Access Control) & Triệt tiêu IDOR**:
-   * Tập trung hóa toàn bộ logic xác thực quan hệ vào [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java).
+   * Tập trung hóa toàn bộ logic xác thực quan hệ vào [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java).
    * **ISSUE-01 (Đơn nghỉ phép)**: Phụ huynh chỉ được xem con của mình (`guardian_students`), Giáo viên chỉ được xem/duyệt học sinh lớp mình chủ nhiệm (`classes.homeroom_teacher_id`). Giáo viên bộ môn không có quyền duyệt đơn nghỉ và sẽ nhận `403 Forbidden`.
    * **ISSUE-02 (Lịch sử lớp học Enrollment)**: Xóa bỏ lỗ hổng kiểm tra theo role chung. Áp dụng quy tắc quan hệ chặt chẽ: Phụ huynh chỉ xem con mình, Học sinh chỉ xem chính mình, Giáo viên chỉ xem học sinh thuộc lớp mình dạy; các trường hợp vi phạm đều bị chặn với mã HTTP chuẩn `403 Forbidden`.
 2. **Quản lý phiên bản CSDL Flyway an toàn & Khắc phục thiếu Baseline**:
-   * Bổ sung [`V1__initial_schema.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V1__initial_schema.sql) mô tả toàn bộ schema cơ sở (users, teachers, classes, parents, students, subjects, attendance, marks, fees).
+   * Bổ sung [`V1__initial_schema.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/db/migration/V1__initial_schema.sql) mô tả toàn bộ schema cơ sở (users, teachers, classes, parents, students, subjects, attendance, marks, fees).
    * Tích hợp `flyway-core` và `flyway-database-postgresql` vào `pom.xml`.
    * Cấu hình an toàn `spring.flyway.baseline-on-migrate=true` và `spring.flyway.baseline-version=0`: Giúp ứng dụng khởi động an toàn trên cả Database trống (chạy tuần tự V1..V4) lẫn Database đã có dữ liệu (đánh dấu baseline version 0 và chạy các script idempotent mà không làm gãy schema).
 3. **Động cơ LMS & Tự động chấm điểm (Auto-Grading)**:
@@ -39,9 +39,9 @@
    * Áp dụng dọn dẹp có chủ đích (targeted cleanup) theo tiền tố test ID/username, bảo vệ 100% dữ liệu gốc trong CSDL.
    * Bảo vệ tài khoản `admin` trong `DataSeeder.java` không bị reset mật khẩu khi khởi động lại server.
 6. **Gia cố Toàn diện Giao dịch & Rollback (Transactional Hardening)**:
-   * **Tách cuộc gọi mạng bên ngoài (Out-of-Transaction Network I/O)**: Trong [`FeeService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/FeeService.java), lệnh tạo đơn hàng `razorpay.orders.create` được đưa ra ngoài DB transaction nhằm triệt tiêu nguy cơ cạn kiệt Connection Pool khi dịch vụ cổng thanh toán bị treo hoặc trễ mạng.
+   * **Tách cuộc gọi mạng bên ngoài (Out-of-Transaction Network I/O)**: Trong [`FeeService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/FeeService.java), lệnh tạo đơn hàng `razorpay.orders.create` được đưa ra ngoài DB transaction nhằm triệt tiêu nguy cơ cạn kiệt Connection Pool khi dịch vụ cổng thanh toán bị treo hoặc trễ mạng.
    * **Xử lý thanh toán lặp an toàn (Idempotency)**: `verifyRazorpayPayment` kiểm tra tính duy nhất của mã giao dịch Razorpay, trả về trạng thái thanh toán hiện hữu nếu đã được xử lý trước đó, ngăn chặn việc trừ phí hai lần hoặc ghi trùng bản ghi.
-   * **Kiến trúc Import 2 pha (Two-Phase Processing)**: [`BulkImportService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/BulkImportService.java) thực hiện Pha 1 quét kiểm tra định dạng và trùng lặp toàn bộ file Excel trên bộ nhớ trước, gom toàn bộ lỗi vào `ExcelValidationException` để trả về cho người dùng sửa một lần; Pha 2 chỉ thực thi lưu DB trong một giao dịch duy nhất khi dữ liệu 100% hợp lệ. Giới hạn cứng 2,000 dòng bảo vệ tài nguyên bộ nhớ.
+   * **Kiến trúc Import 2 pha (Two-Phase Processing)**: [`BulkImportService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/BulkImportService.java) thực hiện Pha 1 quét kiểm tra định dạng và trùng lặp toàn bộ file Excel trên bộ nhớ trước, gom toàn bộ lỗi vào `ExcelValidationException` để trả về cho người dùng sửa một lần; Pha 2 chỉ thực thi lưu DB trong một giao dịch duy nhất khi dữ liệu 100% hợp lệ. Giới hạn cứng 2,000 dòng bảo vệ tài nguyên bộ nhớ.
    * **Triệt tiêu thói quen nuốt ngoại lệ âm thầm (Silent Exception Swallowing)**: Loại bỏ toàn bộ `catch (Exception ignored) {}` trong `AttendanceService.java`, `MarksService.java` và `DataMigrationService.java`. Khi phát sinh lỗi dữ liệu, ném ngoại lệ rõ ràng và kích hoạt `@Transactional(rollbackFor = Exception.class)` hoàn tác sạch sẽ dữ liệu.
 
 ---
@@ -52,7 +52,7 @@
 
 ### 2.1. Kiểm thử Tích hợp Tự động Backend (`./mvnw test`)
 * **Tổng số ca kiểm thử**: **26 / 26 tests PASSED (0 failures, 0 errors, 0 skipped)**
-* **Chi tiết bộ test ReBAC, LMS & Security Hardening** ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):
+* **Chi tiết bộ test ReBAC, LMS & Security Hardening** ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):
   * ✅ `testEnrollment_ParentReBAC`: Phụ huynh xem con mình -> **200 OK**; xem con người khác -> **403 Forbidden**.
   * ✅ `testEnrollment_StudentReBAC`: Học sinh xem chính mình -> **200 OK**; xem bạn cùng lớp/khác lớp -> **403 Forbidden**.
   * ✅ `testLeaveRequest_ReviewPermissions`: Giáo viên chủ nhiệm duyệt đơn -> **200 OK**; Giáo viên bộ môn cố tình duyệt đơn -> **403 Forbidden**.
@@ -67,9 +67,9 @@
   * ✅ `testAttendanceBulk_OtherTeacherBlocked`: Giáo viên không phụ trách lớp gửi điểm danh hàng loạt -> Trả về chuẩn HTTP **403 Forbidden** (khóa BOLA BUG-002).
   * ✅ `testTeachingAssignment_OtherTeacherBlocked`: Giáo viên xem phân công của giáo viên khác -> Trả về chuẩn HTTP **403 Forbidden** (chống IDOR BUG-003).
   * ✅ `testStudent_CanAccessProfile`: Học sinh gọi cổng thông tin hồ sơ `GET /api/student-portal/profile` -> Trả về chuẩn HTTP **200 OK** với `StudentProfileDto` (xác thực kiến trúc BUG-004).
-* **Chi tiết bộ test Security Matrix hiện hữu** ([`StudentSecurityMatrixTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/StudentSecurityMatrixTest.java)):
+* **Chi tiết bộ test Security Matrix hiện hữu** ([`StudentSecurityMatrixTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/StudentSecurityMatrixTest.java)):
   * ✅ **7 / 7 tests PASSED**: Cưỡng chế đổi mật khẩu lần đầu, kiểm soát quyền truy cập theo vai trò.
-* **Chi tiết bộ test Transaction Rollback thực tế** ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java)):
+* **Chi tiết bộ test Transaction Rollback thực tế** ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java)):
   * ✅ `testBulkImport_PreValidationFails_DatabaseRemainsUntouched`: Xác minh import Excel có dòng lỗi thì Pha 1 bắt trọn vẹn lỗi, ném `ExcelValidationException` và CSDL không có bất kỳ dòng nào bị chèn (0 bản ghi rác).
   * ✅ `testBulkImport_Success_CommittedToDatabase`: Xác minh file Excel hợp lệ thì Pha 2 commit thành công và toàn bộ học sinh được lưu chính xác.
   * ✅ `testAttendanceSave_InvalidDate_RollsBack`: Xác minh điểm danh gặp lỗi ngày tháng không nuốt lỗi mà ném ngoại lệ và hoàn tác giao dịch sạch sẽ.
@@ -125,18 +125,18 @@
 * **Giải pháp áp dụng**: Trong các luồng truy vấn nghiệp vụ và kiểm thử, sử dụng `findByUserId` hoặc `findByUserUsername` (trường `username` không mã hóa) để đảm bảo độ tin cậy tuyệt đối.
 
 ### 4.4. Xung đột AST Lombok và Eclipse JDT LS ("Flexible Constructor Bodies")
-* **Triệu chứng**: Trình phân tích mã nguồn Eclipse JDT Language Server (ECJ) trong IDE báo lỗi: `The Java feature 'Flexible Constructor Bodies' is only available with source level 25 and above` tại annotation `@AllArgsConstructor` trong [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java), [`StudentMarkDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentMarkDto.java), [`ImportRowError.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/response/ImportRowError.java) và `@RequiredArgsConstructor` trong [`AdminMigrationController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AdminMigrationController.java) cũng như [`DataMigrationService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/DataMigrationService.java).
+* **Triệu chứng**: Trình phân tích mã nguồn Eclipse JDT Language Server (ECJ) trong IDE báo lỗi: `The Java feature 'Flexible Constructor Bodies' is only available with source level 25 and above` tại annotation `@AllArgsConstructor` trong [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java), [`StudentMarkDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentMarkDto.java), [`ImportRowError.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/response/ImportRowError.java) và `@RequiredArgsConstructor` trong [`AdminMigrationController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AdminMigrationController.java) cũng như [`DataMigrationService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/DataMigrationService.java).
 * **Nguyên nhân**: Tính năng "Flexible Constructor Bodies" (JEP 513, tiêu chuẩn hóa ở Java 25) cho phép thực thi câu lệnh trước `super()` trong constructor. Khi Lombok xử lý `@AllArgsConstructor` hoặc `@RequiredArgsConstructor`, nó tạo AST chứa các phép gán trường. Trình biên dịch ECJ của Eclipse JDT LS trong IDE diễn giải cấu trúc AST tổng hợp này như các câu lệnh đứng trước constructor invocation, và do source level của dự án là Java 17/21 (< 25) nên phát sinh lỗi biên dịch giả (false-positive).
 * **Giải pháp áp dụng**: Khai báo constructor tường minh (explicit constructor injection) thay vì dựa vào `@AllArgsConstructor` / `@RequiredArgsConstructor` của Lombok. Cách này ngăn chặn việc inject AST lỗi từ Lombok vào ECJ, hoàn toàn tương thích với Spring Dependency Injection (tự động `@Autowired`), `@Builder` và duy trì build sạch sẽ, nhất quán 100% trên cả IDE lẫn Maven CLI.
 
 ### 4.5. Gia cố Giao dịch Rollback & Cơ chế Kiểm thử Thực tế Không Gắn `@Transactional`
-* **Triệt tiêu bẫy False-Positive trong Spring Test Context**: Khi viết test kiểm tra rollback, nếu gắn `@Transactional` trên test class, Spring Test Context sẽ tự động rollback toàn bộ dữ liệu ở cuối mỗi method test kể cả khi nghiệp vụ lỗi hay đúng. Điều này che giấu các lỗi nghiêm trọng như việc transaction nghiệp vụ không rollback thật, hoặc tự commit một phần. Do đó, [`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java) tuyệt đối KHÔNG gắn `@Transactional`, cho phép transaction nghiệp vụ tự commit/rollback vào PostgreSQL thật, sau đó dùng `assertEquals` truy vấn CSDL để đối soát trực tiếp số dòng thực tế.
+* **Triệt tiêu bẫy False-Positive trong Spring Test Context**: Khi viết test kiểm tra rollback, nếu gắn `@Transactional` trên test class, Spring Test Context sẽ tự động rollback toàn bộ dữ liệu ở cuối mỗi method test kể cả khi nghiệp vụ lỗi hay đúng. Điều này che giấu các lỗi nghiêm trọng như việc transaction nghiệp vụ không rollback thật, hoặc tự commit một phần. Do đó, [`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java) tuyệt đối KHÔNG gắn `@Transactional`, cho phép transaction nghiệp vụ tự commit/rollback vào PostgreSQL thật, sau đó dùng `assertEquals` truy vấn CSDL để đối soát trực tiếp số dòng thực tế.
 * **Tách Network I/O ra khỏi Database Transaction**: Nếu đặt cuộc gọi API bên ngoài (như Razorpay SDK, gửi Email, SMS) bên trong `@Transactional`, khi mạng bên ngoài chậm 5-10 giây, kết nối DB bị giữ trong suốt thời gian đó, nhanh chóng dẫn đến cạn kiệt Connection Pool (HikariCP pool exhaustion). Việc tách `createRazorpayOrder` ra khỏi transaction giúp giải phóng ngay connection DB.
 * **Quy trình Import 2 Pha (Two-Phase Processing)**: Giải quyết vấn đề UX và tính toàn vẹn dữ liệu. Pha 1 gom toàn bộ lỗi vào `ExcelValidationException` giúp người dùng sửa một lần thay vì sửa từng dòng. Pha 2 thực thi trong một transaction nguyên tử `rollbackFor = Exception.class`, đảm bảo nguyên tắc "hoặc lưu thành công 100%, hoặc không lưu dòng nào".
 
 ### 4.6. Cơ chế Xử lý Ngoại lệ Tập trung Toàn cục (`GlobalExceptionHandler.java`)
 * **Vấn đề tồn tại trước đây**: Các ngoại lệ nghiệp vụ như `IllegalArgumentException`, `IllegalStateException` ở các tầng Service (như `LeaveRequestService`, `AttendanceService`, `StudentHomeworkService`) hoặc `ExcelValidationException` khi không được controller bắt cụ thể sẽ bị đẩy lên servlet container và trả về mã lỗi HTTP 500 Internal Server Error, tạo cảm giác hệ thống bị crash cho phía client dù thực chất chỉ là dữ liệu đầu vào không hợp lệ.
-* **Giải pháp áp dụng**: Xây dựng lớp `@RestControllerAdvice` tập trung tại [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java):
+* **Giải pháp áp dụng**: Xây dựng lớp `@RestControllerAdvice` tập trung tại [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java):
   * Bắt `IllegalArgumentException` và `IllegalStateException` -> Trả về chuẩn HTTP **400 Bad Request** với `{ "success": false, "message": "..." }`.
   * Bắt `ExcelValidationException` -> Trả về HTTP **400 Bad Request** kèm mảng chi tiết các lỗi dòng `errors`.
   * Bắt `SecurityException` và `AccessDeniedException` -> Trả về chuẩn HTTP **403 Forbidden**.
@@ -145,34 +145,34 @@
   * Bắt `Exception` fallback -> Trả về HTTP **500 Internal Server Error** với thông báo lỗi thân thiện được che giấu (Sanitized message), ghi log stacktrace chi tiết vào file log máy chủ để phục vụ debug mà không làm lộ cấu trúc hệ thống ra Internet.
 
 ### 4.7. Chuẩn hóa Logging Converter & Bổ sung Bắt Ngoại lệ Xác thực Đăng nhập
-* **Chuẩn hóa Logging trong JPA Converter**: Trong [`EncryptedLocalDateConverter.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/EncryptedLocalDateConverter.java), thay thế hoàn toàn lệnh `System.err.println` thô bằng logger SLF4J (`log.warn(...)`). Giữ nguyên cơ chế fallback an toàn (thử các định dạng `dd/MM/yyyy`, `MM/dd/yyyy` và trả về `null` kèm cảnh báo log có cấu trúc nếu toàn bộ định dạng thất bại) nhằm tránh làm sập luồng đọc dữ liệu lịch sử chưa chuẩn hóa.
-* **Phòng thủ Xác thực Đăng nhập**: Trong [`AuthController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java), bổ sung khối `catch (AuthenticationException e)` đứng sau `catch (BadCredentialsException e)`, đảm bảo mọi ngoại lệ phát sinh trong quá trình xác thực người dùng đều được trả về mã HTTP 401 rõ ràng, loại bỏ hoàn toàn nguy cơ ném lỗi 500 không kiểm soát.
+* **Chuẩn hóa Logging trong JPA Converter**: Trong [`EncryptedLocalDateConverter.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/EncryptedLocalDateConverter.java), thay thế hoàn toàn lệnh `System.err.println` thô bằng logger SLF4J (`log.warn(...)`). Giữ nguyên cơ chế fallback an toàn (thử các định dạng `dd/MM/yyyy`, `MM/dd/yyyy` và trả về `null` kèm cảnh báo log có cấu trúc nếu toàn bộ định dạng thất bại) nhằm tránh làm sập luồng đọc dữ liệu lịch sử chưa chuẩn hóa.
+* **Phòng thủ Xác thực Đăng nhập**: Trong [`AuthController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java), bổ sung khối `catch (AuthenticationException e)` đứng sau `catch (BadCredentialsException e)`, đảm bảo mọi ngoại lệ phát sinh trong quá trình xác thực người dùng đều được trả về mã HTTP 401 rõ ràng, loại bỏ hoàn toàn nguy cơ ném lỗi 500 không kiểm soát.
 
 ### 4.8. Gia cố 4 Lỗ hổng Bảo mật Ưu tiên cao (P0/P1 Security Hardening)
 * **P0 - Khóa lỗ hổng leo thang đặc quyền Đăng ký ADMIN (`/api/auth/signup`)**:
   * *Vấn đề*: Endpoint mở `permitAll()` và nhận trực tiếp role từ client, cho phép đối tượng xấu tự phong làm `ADMIN`.
-  * *Giải pháp*: Trong [`AuthController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java), cưỡng chế vai trò `Role.PARENT` cho luồng đăng ký công khai; từ chối và trả về HTTP 400 Bad Request kèm cảnh báo bảo mật nếu client cố tình truyền role khác. Toàn bộ tài khoản ADMIN/TEACHER/STUDENT bắt buộc phải do Nhà trường cấp phát nội bộ.
+  * *Giải pháp*: Trong [`AuthController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java), cưỡng chế vai trò `Role.PARENT` cho luồng đăng ký công khai; từ chối và trả về HTTP 400 Bad Request kèm cảnh báo bảo mật nếu client cố tình truyền role khác. Toàn bộ tài khoản ADMIN/TEACHER/STUDENT bắt buộc phải do Nhà trường cấp phát nội bộ.
 * **P0 - Triệt tiêu nguy cơ rò rỉ hash mật khẩu (CWE-200)**:
-  * *Vấn đề*: Trường `password` trong [`User.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/User.java) không có `@JsonIgnore`, dẫn đến việc các API trả về `Teacher` hoặc `Student` serialize cả trường `password` hash bcrypt ra client.
+  * *Vấn đề*: Trường `password` trong [`User.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/User.java) không có `@JsonIgnore`, dẫn đến việc các API trả về `Teacher` hoặc `Student` serialize cả trường `password` hash bcrypt ra client.
   * *Giải pháp*: Bổ sung `@JsonIgnore` và `@ToString.Exclude` trên `User.password`, đảm bảo mật khẩu hash không bao giờ xuất hiện trong JSON response hoặc log hệ thống.
 * **P0 - Khóa lỗ hổng IDOR/BOLA trên dữ liệu học phí (`FeeController`)**:
   * *Vấn đề*: Các API xem sao kê học phí (`/api/fees/statement/{studentId}`), lịch sử thanh toán (`/api/fees/student/{studentId}`) và tạo đơn thanh toán (`/api/fees/create-order`) chỉ kiểm tra role chung mà không xác minh quan hệ giám hộ giữa phụ huynh và học sinh.
-  * *Giải pháp*: Tích hợp [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java) vào [`FeeController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/FeeController.java), gọi `accessPolicy.verifyCanAccessStudent(auth, studentId)` trước khi trả dữ liệu. Phụ huynh cố tình xem con người khác sẽ nhận ngay HTTP **403 Forbidden**.
+  * *Giải pháp*: Tích hợp [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java) vào [`FeeController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/FeeController.java), gọi `accessPolicy.verifyCanAccessStudent(auth, studentId)` trước khi trả dữ liệu. Phụ huynh cố tình xem con người khác sẽ nhận ngay HTTP **403 Forbidden**.
 * **P1 - Chuẩn hóa Niên khóa & Gia cố Dịch vụ OTP**:
   * *Niên khóa*: Gắn `@PreAuthorize("isAuthenticated()")` tường minh trên `AcademicYearController.java` tuân thủ nguyên tắc Defense-in-Depth.
-  * *Dịch vụ OTP*: Trong [`OtpService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/OtpService.java), bổ sung cơ chế thời hạn hết hạn (TTL 5 phút), giới hạn tối đa 5 lần thử xác minh chống tấn công vét cạn (Brute-Force), chuyển sang sử dụng `ConcurrentHashMap` an toàn đa luồng và che giấu PII trong log. Đồng thời tự động bypass gọi API ra internet và in rõ mã OTP ra log console ở chế độ DEV MODE để phục vụ kiểm thử cục bộ.
-* **Đồng bộ Ma trận Phân quyền QA**: Cập nhật [`qa/01-endpoint-inventory.md`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/01-endpoint-inventory.md) phản ánh chính xác việc endpoint `GET /api/students/{id}` đã bị chặn đối với vai trò `PARENT` ở tầng controller (bắt buộc dùng `/api/students/my-wards`).
+  * *Dịch vụ OTP*: Trong [`OtpService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/OtpService.java), bổ sung cơ chế thời hạn hết hạn (TTL 5 phút), giới hạn tối đa 5 lần thử xác minh chống tấn công vét cạn (Brute-Force), chuyển sang sử dụng `ConcurrentHashMap` an toàn đa luồng và che giấu PII trong log. Đồng thời tự động bypass gọi API ra internet và in rõ mã OTP ra log console ở chế độ DEV MODE để phục vụ kiểm thử cục bộ.
+* **Đồng bộ Ma trận Phân quyền QA**: Cập nhật [`qa/01-endpoint-inventory.md`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/01-endpoint-inventory.md) phản ánh chính xác việc endpoint `GET /api/students/{id}` đã bị chặn đối với vai trò `PARENT` ở tầng controller (bắt buộc dùng `/api/students/my-wards`).
 
 ### 4.9. Xử lý Triệt để Các Lỗ hổng Nghiệp vụ ReBAC & IDOR Còn Lại (BUG-002, BUG-003, BUG-004)
 * **BUG-002 — BOLA/ReBAC trong Điểm danh hàng loạt (`AttendanceController`)**:
   * *Vấn đề*: Endpoint `POST /api/attendance/bulk` chỉ kiểm tra vai trò `TEACHER` chung mà không xác minh xem giáo viên có phụ trách hoặc giảng dạy lớp học đó không.
-  * *Giải pháp*: Bổ sung trường `classId` vào [`BulkAttendanceRequest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/request/BulkAttendanceRequest.java). Tích hợp `accessPolicy.verifyTeacherCanManageClassAttendance(auth, request.getClassId())` vào [`AttendanceController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AttendanceController.java) để chặn giáo viên ngoại lai (HTTP 403 Forbidden). Đồng thời bảo vệ endpoint điểm danh đơn lẻ bằng `verifyCanAccessStudent`.
+  * *Giải pháp*: Bổ sung trường `classId` vào [`BulkAttendanceRequest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/request/BulkAttendanceRequest.java). Tích hợp `accessPolicy.verifyTeacherCanManageClassAttendance(auth, request.getClassId())` vào [`AttendanceController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AttendanceController.java) để chặn giáo viên ngoại lai (HTTP 403 Forbidden). Đồng thời bảo vệ endpoint điểm danh đơn lẻ bằng `verifyCanAccessStudent`.
 * **BUG-003 — IDOR Phân công giảng dạy (`TeachingAssignmentController`)**:
   * *Vấn đề*: Giáo viên có thể tùy ý xem lịch phân công giảng dạy của bất kỳ giáo viên nào khác qua `GET /api/teaching-assignments/teacher/{teacherId}`.
-  * *Giải pháp*: Bổ sung hàm kiểm tra `verifyCanAccessTeacherAssignments(auth, teacherId)` trong [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java). Chỉ ADMIN hoặc chính giáo viên sở hữu ID mới có quyền xem phân công; giáo viên khác gọi vào sẽ nhận ngay HTTP **403 Forbidden**. Đồng thời siết quyền `GET /api/teaching-assignments/class/{classId}` chỉ cho phép GVCN/GV bộ môn của lớp đó.
+  * *Giải pháp*: Bổ sung hàm kiểm tra `verifyCanAccessTeacherAssignments(auth, teacherId)` trong [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java). Chỉ ADMIN hoặc chính giáo viên sở hữu ID mới có quyền xem phân công; giáo viên khác gọi vào sẽ nhận ngay HTTP **403 Forbidden**. Đồng thời siết quyền `GET /api/teaching-assignments/class/{classId}` chỉ cho phép GVCN/GV bộ môn của lớp đó.
 * **BUG-004 — Phân định rõ Endpoint Hồ sơ Học sinh (`ProfileController` vs `StudentPortalController`)**:
   * *Vấn đề*: Endpoint chung `GET /api/profile` chặn vai trò `STUDENT` (HTTP 403 Forbidden).
-  * *Giải pháp*: Duy trì thiết kế an toàn `@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")` tại [`ProfileController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/ProfileController.java) nhằm bảo vệ ma trận phân quyền hệ thống lõi và tuân thủ `StudentSecurityMatrixTest`. Thống nhất kiến trúc API: Học sinh truy cập thông tin cá nhân và lớp học qua cổng chuyên biệt `GET /api/student-portal/profile` (trả về `StudentProfileDto`). Đã viết test `testStudent_CanAccessProfile` xác minh trả về HTTP **200 OK**.
+  * *Giải pháp*: Duy trì thiết kế an toàn `@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER') or hasAuthority('PARENT')")` tại [`ProfileController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/ProfileController.java) nhằm bảo vệ ma trận phân quyền hệ thống lõi và tuân thủ `StudentSecurityMatrixTest`. Thống nhất kiến trúc API: Học sinh truy cập thông tin cá nhân và lớp học qua cổng chuyên biệt `GET /api/student-portal/profile` (trả về `StudentProfileDto`). Đã viết test `testStudent_CanAccessProfile` xác minh trả về HTTP **200 OK**.
 
 ---
 
@@ -204,46 +204,46 @@ Senior QA kiến nghị Ban Giám hiệu / Product Owner phê duyệt 3 điểm 
 
 ## 7. BỘ HỒ SƠ KIỂM THỬ ĐỘC LẬP TOÀN DIỆN (QA PHASE 1 TEST SUITE)
 
-Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đầy đủ tại thư mục [`qa/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/):
+Hồ sơ kiểm thử độc lập hoàn chỉnh đã được thiết lập đầy đủ tại thư mục [`qa/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/):
 
 1. **Kế hoạch & Danh mục Endpoint**:
-   - [00-test-plan.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/00-test-plan.md): Kế hoạch kiểm thử chi tiết phạm vi, môi trường, thiết bị, vai trò và tiêu chí ra/vào.
-   - [01-endpoint-inventory.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/01-endpoint-inventory.md): Danh mục 72 endpoint và ma trận phân quyền 4 vai trò.
-   - [02-traceability-matrix.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/02-traceability-matrix.md): Ma trận truy vết 50 yêu cầu nghiệp vụ → 196 test cases.
+   - [00-test-plan.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/00-test-plan.md): Kế hoạch kiểm thử chi tiết phạm vi, môi trường, thiết bị, vai trò và tiêu chí ra/vào.
+   - [01-endpoint-inventory.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/01-endpoint-inventory.md): Danh mục 72 endpoint và ma trận phân quyền 4 vai trò.
+   - [02-traceability-matrix.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/02-traceability-matrix.md): Ma trận truy vết 50 yêu cầu nghiệp vụ → 196 test cases.
 
 2. **196 Test Cases Chi tiết (11 Modules)**:
-   - [AUTH](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/AUTH-dang-nhap-phien.md) (15 TCs): Đăng nhập, khóa 5 lần sai, phiên JWT 24h, OTP.
-   - [SEC](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/SEC-phan-quyen-rebac.md) (54 TCs): Ma trận ReBAC quan hệ dữ liệu cho toàn bộ endpoint có ID.
-   - [CORE](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/CORE-nam-hoc-lop-ghi-danh.md) (17 TCs): Năm học, lớp, học sinh, phân công giảng dạy.
-   - [ATT](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/ATT-diem-danh-nghi-phep.md) (17 TCs): Điểm danh hàng loạt, vòng đời đơn nghỉ, đồng bộ điểm danh có phép.
-   - [HW](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/HW-bai-tap-cham-diem.md) (27 TCs): Soạn bài (5 dạng câu hỏi), giao bài, làm bài, lưu nháp, tự động chấm.
-   - [MAT](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/MAT-hoc-lieu.md) (11 TCs): Học liệu theo trạng thái và lớp phân phối, tải file đính kèm.
-   - [IMP](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/IMP-import-excel-migration.md) (17 TCs): Import Excel học sinh, kiểm tra rollback 100% không mồ côi.
-   - [PAY](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/PAY-hoc-phi-thanh-toan.md) (11 TCs): Sao kê học phí, Razorpay Sandbox, Idempotency.
-   - [NOTI](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/NOTI-thong-bao-su-kien.md) (8 TCs): Gửi thông báo phân loại theo phạm vi đối tượng.
-   - [UI](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/UI-mobile-flutter.md) (10 TCs): Màn hình Flutter, điều hướng vai trò, Loading, Empty, Offline.
-   - [NFR](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/03-test-cases/NFR-hieu-nang-tieng-viet-thiet-bi.md) (9 TCs): Tiếng Việt Unicode, che dấu PII trẻ em, P95 benchmark.
+   - [AUTH](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/AUTH-dang-nhap-phien.md) (15 TCs): Đăng nhập, khóa 5 lần sai, phiên JWT 24h, OTP.
+   - [SEC](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/SEC-phan-quyen-rebac.md) (54 TCs): Ma trận ReBAC quan hệ dữ liệu cho toàn bộ endpoint có ID.
+   - [CORE](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/CORE-nam-hoc-lop-ghi-danh.md) (17 TCs): Năm học, lớp, học sinh, phân công giảng dạy.
+   - [ATT](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/ATT-diem-danh-nghi-phep.md) (17 TCs): Điểm danh hàng loạt, vòng đời đơn nghỉ, đồng bộ điểm danh có phép.
+   - [HW](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/HW-bai-tap-cham-diem.md) (27 TCs): Soạn bài (5 dạng câu hỏi), giao bài, làm bài, lưu nháp, tự động chấm.
+   - [MAT](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/MAT-hoc-lieu.md) (11 TCs): Học liệu theo trạng thái và lớp phân phối, tải file đính kèm.
+   - [IMP](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/IMP-import-excel-migration.md) (17 TCs): Import Excel học sinh, kiểm tra rollback 100% không mồ côi.
+   - [PAY](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/PAY-hoc-phi-thanh-toan.md) (11 TCs): Sao kê học phí, Razorpay Sandbox, Idempotency.
+   - [NOTI](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/NOTI-thong-bao-su-kien.md) (8 TCs): Gửi thông báo phân loại theo phạm vi đối tượng.
+   - [UI](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/UI-mobile-flutter.md) (10 TCs): Màn hình Flutter, điều hướng vai trò, Loading, Empty, Offline.
+   - [NFR](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/03-test-cases/NFR-hieu-nang-tieng-viet-thiet-bi.md) (9 TCs): Tiếng Việt Unicode, che dấu PII trẻ em, P95 benchmark.
 
 3. **Dữ liệu Kiểm thử & Mẫu Excel Thực tế**:
-   - [accounts.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/04-test-data/accounts.md): Bảng phân bổ tài khoản theo 4 vai trò (không lưu mật khẩu thật).
-   - [seed-data.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/04-test-data/seed-data.md): Đặc tả dữ liệu mẫu chuẩn cho CSDL kiểm thử.
-   - [excel-samples/](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/04-test-data/excel-samples/): 9 tệp Excel `.xlsx` nhị phân thật (01-valid, 02-error-middle, 03-multiple-errors, 04-internal-dup, 05-db-dup, 06-missing-cols, 07-invalid-headers, 08-empty, 11-vietnamese-accents).
+   - [accounts.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/04-test-data/accounts.md): Bảng phân bổ tài khoản theo 4 vai trò (không lưu mật khẩu thật).
+   - [seed-data.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/04-test-data/seed-data.md): Đặc tả dữ liệu mẫu chuẩn cho CSDL kiểm thử.
+   - [excel-samples/](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/04-test-data/excel-samples/): 9 tệp Excel `.xlsx` nhị phân thật (01-valid, 02-error-middle, 03-multiple-errors, 04-internal-dup, 05-db-dup, 06-missing-cols, 07-invalid-headers, 08-empty, 11-vietnamese-accents).
 
 4. **Tự động hóa Kiểm thử (Automation Collection)**:
-   - [05-automation/README.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/05-automation/README.md) & 6 bộ kịch bản REST Client `.http` chạy trực tiếp trên IDE.
+   - [05-automation/README.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/05-automation/README.md) & 6 bộ kịch bản REST Client `.http` chạy trực tiếp trên IDE.
 
 5. **Kết quả Thực tế & Lỗi Phát hiện**:
-   - [2026-10-15-lan-01.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/06-execution-reports/2026-10-15-lan-01.md): Báo cáo lần chạy 1: 35 ca đã chạy thực tế (27 PASS, 5 FAIL, 3 Chặn chờ quyết định).
+   - [2026-10-15-lan-01.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/06-execution-reports/2026-10-15-lan-01.md): Báo cáo lần chạy 1: 35 ca đã chạy thực tế (27 PASS, 5 FAIL, 3 Chặn chờ quyết định).
    - **5 Bugs ghi nhận độc lập (Đã xử lý & đóng 100%)**:
-     - [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md): Endpoint cấu hình năm học thiếu `@PreAuthorize` → [x] **Đã sửa & Đóng**.
-     - [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md): Điểm danh hàng loạt thiếu xác minh giáo viên phụ trách lớp → [x] **Đã sửa & Đóng**.
-     - [BUG-003](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-003-teaching-assignment-idor.md): Xem phân công giảng dạy của giáo viên khác qua ID → [x] **Đã sửa & Đóng**.
-     - [BUG-004](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-004-student-cannot-access-profile-endpoint.md): Học sinh bị thiếu role tại `/api/profile` → [x] **Đã đóng** (theo thiết kế dùng `/api/student-portal/profile`).
-     - [BUG-005](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/07-bugs/BUG-005-sms-debug-route-live-api.md): Endpoint debug SMS gọi API thật ngoài Internet → [x] **Đã sửa & Đóng**.
+     - [BUG-001](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-001-open-academic-year-endpoints.md): Endpoint cấu hình năm học thiếu `@PreAuthorize` → [x] **Đã sửa & Đóng**.
+     - [BUG-002](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-002-attendance-bulk-missing-teacher-rebac.md): Điểm danh hàng loạt thiếu xác minh giáo viên phụ trách lớp → [x] **Đã sửa & Đóng**.
+     - [BUG-003](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-003-teaching-assignment-idor.md): Xem phân công giảng dạy của giáo viên khác qua ID → [x] **Đã sửa & Đóng**.
+     - [BUG-004](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-004-student-cannot-access-profile-endpoint.md): Học sinh bị thiếu role tại `/api/profile` → [x] **Đã đóng** (theo thiết kế dùng `/api/student-portal/profile`).
+     - [BUG-005](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/07-bugs/BUG-005-sms-debug-route-live-api.md): Endpoint debug SMS gọi API thật ngoài Internet → [x] **Đã sửa & Đóng**.
 
 6. **Biên bản Nghiệm thu & Phát hành**:
-   - [uat-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/08-signoff/uat-checklist.md): Kịch bản nghiệm thu thực tế cho Admin, Giáo viên, Phụ huynh, Học sinh.
-   - [release-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/qa/08-signoff/release-checklist.md): Danh mục kiểm soát chất lượng (Quality Gates) trước khi đưa lên Production.
+   - [uat-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/08-signoff/uat-checklist.md): Kịch bản nghiệm thu thực tế cho Admin, Giáo viên, Phụ huynh, Học sinh.
+   - [release-checklist.md](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/qa/08-signoff/release-checklist.md): Danh mục kiểm soát chất lượng (Quality Gates) trước khi đưa lên Production.
 
 ---
 
@@ -374,23 +374,23 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 ### 10.1. Tái Cấu Trúc 4 Tầng theo Thiết Kế Đã Duyệt
 1. **Tầng Mạng & Ngoại lệ (Shared Data / API)**:
-   - [`api_exceptions.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_exceptions.dart): Hệ thống phân cấp ngoại lệ (`ApiException`, `UnauthorizedException`, `ForbiddenException`, `ResourceNotFoundException`, `NetworkException`).
-   - [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart): Áp dụng mẫu **Composition over Inheritance** (bọc `http.Client` và `AuthService`), tự động giải mã UTF-8 `utf8.decode(response.bodyBytes)`, tiêm `Authorization: Bearer <token>`, cho phép inject mock client trong unit test.
-   - [`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_portal_service.dart): Tái cấu trúc compose `ApiClient`, loại bỏ toàn bộ boilerplate gọi HTTP lặp lại.
+   - [`api_exceptions.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_exceptions.dart): Hệ thống phân cấp ngoại lệ (`ApiException`, `UnauthorizedException`, `ForbiddenException`, `ResourceNotFoundException`, `NetworkException`).
+   - [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_client.dart): Áp dụng mẫu **Composition over Inheritance** (bọc `http.Client` và `AuthService`), tự động giải mã UTF-8 `utf8.decode(response.bodyBytes)`, tiêm `Authorization: Bearer <token>`, cho phép inject mock client trong unit test.
+   - [`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/student_portal_service.dart): Tái cấu trúc compose `ApiClient`, loại bỏ toàn bộ boilerplate gọi HTTP lặp lại.
 2. **Tầng Tiện Ích & Design Tokens (Shared Core / Utils)**:
-   - [`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart): Token hóa toàn bộ bảng màu chuẩn flat demo HTML (`primary`, `border`, `cardBg`, `background`, `surfaceAlt`, `success`, `warning`, `error`, `purple`).
-   - [`date_time_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/date_time_utils.dart): Xử lý chuẩn hóa ngày tháng tiếng Việt, phân tách khoảng tiết học `07:30–08:15`, nhãn tuần học, và thuật toán kiểm tra quá hạn `isOverdue`.
-   - [`status_helper.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/status_helper.dart): Ánh xạ tập trung trạng thái Chuyên cần, Bài tập LMS, Đơn nghỉ phép ra nhãn tiếng Việt và màu sắc tương ứng.
-   - [`format_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/format_utils.dart): Định dạng điểm số (`8 đ`, `9.5 / 10 đ`), tên lớp (`Lớp 3A`), và tiền tệ Việt Nam đồng (`1.250.000 đ`).
+   - [`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_colors.dart): Token hóa toàn bộ bảng màu chuẩn flat demo HTML (`primary`, `border`, `cardBg`, `background`, `surfaceAlt`, `success`, `warning`, `error`, `purple`).
+   - [`date_time_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/date_time_utils.dart): Xử lý chuẩn hóa ngày tháng tiếng Việt, phân tách khoảng tiết học `07:30–08:15`, nhãn tuần học, và thuật toán kiểm tra quá hạn `isOverdue`.
+   - [`status_helper.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/status_helper.dart): Ánh xạ tập trung trạng thái Chuyên cần, Bài tập LMS, Đơn nghỉ phép ra nhãn tiếng Việt và màu sắc tương ứng.
+   - [`format_utils.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/format_utils.dart): Định dạng điểm số (`8 đ`, `9.5 / 10 đ`), tên lớp (`Lớp 3A`), và tiền tệ Việt Nam đồng (`1.250.000 đ`).
 3. **Tầng Giao Diện Dùng Chung (Shared UI Components)**:
-   - [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Tiêu đề section chuẩn, hỗ trợ nút "Xem tất cả" hoặc action tùy chỉnh.
-   - [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_empty_card.dart): Trạng thái rỗng phẳng có icon và thông điệp hướng dẫn người dùng.
-   - [`app_status_badge.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_status_badge.dart): Huy hiệu trạng thái viền phẳng hoặc nền nhạt theo Design System.
-   - [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Thiết kế **Mode-Driven** (`HomeworkCardMode`: `studentTake`, `teacherGrade`, `parentView`, `viewOnly`), triệt tiêu việc kiểm tra cờ role lộn xộn trong UI.
-   - [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Thẻ học liệu số hiển thị icon định dạng (PDF/DOC/Video), dung lượng, tác giả và thao tác xem/tải.
-   - [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Hàng hiển thị tiết học thời khóa biểu chuẩn hóa cột giờ và thông tin phòng học / giáo viên.
+   - [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Tiêu đề section chuẩn, hỗ trợ nút "Xem tất cả" hoặc action tùy chỉnh.
+   - [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_empty_card.dart): Trạng thái rỗng phẳng có icon và thông điệp hướng dẫn người dùng.
+   - [`app_status_badge.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_status_badge.dart): Huy hiệu trạng thái viền phẳng hoặc nền nhạt theo Design System.
+   - [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/homework_card.dart): Thiết kế **Mode-Driven** (`HomeworkCardMode`: `studentTake`, `teacherGrade`, `parentView`, `viewOnly`), triệt tiêu việc kiểm tra cờ role lộn xộn trong UI.
+   - [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart): Thẻ học liệu số hiển thị icon định dạng (PDF/DOC/Video), dung lượng, tác giả và thao tác xem/tải.
+   - [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Hàng hiển thị tiết học thời khóa biểu chuẩn hóa cột giờ và thông tin phòng học / giáo viên.
 4. **Tái Cấu Trúc Presentation Học Sinh (Refactored Student Dashboard)**:
-   - [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Loại bỏ ~300 dòng mã trùng lặp, kế thừa 100% component dùng chung từ `lib/core/widgets/` và `lib/utils/`.
+   - [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Loại bỏ ~300 dòng mã trùng lặp, kế thừa 100% component dùng chung từ `lib/core/widgets/` và `lib/utils/`.
 
 ---
 
@@ -436,19 +436,19 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 ### 10.3. Triệt Tiêu Xáo Trộn Dữ Liệu qua Feature Flags & Quản Lý Demo Mode
 **Vấn đề phát hiện**: Trước đó, khi API trả về danh sách rỗng `[]`, dashboard dùng toán tử 3 ngôi gán mock data, khiến học sinh thấy bài tập/điểm số/học liệu không thuộc về mình.  
 **Giải pháp kiến trúc**:
-1. Khởi tạo [`feature_flags.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/config/feature_flags.dart) với cờ `FeatureFlags.useDemoFallback` (mặc định đọc từ `.env ['ENABLE_DEMO_DATA']` hoặc `kDebugMode`).
+1. Khởi tạo [`feature_flags.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/config/feature_flags.dart) với cờ `FeatureFlags.useDemoFallback` (mặc định đọc từ `.env ['ENABLE_DEMO_DATA']` hoặc `kDebugMode`).
 2. Tách bạch hoàn toàn:
    - **Khi tắt Demo Mode (`useDemoFallback = false`)**: Ứng dụng tuân thủ 100% dữ liệu thực từ API; khi danh sách bài tập/học liệu/tiết học rỗng $\rightarrow$ hiển thị thẻ rỗng phẳng `AppEmptyCard` chuẩn mực, đạt chuẩn **Zero Regression**.
    - **Khi bật Demo Mode (`useDemoFallback = true`)**: Bổ sung dữ liệu mẫu minh họa, hiển thị banner cảnh báo `[Chế độ Demo]` ở trang chủ, cho phép Sếp/Ban lãnh đạo trải nghiệm đầy đủ luồng làm bài, tự động lưu nháp và so sánh kết quả.
 3. Tích hợp nút chuyển đổi `SwitchListTile` trong Tab "Thêm" của Dashboard giúp chuyển đổi chế độ Demo trực tiếp khi trình chiếu.
-4. Bổ sung bộ unit test [`feature_flags_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/config/feature_flags_test.dart) (nâng tổng số test lên **23 / 23 tests PASSED**).
+4. Bổ sung bộ unit test [`feature_flags_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/config/feature_flags_test.dart) (nâng tổng số test lên **23 / 23 tests PASSED**).
 
 ---
 
 ### 10.4. Khắc Phục Lỗi Bố Cục Lơ Lửng & Bọc Khung Điện Thoại Giả Lập (Mobile Viewport Shell)
 **Vấn đề phát hiện**: Khi xem Student Dashboard trên trình duyệt Web/màn hình rộng (Desktop), `Scaffold` mở rộng 100% chiều ngang (1920px). Bên trong `bottomNavigationBar`, widget lại bị bọc trong `Center(child: ConstrainedBox(maxWidth: 480))`. Điều này khiến thanh điều hướng 5 tab (*Trang chủ, Lịch học, Học liệu, Bài tập, Thêm*) bị co cụm trong một khối 480px nằm **lơ lửng ở chính giữa chiều ngang**, hai bên thừa khoảng trắng lớn, gây nhầm lẫn là lỗi CSS `position`.  
 **Giải pháp kiến trúc**:
-1. Bọc toàn bộ `Scaffold` của [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) vào một khung giả lập điện thoại di động (Mobile Phone Shell):
+1. Bọc toàn bộ `Scaffold` của [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) vào một khung giả lập điện thoại di động (Mobile Phone Shell):
    - Nền ngoài trình duyệt là màu xám dịu chuẩn mẫu thiết kế: `#F5F6F7`.
    - Khung app ở giữa có `maxWidth: 480px`, viền cạnh nhẹ nhàng và đổ bóng `BoxShadow(blurRadius: 16, color: Colors.black.withValues(alpha: 0.06))`.
    - Loại bỏ các `ConstrainedBox(maxWidth: 480)` lồng cục bộ bên trong `body` và `bottomNavigationBar`.
@@ -462,16 +462,16 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 ### 10.5. Tương Tác Chi Tiết Tiết Học Khi Nhấn Vào Lịch Học (Interactive Lesson Details)
 **Yêu cầu nghiệp vụ**: Khi học sinh nhấn vào bất kỳ tiết học nào (ở Tab Trang chủ hoặc Tab Lịch học), hệ thống phải mở giao diện xem chi tiết bao gồm: Tên môn học, Tiết, Khung thời gian, Giáo viên giảng dạy, Phòng học / Địa điểm và Nhắc nhở chuẩn bị bài.  
 **Giải pháp kiến trúc**:
-1. Cải tiến widget [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart):
+1. Cải tiến widget [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/lesson_row.dart):
    - Bổ sung thuộc tính callback `onTap: VoidCallback?`.
    - Bọc toàn bộ phần tử trong `InkWell` hỗ trợ hiệu ứng phản hồi xúc giác/gợn sóng (ripple effect), bổ sung icon điều hướng `Icons.chevron_right` tinh tế khi có thể tương tác.
-2. Xây dựng BottomSheet Modal `_showLessonDetailModal` trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+2. Xây dựng BottomSheet Modal `_showLessonDetailModal` trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
    - Đóng gói trong khung tối đa 480px chuẩn Mobile Shell.
    - Header trực quan: Badge số thứ tự tiết (Tiết 1, Tiết 2...), nút đóng nhanh.
    - Thẻ thông tin trọng tâm: Biểu tượng môn học, Tên môn học, Khung giờ, Giáo viên giảng dạy kèm icon, Phòng học/Địa điểm kèm icon.
    - Khung chỉ dẫn nhắc nhở học sinh chuẩn bị đầy đủ sách giáo khoa, vở ghi và đồ dùng học tập trước khi vào lớp.
 3. **Kiểm chứng chất lượng & Tự động hóa**:
-   - Tạo mới bộ kiểm thử widget [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/lesson_row_test.dart): Kiểm tra render đầy đủ thông tin và kích hoạt callback `onTap` chính xác.
+   - Tạo mới bộ kiểm thử widget [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/lesson_row_test.dart): Kiểm tra render đầy đủ thông tin và kích hoạt callback `onTap` chính xác.
    - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên các file chỉnh sửa.
    - `flutter test`: Toàn bộ **25 / 25 tests PASSED (100% thành công)**.
 
@@ -482,16 +482,16 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Chuyển đổi toàn bộ thuật ngữ hàn lâm *"Học liệu"* $\rightarrow$ *"Sách học"* và *"Học liệu mới"* $\rightarrow$ *"Sách đọc mới"* cho phù hợp với tâm lý lứa tuổi học sinh.
 - Khi bấm vào từng cuốn sách, hiển thị bảng thông tin chi tiết kèm đường dẫn tệp PDF cục bộ trên thiết bị (Local Storage Mock Path), cho phép sao chép đường dẫn và mô phỏng đọc sách offline.  
 **Giải pháp kiến trúc**:
-1. Nâng cấp widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart):
+1. Nâng cấp widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart):
    - Trích xuất hoặc tự động sinh đường dẫn tệp an toàn chuẩn hóa: `file:///storage/emulated/0/Download/<ten_sach>.pdf`.
    - Hiển thị hộp đường dẫn tệp PDF nổi bật kèm nút sao chép `Clipboard.setData` và huy hiệu `Đã tải về máy · Sẵn sàng đọc offline`.
    - Nút hành động: "Đọc sách ngay" (`Icons.chrome_reader_mode_outlined`) mô phỏng mở sách và nút "Đóng".
-2. Đồng bộ hóa giao diện trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+2. Đồng bộ hóa giao diện trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
    - Đổi nhãn Tab 2 trong `BottomNavigationBar` và `_getAppBarTitle()` thành **"Sách học"**.
    - Section 3 tại Tab Trang chủ đổi thành **"Sách đọc mới"**.
    - Cập nhật danh mục sách mẫu phong phú: *SGK Toán 3 - Tập 1*, *Vở bài tập Tiếng Việt 3*, *Tiếng Anh 3 - Global Success* kèm dung lượng MB và `filePath` thực tế.
 3. **Kiểm chứng chất lượng**:
-   - Tạo mới bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart).
+   - Tạo mới bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/material_card_test.dart).
    - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues**.
    - `flutter test`: Toàn bộ **27 / 27 tests PASSED (100% thành công)**.
 
@@ -500,7 +500,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 ### 10.7. Chuyển Đổi Chi Tiết Sách Đọc Thành Tuyến Màn Hình Mobile Riêng (StudentBookDetailScreen)
 **Yêu cầu nghiệp vụ**: Chuyển giao diện xem chi tiết sách học/sách đọc từ dạng hộp thoại popup (dialog) thành một tuyến màn hình di động riêng biệt (dedicated mobile screen route), có AppBar, nút quay lại, nội dung cuộn chi tiết và thanh công cụ đọc sách ghim ở chân trang, được bọc đồng bộ trong khung Mobile Viewport Shell (`maxWidth: 480px`, nền ngoài `#F5F6F7`, viền và bóng đổ) tương tự như Trang chủ và Lịch học.  
 **Giải pháp kiến trúc**:
-1. Xây dựng màn hình chuyên biệt [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
+1. Xây dựng màn hình chuyên biệt [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
    - **Header chuẩn mực**: `AppBar` phẳng có nút quay lại (`arrow_back`), tiêu đề "Chi tiết sách đọc" và đường phân cách 1px.
    - **Thẻ bìa sách trực quan**: Badge môn học, icon PDF nhận diện, tiêu đề sách, giáo viên giảng dạy, định dạng tệp, dung lượng và ngày cập nhật.
    - **Khung đường dẫn tệp PDF cục bộ (Local Storage Mock Path)**: Hiển thị đường dẫn tệp dạng `file:///storage/emulated/0/Download/<ten_sach>.pdf` cho phép bôi đen sao chép, tích hợp nút sao chép nhanh vào bộ nhớ tạm bằng `Clipboard.setData` và huy hiệu `Đã lưu trong bộ nhớ máy · Sẵn sàng đọc offline`. Áp dụng `Expanded` bọc văn bản chống lỗi tràn viền (overflow) trên mọi kích thước màn hình hẹp.
@@ -508,11 +508,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
    - **Mục lục sách số hóa**: Hiển thị danh sách các chương học kèm số trang và biểu tượng bookmark trực quan.
    - **Bottom Bar ghim cố định**: Nút hành động nổi bật "Đọc sách ngay" (`Icons.chrome_reader_mode_outlined`) kích hoạt SnackBar mở trình đọc.
    - **Mobile Viewport Shell**: Đóng gói toàn bộ `Scaffold` trong khung giả lập điện thoại di động `maxWidth: 480px`, nền ngoài `#F5F6F7` và bóng đổ mượt mà, đồng bộ tuyệt đối với Trang chủ và Lịch học.
-2. Cải tiến widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart):
+2. Cải tiến widget [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart):
    - Cập nhật sự kiện `onTap`: Điều hướng trực tiếp sang route màn hình `StudentBookDetailScreen(data: data)` bằng `Navigator.push`.
    - Dọn dẹp mã nguồn cũ: Loại bỏ dialog `_showDefaultDetailDialog` và các biến khai báo thừa, đảm bảo mã nguồn tinh gọn và sạch sẽ.
 3. **Kiểm chứng chất lượng & Tự động hóa**:
-   - Cập nhật bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart) để xác thực việc điều hướng và hiển thị đầy đủ giao diện màn hình chi tiết sách.
+   - Cập nhật bộ kiểm thử widget [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/material_card_test.dart) để xác thực việc điều hướng và hiển thị đầy đủ giao diện màn hình chi tiết sách.
    - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên các file thay đổi.
    - `flutter test`: Toàn bộ **27 / 27 tests PASSED (100% thành công)**.
 
@@ -524,21 +524,21 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - **Chống cạn kiệt tài nguyên mạng & bộ nhớ khi đăng nhập (No Eager Pre-download)**: Không tự động tải hàng loạt tài liệu về máy khi người dùng đăng nhập; chỉ tải khi học sinh thực sự có nhu cầu mở sách.
 
 **Giải pháp kiến trúc & Tính năng hoàn thiện**:
-1. **Quản lý vòng đời tải theo nhu cầu (On-Demand Download State Machine)** trong [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
+1. **Quản lý vòng đời tải theo nhu cầu (On-Demand Download State Machine)** trong [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart):
    - **Trạng thái Chưa tải (Cloud)**: Hiển thị thẻ lưu trữ đám mây, thông báo tài liệu lưu an toàn trên máy chủ và nút tải nhanh "Tải về máy ngay ($fileSize)".
    - **Trạng thái Đang tải (Downloading Progress)**: Hiển thị thanh tiến trình hoạt ảnh thực tế (`LinearProgressIndicator`), thông số phần trăm hoàn thành và nút hủy tải an toàn.
    - **Trạng thái Đã tải (Offline Ready)**: Kích hoạt hiển thị đường dẫn tệp trong bộ nhớ máy, badge sẵn sàng đọc ngoại tuyến và nút mở trình đọc.
 2. **Kiểm soát & Giải phóng bộ nhớ (Storage & Cache Management)**:
    - Cung cấp nút thao tác "Giải phóng bộ nhớ" / "Xóa bản tải" trực tiếp trên màn hình chi tiết sách.
    - Hộp thoại cảnh báo xác nhận giải phóng dung lượng giúp học sinh dễ dàng dọn dẹp các cuốn sách đã học xong, đưa trạng thái về `NOT_DOWNLOADED` và trả lại bộ nhớ máy tức thì.
-3. **Trình đọc sách tích hợp trong app (In-App Reader View - [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart))**:
+3. **Trình đọc sách tích hợp trong app (In-App Reader View - [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart))**:
    - Đóng gói toàn bộ trong Mobile Viewport Shell (`maxWidth: 480px`).
    - Mở và đọc sách trực tiếp bên trong ứng dụng mượt mà, không phụ thuộc vào ứng dụng thứ ba.
    - Chuyển đổi linh hoạt chế độ đọc ban ngày (giấy kem dịu mắt) và ban đêm (Dark Mode bảo vệ mắt).
    - Ngăn kéo mục lục (Table of Contents BottomSheet) cho phép nhảy nhanh đến từng chương học.
    - Thanh điều hướng trang: Nút trang trước/sau, thanh trượt tìm trang (Page Seeker Slider) và cơ chế tự động ghi nhớ trang đọc dở (`_lastReadPage`).
 4. **Kiểm chứng chất lượng**:
-   - Mở rộng bộ kiểm thử tự động [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart) bao phủ toàn bộ luồng mở trình đọc sách in-app và thao tác giải phóng bộ nhớ.
+   - Mở rộng bộ kiểm thử tự động [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/material_card_test.dart) bao phủ toàn bộ luồng mở trình đọc sách in-app và thao tác giải phóng bộ nhớ.
    - `flutter analyze`: **0 Errors, 0 Warnings, 0 Issues** trên tất cả 4 tệp liên quan.
    - `flutter test`: Toàn bộ **29 / 29 tests PASSED (100% thành công)**.
 
@@ -558,26 +558,26 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 **Chi tiết giải pháp kiến trúc & Triển khai**:
 
 1. **Phía Máy chủ (Spring Boot Backend)**:
-   - **Thư viện**: Bổ sung `org.apache.pdfbox:pdfbox:3.0.3` và `com.github.ben-manes.caffeine:caffeine` trong [`pom.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/pom.xml).
-   - **Dịch vụ kết xuất [`MaterialPageService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/MaterialPageService.java)**:
+   - **Thư viện**: Bổ sung `org.apache.pdfbox:pdfbox:3.0.3` và `com.github.ben-manes.caffeine:caffeine` trong [`pom.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/pom.xml).
+   - **Dịch vụ kết xuất [`MaterialPageService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/MaterialPageService.java)**:
      - Dùng API PDFBox 3.x (`Loader.loadPDF(File)`).
      - Kết xuất trang chỉ định: `new PDFRenderer(doc).renderImageWithDPI(pageIndex, clampedDpi, ImageType.RGB)` sang luồng byte JPEG.
      - Khống chế DPI trần: `clampedDpi = Math.min(dpi, 150)`.
      - Tích hợp bộ đệm Caffeine: Giới hạn tối đa 300 trang trong RAM, thời gian sống (TTL) 2 giờ sau lần truy cập gần nhất, tự động giải phóng khi đầy.
      - Hàm lấy tổng số trang: `pageCount(Path pdf)`.
-   - **Bộ điều khiển [`MaterialPageController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/MaterialPageController.java)**:
+   - **Bộ điều khiển [`MaterialPageController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/MaterialPageController.java)**:
      - `GET /api/materials/files/{fileId}/pages`: Trả về `{"totalPages": 118, "fileName": "SGK_Toan_1_Tap_1.pdf"}`.
      - `GET /api/materials/files/{fileId}/pages/{pageNumber}?dpi=115`: Trả về ảnh trang JPEG kèm header `ETag` và `Cache-Control: max-age=3600`.
      - **Bảo mật ReBAC**: Gọi `accessPolicy.verifyCanDownloadMaterialFile(auth, fileId)` đảm bảo chỉ học sinh cùng khối/lớp hoặc giáo viên liên quan mới có quyền đọc.
      - **Bảo mật chống Path Traversal**: Tên tệp được truy vấn 100% từ CSDL (thực thể `MaterialFile`), chuẩn hóa `Path.normalize()` và kiểm tra tiền tố bắt buộc thuộc `uploads/materials`.
-   - **Khắc phục xử lý ngoại lệ [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java)**:
+   - **Khắc phục xử lý ngoại lệ [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java)**:
      - Bổ sung `@ExceptionHandler(ResponseStatusException.class)` để bảo toàn đúng mã trạng thái HTTP (404 Not Found, 403 Forbidden) do Spring Web ném ra, tránh việc bị bắt nhầm thành HTTP 500.
-   - **Khởi tạo dữ liệu mẫu [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java)**:
+   - **Khởi tạo dữ liệu mẫu [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java)**:
      - Tự động nạp bản ghi `Material`: *"Sách giáo khoa Toán 1 - Tập 1"*, môn Toán, trạng thái `PUBLISHED`, liên kết `MaterialFile` tệp `SGK_Toan_1_Tap_1.pdf` (118 trang) và phân phối đến tất cả các lớp học.
      - Tệp vật lý được lưu trữ tại `uploads/materials/SGK_Toan_1_Tap_1.pdf` (75.0 MB).
 
 2. **Phía Ứng dụng Di động (Flutter Mobile Frontend)**:
-   - **Trình đọc sách lật trang [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart)**:
+   - **Trình đọc sách lật trang [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart)**:
      - **Cơ chế lật trang (Page Flip Animation)**: Sử dụng `PageView.builder` kết hợp `PageController` và `BouncingScrollPhysics`, cho phép vuốt tay lật trang cực kỳ mượt mà.
      - **Phóng to / Thu nhỏ đa điểm (Pinch-to-Zoom)**: Tích hợp `InteractiveViewer` (`minScale: 1.0, maxScale: 3.5`) trên từng trang giúp học sinh soi rõ từng chi tiết hình vẽ, chữ số nhỏ.
      - **Truyền tải ảnh trang trực tiếp (Live Page Streaming)**: Tải ảnh trang từ endpoint máy chủ backend kèm header xác thực `Authorization: Bearer <jwt_token>` và vòng xoay tiến độ sinh động.
@@ -591,10 +591,10 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
      - **Bảng điều khiển ghim chân trang**: Nút lật trang trước (`chevron_left`), lật trang sau (`chevron_right`), thanh trượt tìm trang nhanh (`Slider`), hiển thị % tiến độ đọc và trạng thái tự động lưu vị trí đọc dở.
      - **Chế độ đọc ban đêm**: Nút chuyển đổi Light Mode (nền giấy kem) / Dark Mode (bảo vệ mắt khi đọc đêm).
      - **Khung hiển thị Mobile Viewport Shell**: Bọc toàn bộ trong khung mô phỏng di động chuẩn (`maxWidth: 480px`, nền ngoài `#F5F6F7`, viền và bóng đổ mềm mại).
-   - **Màn hình Chi tiết Sách [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart)**:
+   - **Màn hình Chi tiết Sách [`student_book_detail_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_book_detail_screen.dart)**:
      - Cập nhật mục lục động: Nếu mở SGK Toán 1 sẽ hiển thị đầy đủ 5 Chủ đề kèm số trang tương ứng.
      - Nút "Đọc sách ngay" dẫn thẳng vào trình đọc lật trang với trang bắt đầu tương ứng.
-   - **Trang chủ Học sinh [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+   - **Trang chủ Học sinh [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
      - Đưa *"Sách giáo khoa Toán 1 - Tập 1"* (75.0 MB, 118 trang) lên vị trí đầu tiên trong danh mục Sách học để sẵn sàng phục vụ trình chiếu/demo cho ban lãnh đạo.
 
 3. **Kết quả Kiểm chứng Chất lượng & Tự động hóa**:
@@ -623,18 +623,18 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 **Phân tích Nguyên nhân gốc rễ (Root Cause Analysis - Senior QA & Dev Review)**:
 1. **Lỗi 500 do thiếu Exception Handler cho `NoSuchElementException`**:
    - Khi học sinh bấm nộp bài với bài tập chưa được tạo bản ghi làm bài trong CSDL (hoặc với mã mock demo `submissionId: 100`), backend gọi `submissionRepository.findById(submissionId).orElseThrow(() -> new NoSuchElementException("Bài làm không tồn tại."))`.
-   - Trong [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java), trước đây chưa có handler riêng cho `NoSuchElementException`. Do đó, ngoại lệ này bị bắt bởi khối tổng quát `@ExceptionHandler(Exception.class)` và trả về mã HTTP 500 kèm thông điệp generic *"Đã xảy ra lỗi nội bộ hệ thống. Vui lòng thử lại sau."*.
+   - Trong [`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java), trước đây chưa có handler riêng cho `NoSuchElementException`. Do đó, ngoại lệ này bị bắt bởi khối tổng quát `@ExceptionHandler(Exception.class)` và trả về mã HTTP 500 kèm thông điệp generic *"Đã xảy ra lỗi nội bộ hệ thống. Vui lòng thử lại sau."*.
 2. **Cơ sở dữ liệu thiếu Dữ liệu mẫu (Data Seeding) cho Bài tập**:
-   - [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java) trước đó chưa tự động seed các bảng `homework`, `questions`, `question_options`, `homework_assignments`. Do đó danh sách bài tập của học sinh trong DB rỗng, khiến dashboard học sinh phải dùng dữ liệu giả lập (mock ID 1, submission ID 100).
+   - [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java) trước đó chưa tự động seed các bảng `homework`, `questions`, `question_options`, `homework_assignments`. Do đó danh sách bài tập của học sinh trong DB rỗng, khiến dashboard học sinh phải dùng dữ liệu giả lập (mock ID 1, submission ID 100).
 3. **An toàn kiểu dữ liệu chấm điểm tự động (Null-Safety)**:
-   - Trong [`StudentHomeworkService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentHomeworkService.java), stream so sánh đáp án đúng gọi `o.getIsCorrect()` có nguy cơ ném `NullPointerException` nếu cột `is_correct` của lựa chọn bị null.
+   - Trong [`StudentHomeworkService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentHomeworkService.java), stream so sánh đáp án đúng gọi `o.getIsCorrect()` có nguy cơ ném `NullPointerException` nếu cột `is_correct` của lựa chọn bị null.
 4. **Cơ chế nộp bài dự phòng phía Mobile Client (Resilient Demo Fallback)**:
-   - Trên màn hình làm bài [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart), khi đang ở chế độ demo hoặc submission ID là mock (`subId >= 100`), nếu API trả về lỗi hoặc offline, màn hình chưa có cơ chế tự động chấm điểm dự phòng để hiển thị kết quả demo trơn tru cho ban giám hiệu.
+   - Trên màn hình làm bài [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart), khi đang ở chế độ demo hoặc submission ID là mock (`subId >= 100`), nếu API trả về lỗi hoặc offline, màn hình chưa có cơ chế tự động chấm điểm dự phòng để hiển thị kết quả demo trơn tru cho ban giám hiệu.
 
 **Chi tiết Giải pháp & Triển khai**:
 
 1. **Phía Backend (Spring Boot)**:
-   - **Xử lý ngoại lệ chuẩn HTTP 404 ([`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java))**:
+   - **Xử lý ngoại lệ chuẩn HTTP 404 ([`GlobalExceptionHandler.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/exception/GlobalExceptionHandler.java))**:
      - Bổ sung `@ExceptionHandler(NoSuchElementException.class)` trả về HTTP 404 NOT_FOUND với cấu trúc JSON chuẩn:
        ```json
        {
@@ -643,9 +643,9 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
        }
        ```
      - Chấm dứt hoàn toàn hiện tượng ngoại lệ logic nghiệp vụ (không tìm thấy bài nộp) bị biến thành lỗi hệ thống 500.
-   - **Bảo vệ Null-Safe khi chấm điểm trắc nghiệm ([`StudentHomeworkService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentHomeworkService.java))**:
+   - **Bảo vệ Null-Safe khi chấm điểm trắc nghiệm ([`StudentHomeworkService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentHomeworkService.java))**:
      - Thay thế `.filter(QuestionOption::getIsCorrect)` bằng `.filter(o -> Boolean.TRUE.equals(o.getIsCorrect()))` để phòng ngừa triệt để lỗi unboxing `Boolean` sang `boolean`.
-   - **Khởi tạo dữ liệu bài tập thực tế ([`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java))**:
+   - **Khởi tạo dữ liệu bài tập thực tế ([`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java))**:
      - Tự động seed bài tập *"Bài tập tuần 5 - Phép nhân"* (Môn Toán, thang điểm 10.0, giáo viên T001) với 4 dạng câu hỏi chuẩn:
        1. **SINGLE_CHOICE (2.5đ)**: 7 x 8 = ? (Các lựa chọn 54, 56, 64, 48).
        2. **MULTIPLE_CHOICE (2.5đ)**: Chọn phép tính có kết quả 36 (6x6, 4x9, 5x7).
@@ -654,12 +654,12 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
      - Tự động giao bài (`HomeworkAssignment`) cho toàn bộ các lớp học với hạn nộp sau 7 ngày.
 
 2. **Phía Mobile App (Flutter Client)**:
-   - **Cơ chế nộp bài tự động dự phòng ([`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart))**:
-     - Bổ sung xử lý thông minh khi nộp bài: Nếu bài tập là mock data (`subId >= 100`) hoặc `FeatureFlags.useDemoFallback` đang bật, hệ thống tự động tính điểm theo đáp án học sinh đã chọn, sinh bản ghi kết quả hoàn chỉnh và chuyển mượt mà sang màn hình Kết quả bài nộp [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart).
+   - **Cơ chế nộp bài tự động dự phòng ([`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart))**:
+     - Bổ sung xử lý thông minh khi nộp bài: Nếu bài tập là mock data (`subId >= 100`) hoặc `FeatureFlags.useDemoFallback` đang bật, hệ thống tự động tính điểm theo đáp án học sinh đã chọn, sinh bản ghi kết quả hoàn chỉnh và chuyển mượt mà sang màn hình Kết quả bài nộp [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart).
      - Nếu gọi backend thực tế thất bại hoặc gặp mạng gián đoạn, tự động kích hoạt fallback cục bộ thay vì chặn người dùng bằng SnackBar đỏ.
 
 3. **Kiểm thử Tự động & Kết quả Xác minh**:
-   - **Bộ test mới Backend ([`StudentHomeworkControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentHomeworkControllerTest.java))**:
+   - **Bộ test mới Backend ([`StudentHomeworkControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentHomeworkControllerTest.java))**:
      - `testSubmitNonExistentSubmission_Returns404NotFound`: Kiểm tra nộp bài với ID không tồn tại -> Trả về đúng HTTP 404 NOT_FOUND, `success: false` kèm thông điệp *"Bài làm không tồn tại."* (không còn bị lỗi 500).
      - `testGetMyAssignments_ReturnsOk`: Kiểm tra lấy danh sách bài tập đã giao cho học sinh -> Trả về HTTP 200 OK.
      - Kết quả: **2 / 2 tests PASSED**.
@@ -677,7 +677,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Cung cấp link truy cập trực tiếp trên web (`https://trongminh13.github.io/Project-GD/`) phục vụ ban giám đốc/sếp mở trên điện thoại hoặc trình duyệt mà không cần cài đặt môi trường lập trình hay ứng dụng thủ công.
 - Tự động hóa quy trình CI/CD: Mỗi khi commit mới được đẩy lên nhánh `main`, hệ thống tự động biên dịch Flutter Web và xuất bản lên GitHub Pages.
 
-**Chi tiết Cấu hình Workflow ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
+**Chi tiết Cấu hình Workflow ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/.github/workflows/deploy.yml))**:
 1. **Thiết lập Môi trường**: Sử dụng action chuẩn `subosito/flutter-action@v2` (channel: `stable`, hỗ trợ lưu cache dependency giúp tăng tốc độ build).
 2. **Cấu hình Đường dẫn Cơ sở (Base Href)**: Thiết lập tham số bắt buộc `--base-href "/Project-GD/"` để các tệp tài nguyên tĩnh (assets, icon, CanvasKit, WASM/JS) không bị lỗi 404 khi GitHub Pages phục vụ dưới tên repo con.
 3. **Phát hành Tự động**: Đóng gói thư mục `frontend/build/web` thông qua `actions/upload-pages-artifact@v3` và phát hành an toàn với `actions/deploy-pages@v4`.
@@ -689,7 +689,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 ### 10.12. Thiết lập Luồng Tích hợp Liên tục Backend CI và Khắc phục Thiếu Asset `.env` trong Frontend CI
 
-**1. Khởi tạo Backend CI ([`.github/workflows/backend-ci.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/backend-ci.yml))**:
+**1. Khởi tạo Backend CI ([`.github/workflows/backend-ci.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/.github/workflows/backend-ci.yml))**:
 - **Mục tiêu**: Tự động hóa kiểm thử hồi quy cho toàn bộ 32 test backend (ReBAC, chống gian lận điểm số, bảo mật phân quyền, quản lý bài tập) mỗi khi có push hoặc pull request vào nhánh `main`.
 - **Cấu hình Dịch vụ (Service Container)**:
   - Khởi chạy container PostgreSQL 15 (`postgres:15`) tự động kiểm tra trạng thái hoạt động (`pg_isready`).
@@ -699,11 +699,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - Thiết lập Java 17 Temurin (`actions/setup-java@v4`) với cơ chế bộ đệm Maven dependency cache.
   - Cấp quyền thực thi và chạy `./mvnw clean test`.
 
-**2. Khắc phục Lỗi Build Flutter Web trên GitHub Pages do thiếu `.env` ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
+**2. Khắc phục Lỗi Build Flutter Web trên GitHub Pages do thiếu `.env` ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/.github/workflows/deploy.yml))**:
 - **Hiện tượng**: Lần chạy đầu tiên trên GitHub Actions báo lỗi `No file or variants found for asset: .env` vì `.env` nằm trong danh sách `.gitignore` nên máy ảo GitHub không có file này.
 - **Xử lý**: Bổ sung bước `touch .env` trước khi chạy lệnh biên dịch `flutter build web`, đảm bảo ứng dụng Flutter Web luôn đóng gói thành công 100%.
 
-- **Khắc phục Kiểm thử Giao dịch TransactionRollbackRealTest trong môi trường PostgreSQL CI ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java))**:
+- **Khắc phục Kiểm thử Giao dịch TransactionRollbackRealTest trong môi trường PostgreSQL CI ([`TransactionRollbackRealTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/TransactionRollbackRealTest.java))**:
   + Bổ sung `s.setRollNo("888")` khi khởi tạo học sinh mẫu trong trường hợp cơ sở dữ liệu kiểm thử trống, thỏa mãn ràng buộc `NOT NULL` của cột `roll_no` trên PostgreSQL chuẩn.
   + Kiểm thử cục bộ: **4 / 4 tests PASSED (100% BUILD SUCCESS)**.
 
@@ -715,16 +715,16 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Thay thế toàn bộ tên mặc định khởi tạo ban đầu (`admin_app` / `AshaDeep`) bằng tên thương hiệu chính thức: **"Cổng Thông Tin Giáo Dục Đại Việt"** phục vụ trình chiếu chuyên nghiệp cho ban giám đốc.
 
 **Chi tiết Các Tệp Cập nhật**:
-1. **Giao diện Web & Tiêu đề Tab ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+1. **Giao diện Web & Tiêu đề Tab ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html))**:
    - `<title>`: Cập nhật thành `Cổng Thông Tin Giáo Dục Đại Việt`.
    - `<meta name="description">`: Cập nhật mô tả hệ thống quản lý trường học và học liệu số thông minh.
    - `<meta name="apple-mobile-web-app-title">`: Cập nhật thành `Giáo Dục Đại Việt`.
-2. **Cấu hình Ứng dụng Web PWA ([`frontend/web/manifest.json`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/manifest.json))**:
+2. **Cấu hình Ứng dụng Web PWA ([`frontend/web/manifest.json`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/manifest.json))**:
    - `name`: `Cổng Thông Tin Giáo Dục Đại Việt`.
    - `short_name`: `Giáo Dục Đại Việt`.
-3. **Mã nguồn Ứng dụng Flutter ([`frontend/lib/main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart))**:
+3. **Mã nguồn Ứng dụng Flutter ([`frontend/lib/main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/main.dart))**:
    - `MaterialApp(title: "Cổng Thông Tin Giáo Dục Đại Việt")`.
-4. **Cấu hình Ứng dụng Android ([`frontend/android/app/src/main/AndroidManifest.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/android/app/src/main/AndroidManifest.xml))**:
+4. **Cấu hình Ứng dụng Android ([`frontend/android/app/src/main/AndroidManifest.xml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/android/app/src/main/AndroidManifest.xml))**:
    - `android:label="Giáo Dục Đại Việt"`.
 
 **Kiểm chứng Chất lượng**:
@@ -735,14 +735,14 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 ### 10.14. Tích hợp Web Startup Splash Loader và Chuẩn hoá Component Nút Loading (AppLoadingButton)
 
-**1. Khắc phục Trắng Màn Hình khi Khởi Động Web ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+**1. Khắc phục Trắng Màn Hình khi Khởi Động Web ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html))**:
 - **Hiện tượng**: Khi truy cập trên GitHub Pages, trình duyệt tải `main.dart.js` (~3.6MB) mất 2–4 giây khiến người dùng thấy màn hình trắng trơn, tạo cảm giác hệ thống bị đứng.
 - **Giải pháp**:
   - Nhúng trực tiếp Splash Loader bằng CSS thuần + HTML nhẹ (0KB phụ thuộc ngoài).
   - Thiết kế thẻ thương hiệu với biểu tượng `Icons.school_rounded` màu xanh `#2457C5` trên nền hộp bo góc 14px xanh nhạt `rgba(36, 87, 197, 0.12)` chuẩn xác 100% giống trang Đăng nhập (`login_screen.dart`), vòng xoay spinner gradient mượt mà và thanh trạng thái *"Đang tải ứng dụng..."*.
   - Tích hợp listener `window.addEventListener('flutter-first-frame', ...)` giúp màn hình loading mờ dần (fade out 400ms) và tự hủy ngay khi Flutter Web render xong khung hình đầu tiên.
 
-**2. Xây dựng Component Tái Sử Dụng Chuẩn Hoá ([`AppLoadingButton.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_loading_button.dart))**:
+**2. Xây dựng Component Tái Sử Dụng Chuẩn Hoá ([`AppLoadingButton.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_loading_button.dart))**:
 - Cung cấp widget nút bấm thống nhất toàn hệ thống với đầy đủ các biến thể:
   - `AppLoadingButton.primary`: Nền xanh `#2457C5`, chữ trắng.
   - `AppLoadingButton.outlined`: Nền trắng viền xám `#DADCE0`, chữ đen `#202124`.
@@ -754,11 +754,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - Hỗ trợ hiển thị nhãn trạng thái khi đang tải (ví dụ: *"Đang xác thực..."*, *"Đang nộp..."*).
 
 **3. Áp Dụng Thực Tế vào Các Màn Hình Chính**:
-- **Màn hình Đăng nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart))**: Thay thế nút Đăng nhập thủ công bằng `AppLoadingButton`, hiển thị spinner kèm text *"Đang xác thực..."* khi gọi API.
-- **Màn hình Làm & Nộp bài tập ([`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart))**: Thay thế nút Nộp bài bằng `AppLoadingButton` với nhãn tải *"Đang nộp..."*.
+- **Màn hình Đăng nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart))**: Thay thế nút Đăng nhập thủ công bằng `AppLoadingButton`, hiển thị spinner kèm text *"Đang xác thực..."* khi gọi API.
+- **Màn hình Làm & Nộp bài tập ([`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart))**: Thay thế nút Nộp bài bằng `AppLoadingButton` với nhãn tải *"Đang nộp..."*.
 
 **4. Kiểm thử Tự động & Chất lượng Code**:
-- **Bộ Widget Test Mới ([`app_loading_button_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_loading_button_test.dart))**:
+- **Bộ Widget Test Mới ([`app_loading_button_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/app_loading_button_test.dart))**:
   - Test 1: Hiển thị nhãn text và icon chuẩn khi ở trạng thái nghỉ (`isLoading: false`).
   - Test 2: Kích hoạt callback `onPressed` khi người dùng chạm nút.
   - Test 3: Hiển thị `CircularProgressIndicator`, chữ trạng thái tải và vô hiệu hóa tương tác tap khi `isLoading: true`.
@@ -776,7 +776,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 **1. Phân Tích Căn Nguyên Kỹ Thuật (Senior QA & Architecture RCA)**:
 - **Nguyên nhân Lỗi Mạng (`ClientException: Load failed, url = https://api.yourdomain.com/api/auth/signin`)**:
   - Khi triển khai lên GitHub Pages thông qua GitHub Actions (`.github/workflows/deploy.yml`), Flutter được biên dịch ở chế độ `--release` (`kReleaseMode = true`).
-  - Trong [`frontend/lib/utils/constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart), nhánh `kReleaseMode` trước đây gán cứng URL mặc định là `https://api.yourdomain.com/api`. Vì đây là tên miền mẫu (placeholder) không tồn tại backend thật và không có chứng chỉ TLS hợp lệ, trình duyệt Safari trên thiết bị di động ngắt kết nối ngay lập tức và ném ra lỗi `ClientException: Load failed`.
+  - Trong [`frontend/lib/utils/constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart), nhánh `kReleaseMode` trước đây gán cứng URL mặc định là `https://api.yourdomain.com/api`. Vì đây là tên miền mẫu (placeholder) không tồn tại backend thật và không có chứng chỉ TLS hợp lệ, trình duyệt Safari trên thiết bị di động ngắt kết nối ngay lập tức và ném ra lỗi `ClientException: Load failed`.
   - GitHub Pages chạy trên HTTPS tĩnh của GitHub, hoàn toàn độc lập với máy chủ backend Spring Boot chạy ở `localhost:8081` trên máy phát triển cá nhân của người dùng.
 - **Nguyên nhân Gây Giật Lag Màn Hình Trên Mobile Safari (iOS)**:
   - **Font-Blocking Network Delay**: Font chữ `GoogleFonts.outfit` được tải động runtime từ `fonts.gstatic.com`. Trên Safari iOS với cơ chế chặn theo dõi thông minh (ITP) và kết nối mạng di động 4G/WiFi, quá trình tải font bị nghẽn làm WebKit rơi vào trạng thái chặn render văn bản (FOIT - Flash of Invisible Text).
@@ -784,11 +784,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - **Thiếu Cờ Tối Ưu Biên Dịch Web**: Lệnh build trong GitHub Actions chưa có cờ tối ưu hóa nén mã JavaScript `-O4`.
 
 **2. Giải Pháp Triệt Để Đã Triển Khai**:
-- **Cấu hình API Linh hoạt & Nhận diện Chế độ Demo ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+- **Cấu hình API Linh hoạt & Nhận diện Chế độ Demo ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart))**:
   - Hỗ trợ truyền biến môi trường `--dart-define=API_BASE_URL=...` khi build nếu có server thật.
   - Cung cấp getter `ApiConstants.isDemoMode`: tự động phát hiện môi trường nếu `baseUrl` chứa `yourdomain.com` hoặc `demo-api.local`.
   - Bổ sung `fontFamilyFallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto']` vào `AppTextStyles` giúp Safari iOS hiển thị giao diện tức thì bằng font hệ thống San Francisco mà không phải chờ mạng tải font.
-- **Cơ Chế Xác Thực Thông Minh Demo & Offline Fallback ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart))**:
+- **Cơ Chế Xác Thực Thông Minh Demo & Offline Fallback ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart))**:
   - Bổ sung hàm `_tryDemoLogin(username, password)` tự động kích hoạt khi `ApiConstants.isDemoMode == true` hoặc khi phát hiện lỗi rớt mạng/timeout (`ClientException`, `SocketException`, `TimeoutException`).
   - Hỗ trợ đầy đủ bộ tài khoản theo kịch bản trình chiếu:
     + **Học sinh**: `student01` / `student123` (Em Nguyễn Minh Anh - Lớp 10A1).
@@ -797,15 +797,15 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + **Phụ huynh (OTP)**: SĐT `9910157611` / mã OTP `123456`.
   - Nếu nhập sai mật khẩu, hệ thống trả về thông báo lỗi chuẩn xác tiếng Việt (*"Mật khẩu không chính xác..."*).
   - Khắc phục lỗi lưu trữ trên Safari Private Browsing: Khi `FlutterSecureStorage` bị hạn chế trên Safari ẩn danh, tự động fallback sang `SharedPreferences` giúp giữ phiên đăng nhập mượt mà.
-- **Bật Cờ Demo Fallback Tự Động ([`feature_flags.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/config/feature_flags.dart))**:
+- **Bật Cờ Demo Fallback Tự Động ([`feature_flags.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/config/feature_flags.dart))**:
   - Trên nền tảng Web (`kIsWeb`), nếu không cấu hình URL backend chuyên biệt, cờ `useDemoFallback` tự động kích hoạt `true`.
-- **Loại Bỏ Độ Trễ Màn Hình Khởi Động ([`splash_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/splash_screen.dart))**:
+- **Loại Bỏ Độ Trễ Màn Hình Khởi Động ([`splash_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/splash_screen.dart))**:
   - Khi chạy trên Web và không có token lưu sẵn, hệ thống bypass nhanh sang `LoginScreen` ngay sau khi hiển thị hiệu ứng khởi động, loại bỏ hoàn toàn việc chờ 5 giây gọi mạng vô ích.
   - Cập nhật logo nhận diện thương hiệu `Icons.school_rounded` màu xanh trên nền xanh nhạt đồng bộ 100% với trang đăng nhập.
-- **Tối Ưu Hóa Biên Dịch GitHub Pages ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml))**:
+- **Tối Ưu Hóa Biên Dịch GitHub Pages ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/.github/workflows/deploy.yml))**:
   - Cập nhật lệnh đóng gói: `flutter build web --base-href "/Project-GD/" --release -O4`, kích hoạt mức tối ưu hóa cao nhất của dart2js (tree-shaking, minification, loại bỏ assert).
 
-**3. Bộ Kiểm Thử Tự Động Mới ([`test/network/auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
+**3. Bộ Kiểm Thử Tự Động Mới ([`test/network/auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
 - `TC-AUTH-FB-01`: Đăng nhập học sinh `student01` / `student123` thành công qua demo fallback, cấp phát JWT token giả lập và profile `ROLE_STUDENT`.
 - `TC-AUTH-FB-02`: Đăng nhập giáo viên `T001` / `teacher123` thành công qua demo fallback với profile `ROLE_TEACHER`.
 - `TC-AUTH-FB-03`: Đăng nhập ban giám hiệu `admin` / `admin123` thành công qua demo fallback với profile `ROLE_ADMIN`.
@@ -814,9 +814,9 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - `TC-CFG-URL-01`: `ApiConstants.baseUrl` và `isDemoMode` đánh giá logic sạch sẽ và chính xác.
 
 **4. Tinh Chỉnh Trải Nghiệm Người Dùng (UX Polish & Anti-Friction)**:
-- **Thanh Điền Nhanh Tài Khoản Demo ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart))**: Tích hợp các chip tài khoản tương tác (`Học sinh`, `Giáo viên`, `Admin`, `Phụ huynh`). Người dùng chỉ cần chạm 1 chạm là tự động chọn vai trò và điền sẵn username/password, tối ưu tuyệt đối cho người dùng mở trên Safari màn hình cảm ứng di động.
+- **Thanh Điền Nhanh Tài Khoản Demo ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart))**: Tích hợp các chip tài khoản tương tác (`Học sinh`, `Giáo viên`, `Admin`, `Phụ huynh`). Người dùng chỉ cần chạm 1 chạm là tự động chọn vai trò và điền sẵn username/password, tối ưu tuyệt đối cho người dùng mở trên Safari màn hình cảm ứng di động.
 - **Tắt Can Thiệp Bàn Phím iOS (`autocorrect: false`, `enableSuggestions: false`)**: Ngăn chặn WebKit Safari tự động viết hoa chữ cái đầu và sửa từ làm sai lệch tên tài khoản `student01` và mật khẩu.
-- **Bổ Sung Dữ Liệu Bảng Điểm & Chuyên Cần ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**: Bổ sung `_getMockMarks()` (Toán 9.5, TV 9.0, Anh 9.8, TNXH 10) và `_getMockAttendance()` giúp bảng điểm và chuyên cần khi mở modal xem chi tiết hiển thị dữ liệu mẫu đầy đủ, sinh động 100%.
+- **Bổ Sung Dữ Liệu Bảng Điểm & Chuyên Cần ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**: Bổ sung `_getMockMarks()` (Toán 9.5, TV 9.0, Anh 9.8, TNXH 10) và `_getMockAttendance()` giúp bảng điểm và chuyên cần khi mở modal xem chi tiết hiển thị dữ liệu mẫu đầy đủ, sinh động 100%.
 
 **5. Kết Quả Kiểm Chứng Thực Tế**:
 - **Bộ Unit Test Toàn Dự Án Frontend**:
@@ -843,18 +843,18 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 | **Tổng thời gian từ Đăng nhập -> Trang chủ** | **~4.000ms – 8.500ms** | **Người dùng thấy vòng xoay tải 4–8 giây** | **< 50ms (Tức thì)** |
 
 **2. Căn Nguyên Kỹ Thuật (RCA)**:
-- Sau khi bấm Đăng nhập thành công, [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) khởi tạo và chạy `_loadAllData()`.
+- Sau khi bấm Đăng nhập thành công, [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) khởi tạo và chạy `_loadAllData()`.
 - Hàm này phát 5 request HTTP song song qua `Future.wait` tới domain `demo-api.local` hoặc `api.yourdomain.com`.
 - Trình duyệt Safari trên iOS khi gặp tên miền đuôi `.local` sẽ kích hoạt cơ chế Bonjour/mDNS discovery trên mạng nội bộ, chờ đợi phản hồi từ 3 đến 6 giây trước khi ném ngoại lệ.
-- Lớp mạng [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart) và [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_service.dart) trước đây hoàn toàn **không cài đặt `.timeout()`**, khiến ứng dụng bị "treo cứng" theo thời gian chờ của WebKit.
+- Lớp mạng [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_client.dart) và [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/homework_service.dart) trước đây hoàn toàn **không cài đặt `.timeout()`**, khiến ứng dụng bị "treo cứng" theo thời gian chờ của WebKit.
 
 **3. Giải Pháp Triệt Để Đã Triển Khai**:
 - **Bypass Fast-Path Không Độ Trễ Cho Chế Độ Demo**:
-  - Tại [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), khi nhận diện `ApiConstants.isDemoMode || FeatureFlags.useDemoFallback`, nạp ngay toàn bộ dữ liệu mock (`profile`, `attendance`, `marks`, `homework`, `materials`) vào State trong `0ms` mà không gửi bất kỳ request mạng nào.
-  - Áp dụng tương tự cho [DashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/admin/screens/dashboard_screen.dart) (Admin) và [ParentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_dashboard_screen.dart) (Phụ huynh).
+  - Tại [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), khi nhận diện `ApiConstants.isDemoMode || FeatureFlags.useDemoFallback`, nạp ngay toàn bộ dữ liệu mock (`profile`, `attendance`, `marks`, `homework`, `materials`) vào State trong `0ms` mà không gửi bất kỳ request mạng nào.
+  - Áp dụng tương tự cho [DashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/admin/screens/dashboard_screen.dart) (Admin) và [ParentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/parent/screens/parent_dashboard_screen.dart) (Phụ huynh).
 - **Thắt Chặt Timeout Bảo Vệ Lớp Mạng**:
-  - [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart): Bổ sung `defaultTimeout = Duration(milliseconds: 2500)` cho mọi phương thức `get`, `post`, `put`, `delete`.
-  - [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_service.dart): Bổ sung timeout 2500ms cho `getStudentAssignments()`.
+  - [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_client.dart): Bổ sung `defaultTimeout = Duration(milliseconds: 2500)` cho mọi phương thức `get`, `post`, `put`, `delete`.
+  - [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/homework_service.dart): Bổ sung timeout 2500ms cho `getStudentAssignments()`.
   - Bổ sung timeout 2500ms cho `Future.wait` tại các màn hình chính để đảm bảo người dùng không bao giờ phải chờ quá 2.5 giây ngay cả khi kết nối mạng chập chờn.
 
 **4. Kết Quả Kiểm Chứng**:
@@ -872,38 +872,38 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 **Kiến trúc & Giải pháp Production-Grade đã hoàn thiện**:
 
-1. **Phân Tầng Chính Sách Timeout ([`api_timeout_policy.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_timeout_policy.dart))**:
+1. **Phân Tầng Chính Sách Timeout ([`api_timeout_policy.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_timeout_policy.dart))**:
    - `fastRead` (**8.000 ms**): Áp dụng cho các truy vấn đọc dữ liệu nhanh (profile, dashboard stats, thời khóa biểu, danh sách lớp).
    - `mutation` (**15.000 ms**): Áp dụng cho các tác vụ cập nhật/ghi dữ liệu thông thường (nộp bài tập, điểm danh, đổi mật khẩu).
    - `upload` (**60.000 ms**): Áp dụng cho tải tệp dung lượng lớn (import Excel học sinh/giáo viên, tài liệu PDF).
    - `transactional` (**30.000 ms**): Áp dụng riêng cho các giao dịch tài chính, thanh toán học phí.
-   - Tích hợp toàn diện vào [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart), [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_service.dart), [AuthService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart) và [FeeService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/fee_service.dart).
+   - Tích hợp toàn diện vào [ApiClient](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_client.dart), [HomeworkService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/homework_service.dart), [AuthService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart) và [FeeService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/fee_service.dart).
 
-2. **Bảo Toàn Giao Dịch & Chống Trừ Tiền 2 Lần ([`fee_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/fee_service.dart))**:
+2. **Bảo Toàn Giao Dịch & Chống Trừ Tiền 2 Lần ([`fee_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/fee_service.dart))**:
    - **Sinh Khóa Idempotency Chuẩn RFC4122 v4**: `FeeService.generateIdempotencyKey()` tự động tạo UUID v4 bảo mật gửi kèm trong HTTP Header `Idempotency-Key` khi tạo order (`/fees/create-order`) và xác thực thanh toán (`/fees/verify-payment`).
    - **Đối Soát Trạng Thái Khi Timeout Mạng**: Bổ sung hàm `checkPaymentStatus(orderId)` cho phép truy vấn trực tiếp trạng thái đơn hàng trên backend khi gặp sự cố ngắt kết nối giữa chừng, đảm bảo không bao giờ kết luận thanh toán thất bại khi server đã ghi nhận tiền.
 
-3. **Xóa Bỏ Tên Miền Giả & Thực Thi Cơ Chế Fail-Fast ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+3. **Xóa Bỏ Tên Miền Giả & Thực Thi Cơ Chế Fail-Fast ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart))**:
    - Xóa bỏ hoàn toàn chuỗi `demo-api.local` và placeholder `https://api.yourdomain.com/api`.
    - Quản lý định danh môi trường qua 2 cờ biên dịch: `DEMO_MODE` và `API_BASE_URL`.
    - **Cơ chế Fail-Fast trên Release**: Khi `kReleaseMode == true` mà cả `API_BASE_URL` và `DEMO_MODE` đều không được cung cấp, ứng dụng ném ngoại lệ `StateError` rõ ràng ngay lúc khởi tạo, ngăn chặn phát hành bản build release có cấu hình sai lệch.
-   - Cập nhật workflow CI/CD GitHub Actions ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/.github/workflows/deploy.yml)) đóng gói web với cờ `--dart-define=DEMO_MODE=true` tường minh.
+   - Cập nhật workflow CI/CD GitHub Actions ([`.github/workflows/deploy.yml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/.github/workflows/deploy.yml)) đóng gói web với cờ `--dart-define=DEMO_MODE=true` tường minh.
 
 4. **Triệt Tiêu Silent Fallback & Vệ Sinh Bảo Mật**:
-   - [AuthService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart): Chỉ kích hoạt tài khoản demo khi `isDemoMode == true`. Ở môi trường thường, lỗi mạng trả về thông báo lỗi kết nối trung thực (*"Không thể kết nối đến máy chủ"*), tuyệt đối không tự động nhảy sang dữ liệu mock.
+   - [AuthService](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart): Chỉ kích hoạt tài khoản demo khi `isDemoMode == true`. Ở môi trường thường, lỗi mạng trả về thông báo lỗi kết nối trung thực (*"Không thể kết nối đến máy chủ"*), tuyệt đối không tự động nhảy sang dữ liệu mock.
    - Vệ sinh thông báo lỗi: Loại bỏ hoàn toàn việc in mật khẩu ra message lỗi.
-   - **Banner Cảnh Báo Toàn Cục ([`demo_mode_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/demo_mode_banner.dart))**: Hiển thị thanh cảnh báo màu vàng cam cố định ở đỉnh ứng dụng khi chạy ở chế độ Demo (*"CHẾ ĐỘ TRÌNH CHIẾU DEMO: Đang sử dụng dữ liệu mẫu độc lập"*).
+   - **Banner Cảnh Báo Toàn Cục ([`demo_mode_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/demo_mode_banner.dart))**: Hiển thị thanh cảnh báo màu vàng cam cố định ở đỉnh ứng dụng khi chạy ở chế độ Demo (*"CHẾ ĐỘ TRÌNH CHIẾU DEMO: Đang sử dụng dữ liệu mẫu độc lập"*).
 
 5. **Phân Mảnh Tải Dữ Liệu Dashboard (Progressive Rendering)**:
-   - [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Thay thế `Future.wait` nguyên khối bằng mô hình phân mảnh độc lập (`_loadProfile()`, `_loadAttendance()`, `_loadMarks()`, `_loadHomework()`, `_loadMaterials()`).
+   - [StudentDashboardScreen](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Thay thế `Future.wait` nguyên khối bằng mô hình phân mảnh độc lập (`_loadProfile()`, `_loadAttendance()`, `_loadMarks()`, `_loadHomework()`, `_loadMaterials()`).
    - Module nào có dữ liệu về trước được render ngay lập tức (giảm TTI cảm nhận xuống < 200ms).
-   - **Component Thử Lại Cục Bộ ([`app_card_error_with_retry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_card_error_with_retry.dart))**: Module Bài tập hoặc Học liệu nếu bị lỗi mạng/timeout sẽ hiển thị thẻ lỗi riêng biệt kèm nút *"Thử lại"* cục bộ, không làm crash hoặc ảnh hưởng đến các phần còn lại của ứng dụng.
+   - **Component Thử Lại Cục Bộ ([`app_card_error_with_retry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_card_error_with_retry.dart))**: Module Bài tập hoặc Học liệu nếu bị lỗi mạng/timeout sẽ hiển thị thẻ lỗi riêng biệt kèm nút *"Thử lại"* cục bộ, không làm crash hoặc ảnh hưởng đến các phần còn lại của ứng dụng.
 
 6. **Kết Quả Kiểm Chứng & Nghiệm Thu Tự Động Hóa**:
-   - **Unit Tests Mới ([`test/network/api_timeout_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/network/api_timeout_policy_test.dart))**:
+   - **Unit Tests Mới ([`test/network/api_timeout_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/network/api_timeout_policy_test.dart))**:
      + `TC-TIMEOUT-01`: Xác thực thời lượng 4 tầng timeout (`fastRead` 8s, `mutation` 15s, `upload` 60s, `transactional` 30s) PASSED.
      + `TC-IDEM-01` & `TC-IDEM-02`: Xác thực định dạng `Idempotency-Key` chuẩn UUIDv4 RFC4122 (36 ký tự, 4 dấu gạch ngang, version 4) PASSED.
-   - **Cập Nhật Tests Xác Thực ([`test/network/auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
+   - **Cập Nhật Tests Xác Thực ([`test/network/auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
      + `TC-AUTH-FB-01..05`: Đăng nhập demo mode hoạt động trơn tru với các tài khoản học sinh, giáo viên, admin, phụ huynh OTP PASSED.
      + `TC-AUTH-FB-06`: Xác thực chế độ Production **tuyệt đối không xảy ra Silent Fallback** khi mạng gặp sự cố PASSED.
    - **Kết Quả Kiểm Thử Toàn Diện**:
@@ -922,14 +922,14 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   + Chữ màu đen (`color: Colors.black`, `FontWeight.w600`, size 12.5).
 
 **2. Chi tiết Triển khai:**
-- **Widget Dùng Chung [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart)**:
+- **Widget Dùng Chung [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_section_header.dart)**:
   - Thay thế `InkWell` với `Text` màu primary đơn giản bằng `Container` viền đen, bo góc `6px`, nền trong suốt `Colors.transparent`, padding `horizontal: 10, vertical: 4`.
   - Bọc ngoài bằng `Material(color: Colors.transparent)` và `InkWell(borderRadius: BorderRadius.circular(6))` để đảm bảo hiệu ứng chạm/click gợn sóng (ripple effect) mượt mà, vừa vặn với đường viền trên cả Mobile và Web/Safari.
-- **Cổng Học Sinh [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+- **Cổng Học Sinh [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
   - Tái cấu trúc hàm `_buildHomeTab()`: Đặt Section 1 là **"Sách đọc mới"**, Section 2 là **"Bài tập cần làm"**, Section 3 là **"Lịch học hôm nay"**.
 
 **3. Kết quả Kiểm thử & Tự động hóa:**
-- **Unit & Widget Test Mới ([`test/widgets/app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_section_header_test.dart))**:
+- **Unit & Widget Test Mới ([`test/widgets/app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/app_section_header_test.dart))**:
   + `TC-HEADER-01`: Xác thực hiển thị tiêu đề chuẩn xác khi không có nút link (`linkLabel == null`) -> **PASSED**.
   + `TC-HEADER-02`: Xác thực nút link có viền đen `Colors.black`, bo góc `6px`, nền trong suốt `Colors.transparent` và chữ đen -> **PASSED**.
   + `TC-HEADER-03`: Xác thực sự kiện nhấn vào nút *"Xem tất cả"* kích hoạt `onLink` callback -> **PASSED**.
@@ -948,7 +948,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Khi chuyển sang tab Thông báo (hoặc path tương ứng), tiêu đề AppBar đổi thành *"Thông báo"* và màn hình hiển thị danh sách thông báo nhà trường/lớp học.
 - Khi bấm nút **"Thêm"** trên AppBar (ở bất kỳ tab nào), hiển thị BottomSheet tiện ích học sinh (Bảng điểm, Chuyên cần, Thông tin GVCN, Bật/tắt Demo Mode, Đăng xuất).
 
-**2. Chi tiết Triển khai ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)):**
+**2. Chi tiết Triển khai ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)):**
 - **AppBar Actions**:
   - Thứ tự các nút thao tác:
     1. `IconButton(icon: Icon(Icons.refresh), tooltip: 'Tải lại', onPressed: _loadAllData)`
@@ -970,7 +970,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - Cho phép học sinh tra cứu Bảng điểm, Chuyên cần, GVCN hoặc chuyển đổi chế độ Demo tại bất kỳ tab nào.
 
 **3. Kiểm Thử Tự Động & Nghiệm Thu Tích Hợp:**
-- **Widget Test Tự Động ([`test/widgets/student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
+- **Widget Test Tự Động ([`test/widgets/student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
   - `TC-NAV-01`: Xác thực `BottomNavigationBar` có đủ 5 tab với tab thứ 5 là *"Thông báo"* (`Icons.notifications_outlined`). -> **PASSED**.
   - `TC-NAV-02`: Xác thực `AppBar.actions` có 3 nút theo đúng thứ tự: Tải lại (`refresh`) -> Thêm (`more_horiz`) -> Đăng xuất (`logout`). -> **PASSED**.
   - `TC-NAV-03`: Xác thực chạm vào tab *"Thông báo"* chuyển view hiển thị màn hình thông báo và tiêu đề AppBar cập nhật thành *"Thông báo"*. -> **PASSED**.
@@ -990,11 +990,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 
 **2. Chi Tiết Triển Khai Backend (Spring Boot):**
 - **Cơ sở Dữ liệu & Entity Models**:
-  - [`Notification.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/Notification.java): Bảng `notifications` lưu tiêu đề, nội dung, phân loại (`ANNOUNCEMENT`, `HOMEWORK_NEW`, `HOMEWORK_DUE`, `ATTENDANCE`, `MARKS`), đối tượng nhận (`ALL`, `GRADE`, `CLASS`, `INDIVIDUAL`), metadata payload JSON.
-  - [`NotificationRecipient.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/NotificationRecipient.java): Bảng `notification_recipients` theo dõi trạng thái `isRead`, `readAt`, `isSent` của từng người dùng.
-  - [`UserDevice.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/UserDevice.java): Bảng `user_devices` quản lý Device Push Token (FCM Registration Token), platform (`ANDROID`, `IOS`, `WEB`), trạng thái kích hoạt.
-  - Khởi tạo dữ liệu mẫu thông báo tự động trong [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java).
-- **Service Nghiệp Vụ & FCM Lock Screen Builder ([`NotificationService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/NotificationService.java))**:
+  - [`Notification.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/Notification.java): Bảng `notifications` lưu tiêu đề, nội dung, phân loại (`ANNOUNCEMENT`, `HOMEWORK_NEW`, `HOMEWORK_DUE`, `ATTENDANCE`, `MARKS`), đối tượng nhận (`ALL`, `GRADE`, `CLASS`, `INDIVIDUAL`), metadata payload JSON.
+  - [`NotificationRecipient.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/NotificationRecipient.java): Bảng `notification_recipients` theo dõi trạng thái `isRead`, `readAt`, `isSent` của từng người dùng.
+  - [`UserDevice.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/entity/UserDevice.java): Bảng `user_devices` quản lý Device Push Token (FCM Registration Token), platform (`ANDROID`, `IOS`, `WEB`), trạng thái kích hoạt.
+  - Khởi tạo dữ liệu mẫu thông báo tự động trong [`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java).
+- **Service Nghiệp Vụ & FCM Lock Screen Builder ([`NotificationService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/NotificationService.java))**:
   - `getMyNotifications(userId, audience)`: Tự động đồng bộ và liên kết thông báo phù hợp với lớp học của học sinh, trả về danh sách có gắn trạng thái `isRead`.
   - `markAsRead(notificationId, userId)`: Cập nhật `isRead = true`, `readAt = NOW()`.
   - `markAllAsRead(userId)`: Đánh dấu toàn bộ thông báo đã đọc.
@@ -1003,7 +1003,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - **FCM v1 Lock Screen Payload Builder (`buildLockScreenFcmPayload`)**:
     + **Android**: Cấu hình `priority = "HIGH"` (phá vỡ Doze Mode), `channel_id = "school_high_importance"`, `notification_priority = "PRIORITY_MAX"`, `visibility = "PUBLIC"` (bắt buộc hiển thị nội dung trên Màn hình khóa), `sound = "default"`.
     + **iOS (APNs)**: Cấu hình `apns-priority: 10` (đẩy tức thì, đánh thức màn hình khóa), `apns-push-type: alert`, `sound = "default"` (chuông báo thức tỉnh), `interruption-level: "time-sensitive"` (vượt qua chế độ Tập trung / Focus Mode trên iOS 15+).
-- **REST Controller ([`NotificationController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/NotificationController.java))**:
+- **REST Controller ([`NotificationController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/NotificationController.java))**:
   - `GET /api/notifications/my-notifications`: Lấy danh sách thông báo người dùng.
   - `GET /api/notifications/unread-count`: Đếm số lượng thông báo chưa đọc.
   - `PUT /api/notifications/{id}/read`: Đánh dấu 1 thông báo đã đọc.
@@ -1012,16 +1012,16 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - `POST /api/notifications/send`: Dành cho ADMIN và TEACHER phát thông báo.
 
 **3. Chi Tiết Triển Khai Frontend (Flutter Client):**
-- **Client Service ([`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_portal_service.dart))**:
+- **Client Service ([`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/student_portal_service.dart))**:
   - Bổ sung `getMyNotices({String? audience})`: Gọi API `/api/notifications/my-notifications`.
   - Bổ sung `markNoticeAsRead(id)`: Gọi API `/api/notifications/{id}/read`.
   - Bổ sung `registerDeviceToken(token, platform)`: Gọi API `/api/notifications/device-token`.
-- **Màn hình Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+- **Màn hình Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   - Tích hợp `_loadNotices()` vào tiến trình nạp dữ liệu độc lập `Future.wait`.
   - Khi học sinh bấm vào thẻ thông báo để xem modal chi tiết, tự động gọi `markNoticeAsRead(n['id'])` và cập nhật ngay giao diện cục bộ.
 
 **4. Kết Quả Kiểm Thử Tự Động & Xác Minh Toàn Diện:**
-- **Backend Test Suite Mới ([`NotificationControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/NotificationControllerTest.java))**:
+- **Backend Test Suite Mới ([`NotificationControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/NotificationControllerTest.java))**:
   - `TC-NOTIF-01`: Lấy danh sách thông báo học sinh kèm trường `isRead` và số lượng chưa đọc -> **PASSED**.
   - `TC-NOTIF-02`: Đánh dấu đã đọc thành công, số lượng chưa đọc giảm về 0 -> **PASSED**.
   - `TC-NOTIF-03`: Đăng ký Device Push Token lưu vào CSDL thành công -> **PASSED**.
@@ -1031,7 +1031,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - **Toàn bộ Backend Test Suite**:
   - `./mvnw test`: **37 / 37 tests PASSED (100% BUILD SUCCESS, 0 failures, 0 errors)**.
 - **Frontend Test Suite Mới & Toàn Cục**:
-  - `TC-NAV-01..06`: **6 / 6 tests PASSED** trong [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart).
+  - `TC-NAV-01..06`: **6 / 6 tests PASSED** trong [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart).
   - `flutter test`: **54 / 54 tests PASSED (100% thành công)**.
   - `flutter analyze`: **0 issues trên toàn bộ các tệp mã nguồn và kiểm thử mới/sửa đổi**.
 
@@ -1043,7 +1043,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Trong đợt kiểm tra chất lượng toàn diện sau khi phát triển tính năng Thông báo đa nền tảng và Push Lock Screen, đội ngũ QA Senior đã phát hiện 4 điểm cấn/rủi ro tiềm ẩn (architectural bottlenecks & edge cases):
   1. **Lệch cấu trúc JSON DTO giữa Backend & Client (`content` vs `body`)**:
      - *Hiện tượng*: Backend DTO định nghĩa thuộc tính `content`, trong khi giao diện mobile hoặc các thư viện push notification thường đọc payload `body`. Nếu không chuẩn hóa, khi gọi API thật text thông báo có thể bị rỗng.
-     - *Khắc phục*: Thêm alias getter `public String getBody() { return content; }` trong [`NotificationDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/NotificationDto.java) giúp Jackson tự động sinh cả hai thuộc tính JSON `content` và `body`. Đồng thời tại Frontend, áp dụng cơ chế fallback kép `n['content'] ?? n['body'] ?? ''`.
+     - *Khắc phục*: Thêm alias getter `public String getBody() { return content; }` trong [`NotificationDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/NotificationDto.java) giúp Jackson tự động sinh cả hai thuộc tính JSON `content` và `body`. Đồng thời tại Frontend, áp dụng cơ chế fallback kép `n['content'] ?? n['body'] ?? ''`.
   2. **Bộ lọc đối tượng bị gán cứng (`Hardcoded Audience Chips`)**:
      - *Hiện tượng*: Các chip lọc trước đây gán cứng `['Tất cả', 'Toàn trường', 'Lớp 3A', 'Khối 3']`. Khi học sinh thuộc khối lớp khác (ví dụ: `10A1`) đăng nhập, chip lọc lớp 3A sẽ không khớp dữ liệu và hiển thị danh sách rỗng.
      - *Khắc phục*: Tự động trích xuất danh sách đối tượng duy nhất (`distinct audiences`) từ danh sách thông báo thực tế của học sinh để sinh filter chip động.
@@ -1055,7 +1055,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
      - *Khắc phục*: Bổ sung 4 unit/integration test cases mới trên Backend (`TC-NOTIF-06` đến `TC-NOTIF-09`) và 1 widget test case mới trên Frontend (`TC-NAV-07`).
 
 **2. Chi Tiết Các Test Case Bổ Sung & Kết Quả Chạy Thực Tế:**
-- **Backend Test Suite ([`NotificationControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/NotificationControllerTest.java))**:
+- **Backend Test Suite ([`NotificationControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/NotificationControllerTest.java))**:
   - `TC-NOTIF-06` (*Security Negative*): Học sinh (ROLE_STUDENT) gửi request phát thông báo tới `POST /api/notifications/send` -> Hệ thống chặn đứng với mã lỗi **`403 FORBIDDEN`** -> **PASSED**.
   - `TC-NOTIF-07` (*Mark All As Read*): Học sinh gọi `PUT /api/notifications/read-all` -> Toàn bộ thông báo chuyển sang `isRead = true`, số lượng chưa đọc giảm về 0 -> **PASSED**.
   - `TC-NOTIF-08` (*Device Token Handover*): Người dùng A đăng xuất, người dùng B đăng nhập trên cùng thiết bị và gửi cùng FCM token -> Hệ thống tái gán quyền sở hữu token cho người dùng B mà không gây lỗi trùng khóa duy nhất -> **PASSED**.
@@ -1064,7 +1064,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     - `NotificationControllerTest`: **9 / 9 tests PASSED (100%)**.
     - `./mvnw test` toàn dự án Backend: **37 / 37 tests PASSED (100% BUILD SUCCESS, 0 failures, 0 errors)**.
 
-- **Frontend Test Suite ([`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
+- **Frontend Test Suite ([`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
   - `TC-NAV-07` (*Badge Verification*): Khởi tạo màn hình học sinh với thông báo mẫu chưa đọc -> Xác thực thanh điều hướng hiển thị đúng huy hiệu `Badge` kèm số lượng chưa đọc chính xác -> **PASSED**.
   - **Kết quả Frontend**:
     - `student_dashboard_nav_test.dart`: **7 / 7 tests PASSED (100%)**.
@@ -1100,11 +1100,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
    - Dọn dẹp các thư viện import thừa (`http`, `dart:convert`, `auth_service.dart`).
 
 **3. Bộ Kiểm Thử Tự Động Bổ Sung (6 Widget Test Cases Mới):**
-- **Teacher Homework Suite ([`teacher_homework_list_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/teacher_homework_list_test.dart))**:
+- **Teacher Homework Suite ([`teacher_homework_list_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/teacher_homework_list_test.dart))**:
   - `TC-TEACHER-HW-01`: Xác nhận hiển thị đúng `AppEmptyCard` với nội dung chuẩn khi chưa có bài tập trong kho -> **PASSED**.
   - `TC-TEACHER-HW-02`: Xác nhận `HomeworkCard` ở chế độ `teacherGrade` hiển thị đúng nút thao tác và bắt sự kiện khi nhấn -> **PASSED**.
   - `TC-TEACHER-HW-03`: Xác nhận chuyển tab "Lớp Đã Giao" hiển thị đúng empty card và icon `assignment_outlined` -> **PASSED**.
-- **Parent Homework Suite ([`parent_homework_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/parent_homework_test.dart))**:
+- **Parent Homework Suite ([`parent_homework_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/parent_homework_test.dart))**:
   - `TC-PARENT-HW-01`: Xác nhận tab "Chưa nộp / Đang làm" hiển thị đúng `AppEmptyCard` -> **PASSED**.
   - `TC-PARENT-HW-02`: Xác nhận tab "Đã nộp / Đã có điểm" hiển thị đúng `AppEmptyCard` -> **PASSED**.
   - `TC-PARENT-HW-03`: Xác nhận `HomeworkCard(mode: parentView)` hiển thị chuẩn huy hiệu "Chưa nộp" và "Điểm: 9.5 đ" khi có điểm số -> **PASSED**.
@@ -1131,17 +1131,17 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 **2. Chi Tiết Thực Thi Trên Cả Hai Tầng (Backend & Frontend):**
 
 - **Backend (Spring Boot)**:
-  1. [`EducationLevel.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
+  1. [`EducationLevel.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
      - Định nghĩa enum `PRIMARY` (Tiểu học: lớp 1–5), `SECONDARY` (THCS: lớp 6–9), `HIGH_SCHOOL` (THPT: lớp 10–12).
      - Triển khai hàm `EducationLevel.fromGrade(String grade)` phân tích linh hoạt cả chuỗi số (`"10"`, `"1"`, `"6"`), chuỗi ghép (`"Lớp 10A1"`, `"12B2"`), và fallback an toàn sang `HIGH_SCHOOL`.
-  2. [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
+  2. [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
      - Mở rộng DTO trả về hai trường mới: `educationLevel` (`PRIMARY`/`SECONDARY`/`HIGH_SCHOOL`) và `educationLevelName` (`Tiểu học`/`THCS`/`THPT`).
-  3. [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java):
+  3. [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java):
      - Tích hợp tính `EducationLevel` vào profile học sinh tại `getStudentProfile()`.
      - Cập nhật hàm `calculateGrade(Double averageScore, EducationLevel level)` phân luồng chuẩn theo Bộ GD&ĐT:
        - Cấp 1 (Thông tư 27): Hoàn thành xuất sắc (>= 9.0), Hoàn thành tốt (>= 7.0), Hoàn thành (>= 5.0), Chưa hoàn thành (< 5.0).
        - Cấp 2-3 (Thông tư 22): Tốt (>= 8.0), Khá (>= 6.5), Đạt (>= 5.0), Chưa đạt (< 5.0).
-  4. [`EducationLevelTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
+  4. [`EducationLevelTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
      - Bổ sung 6 unit test cases kiểm chứng:
        - `testPrimaryLevelMapping`: Lớp 1-5 map chính xác sang `PRIMARY`.
        - `testSecondaryLevelMapping`: Lớp 6-9 map chính xác sang `SECONDARY`.
@@ -1151,17 +1151,17 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
        - `testGradeEvaluationSecondaryAndHighSchool`: Quy chuẩn xếp loại TT 22 cho cấp 2 và 3.
 
 - **Frontend (Flutter)**:
-  1. [`education_level.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/enums/education_level.dart):
+  1. [`education_level.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/enums/education_level.dart):
      - Định nghĩa `enum EducationLevel { primary, secondary, highSchool }`.
      - `EducationLevelHelper`:
        - `fromGrade(String? grade)`: Mapping cấp học đồng bộ tuyệt đối với Backend.
        - `getDisplayName(EducationLevel level)`: Trả về nhãn tiếng Việt (`Cấp 1 - Tiểu học`, `Cấp 2 - THCS`, `Cấp 3 - THPT`).
        - `getBadgeLabel(EducationLevel level)`: Trả về nhãn badge (`Tiểu học`, `THCS`, `THPT`).
        - `getDefaultSubjects(EducationLevel level)`: Cung cấp danh sách môn học thích ứng theo chương trình GDPT 2018 cho từng cấp.
-  2. [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  2. [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
      - Hiển thị badge cấp học tương thích (`Container` bo tròn, nền màu phấn pastel `primary.withValues(alpha: 0.1)`, chữ viền đậm) đặt cạnh tên học sinh trên header dashboard.
      - Thay thế mảng môn học hardcode cũ `['Tất cả', 'Toán', 'Tiếng Việt', 'Tiếng Anh']` bằng `EducationLevelHelper.getDefaultSubjects(level)` tự thích ứng theo cấp học.
-  3. [`education_level_helper_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/education_level_helper_test.dart):
+  3. [`education_level_helper_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/education_level_helper_test.dart):
      - Bổ sung 6 unit tests kiểm tra:
        - `TC-EDU-01`: Map đúng lớp 1 đến 5 sang `primary`.
        - `TC-EDU-02`: Map đúng lớp 6 đến 9 sang `secondary`.
@@ -1169,7 +1169,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
        - `TC-EDU-04`: Phân tích đúng chuỗi phức tạp dạng `"Lớp 5A"`, `"Khối 9"`, `"11C1"`.
        - `TC-EDU-05`: Null/Empty an toàn fallback về `highSchool`.
        - `TC-EDU-06`: Danh mục môn học cấp 1 có Tiếng Việt & Đạo đức; cấp 2 có KHTN & Lịch sử & Địa lí; cấp 3 có Vật lí & Hóa học.
-  4. [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart):
+  4. [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart):
      - Bổ sung 2 widget tests:
        - `TC-ADAPTIVE-01`: Xác nhận hiển thị đúng huy hiệu cấp học `THPT` trên dashboard học sinh lớp 10.
        - `TC-ADAPTIVE-02`: Xác nhận chuyển sang tab Sách học hiển thị đầy đủ môn học THPT (`Vật lí`, `Hóa học`, `Sinh học`) thay vì bị hardcode môn cấp 1.
@@ -1238,9 +1238,9 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Thiết lập ảnh nền cho màn hình Đăng nhập (`login_screen.dart`) với phong cách thiết kế cao cấp (Glassmorphic card, gradient overlay tinh tế), đảm bảo tính thẩm mỹ, độ tương phản hoàn hảo và trải nghiệm người dùng vượt trội.
 
 **2. Chi Tiết Thực Hiện:**
-- [school_bg.jpg](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/images/school_bg.jpg): Đổi tên từ tệp wallpaper gốc 563x1000px.
-- [pubspec.yaml](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/pubspec.yaml): Đăng ký `images/` vào danh mục `flutter.assets`.
-- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart): Bọc `Stack` toàn màn hình với hình nền `school_bg.jpg` (`BoxFit.cover`), lớp phủ gradient làm dịu nhẹ `white (0.82 - 0.90)`, đặt Form đăng nhập trong Card kính mờ (Glassmorphism card) viền trắng sang trọng với bóng đổ êm dịu, bảo vệ tỷ lệ tương phản chữ và icon sắc nét. Bổ sung `errorBuilder` an toàn.
+- [school_bg.jpg](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/images/school_bg.jpg): Đổi tên từ tệp wallpaper gốc 563x1000px.
+- [pubspec.yaml](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/pubspec.yaml): Đăng ký `images/` vào danh mục `flutter.assets`.
+- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart): Bọc `Stack` toàn màn hình với hình nền `school_bg.jpg` (`BoxFit.cover`), lớp phủ gradient làm dịu nhẹ `white (0.82 - 0.90)`, đặt Form đăng nhập trong Card kính mờ (Glassmorphism card) viền trắng sang trọng với bóng đổ êm dịu, bảo vệ tỷ lệ tương phản chữ và icon sắc nét. Bổ sung `errorBuilder` an toàn.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
 - `flutter analyze lib/screens/login_screen.dart`: **No issues found! (0 warnings, 0 errors)**.
@@ -1258,11 +1258,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   4. **Web Static Entrypoint (`index.html`)**: Cấu hình CSS background cho `body` và backdrop blur cho `#loading-screen` để hiển thị ngay lập tức khi ứng dụng vừa nạp trên trình duyệt.
 
 **2. Chi Tiết Thực Hiện:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Bọc outer return bằng `Stack` với `Positioned.fill` ảnh nền `school_bg.jpg` phủ kín màn hình trình duyệt Web/Desktop.
   - Thêm watermark `school_bg.jpg` trong `scaffold.body` của học sinh.
   - Trang bị hình nền banner học đường cho Card Header cá nhân học sinh tại tab Trang chủ.
-- [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html): Đặt `background: url("images/school_bg.jpg")` cho `body` và lớp kính mờ `backdrop-filter: blur(8px)` cho `loading-screen`.
+- [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html): Đặt `background: url("images/school_bg.jpg")` cho `body` và lớp kính mờ `backdrop-filter: blur(8px)` cho `loading-screen`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
 - `flutter analyze lib/features/student/screens/student_dashboard_screen.dart`: **No issues found! (0 warnings, 0 errors)**.
@@ -1283,10 +1283,10 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   4. Đặt nền bên ngoài máy tính (trên Web) là nền Studio tối sang trọng (`#0F172A`) làm nổi bật chiếc điện thoại ở trung tâm.
 
 **2. Chi Tiết Thực Hiện:**
-- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart):
+- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart):
   - Bỏ gradient phủ trắng dày 90%. Thay bằng lớp phủ làm dịu mỏng 12% tối.
   - Bọc form đăng nhập bằng `ClipRRect(borderRadius: 24)` kết hợp `BackdropFilter(filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18))` và màu kính trắng 80% trong suốt.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Chuyển `scaffold.backgroundColor` thành `Colors.transparent`.
   - Bọc toàn bộ `scaffold` vào `mobileApp Stack` chứa trực tiếp ảnh nền `school_bg.jpg` phủ trọn vẹn khung điện thoại.
   - Chuyển nền ngoài màn hình Web thành nền xám đen Studio `#0F172A` với bóng đổ 36px tôn khung điện thoại.
@@ -1304,14 +1304,14 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Đảm bảo tất cả các khung chứa (Cards, Containers, Sheets, Modals, Banners), thanh điều hướng (AppBar, BottomNavigationBar) và nút bấm (Action buttons, Demo chips, Day tabs) đều mang **màu trắng nguyên khối 100% (`Colors.white`)** với đường viền phẳng và độ tương phản chữ rõ nét, đặt nổi bật trên nền wallpaper học đường.
 
 **2. Chi Tiết Thực Hiện:**
-- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart):
+- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart):
   - Chuyển Card Form đăng nhập từ kính mờ `Colors.white.withValues(alpha: 0.80)` thành `Colors.white` nguyên khối 100%, bỏ `BackdropFilter` và `ClipRRect`.
   - Khung và các chip chọn tài khoản demo điền nhanh chuyển sang nền `Colors.white`.
   - Khung chọn vai trò chuyển sang nền `Colors.white` cho các tab chưa chọn.
   - Dọn dẹp import `dart:ui` không còn dùng.
-- [app_section_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart):
+- [app_section_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_section_header.dart):
   - Chuyển nút hành động "Xem tất cả", "Xem tuần" từ nền `Colors.transparent` sang nền `Colors.white` đục 100% với viền đen bo góc 6px và chữ đen đậm sắc nét.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - **AppBar**: Đổi từ `Colors.white.withValues(alpha: 0.88)` sang `backgroundColor: Colors.white` 100% đục.
   - **BottomNavigationBar**: Đổi từ `Colors.white.withValues(alpha: 0.92)` và `Colors.transparent` sang `color: Colors.white` và `backgroundColor: Colors.white`.
   - **Header cá nhân học sinh**: Bỏ ảnh nền mờ `Colors.white.withValues(alpha: 0.90)`, chuyển sang nền `Colors.white` thuần khiết với viền `AppColors.border`. Badge cấp học chuyển sang nền trắng viền xanh.
@@ -1326,7 +1326,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - **Bảng Tiện ích học sinh (More Bottom Sheet) & Modal chi tiết tiết học**:
     + Chuyển thẻ thông tin cá nhân và thẻ môn học sang nền `Colors.white`.
     + Khung danh sách tiện ích sử dụng `Material(color: Colors.white)` đảm bảo ink splashes hợp lệ theo chuẩn Flutter.
-- [app_section_header_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_section_header_test.dart):
+- [app_section_header_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/app_section_header_test.dart):
   - Cập nhật test case TC-HEADER-02 và TC-HEADER-04 kiểm tra thuộc tính nền nút `Colors.white`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1347,11 +1347,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + Tạo mặt phẳng nền êm dịu, giúp toàn bộ các khung thẻ và nút bấm màu trắng (`Colors.white`) nổi bật khối 3D rõ nét, tạo cảm giác bề mặt nổi (elevation) trực quan và đọc chữ cực kỳ dễ chịu.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart):
+- [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart):
   - Nhập `import 'dart:ui';`.
   - Bọc ảnh nền `school_bg.jpg` bằng `ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8))` kết hợp `Transform.scale(scale: 1.06)` triệt tiêu viền trắng ở 4 góc mép (edge bleed).
   - Phủ lớp làm dịu `Container(color: Colors.white.withValues(alpha: 0.30))` phía trên ảnh đã mờ.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Nhập `import 'dart:ui';`.
   - Áp dụng cơ chế tương tự: `ClipRect -> ImageFiltered(blur: 8px) -> Transform.scale(1.06) -> Image.asset('images/school_bg.jpg')`.
   - Phủ lớp màu làm dịu 30% trắng giúp các thẻ Lịch học, Sách học, Bài tập và Thông báo màu trắng nổi bật hoàn hảo trên cả điện thoại và trình duyệt.
@@ -1380,17 +1380,17 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   6. `bg_library.jpg`: Thư viện (Không gian tự học & đọc sách)
   7. `bg_hallway.jpg`: Hành lang (Hành lang lớp học ngập tràn ánh nắng)
   8. `bg_study_desk.jpg`: Góc học tập (Bàn học, sách vở & không gian tri thức)
-- [theme_manager.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/theme_manager.dart):
+- [theme_manager.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/theme_manager.dart):
   - Định nghĩa enum `AppTextColorMode { defaultBlack, green, emerald, pink }`.
   - Định nghĩa data class `AppBackgroundItem` và danh sách tĩnh `availableBackgrounds` chứa đầy đủ 8 hình nền với tên tiếng Việt và mô tả ngắn.
   - Quản lý trạng thái `textColorMode` và `bgImagePath`, cung cấp getter `textMain`, `textSub`, `textColorModeLabel`, `currentBackgroundLabel`.
   - Phương thức `setTextColorMode()` và `setBackgroundImage()` kích hoạt `notifyListeners()` và tự động lưu/tải trạng thái qua `SharedPreferences` (`app_text_color_mode` và `app_bg_image_path`).
-- [app_colors.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart):
+- [app_colors.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_colors.dart):
   - Khai báo các hằng số màu chữ `textGreen`, `textEmerald`, `textPink`.
   - Cung cấp helper reactive `AppColors.textMainOf(context)` và `AppColors.textSubOf(context)` với `listen: true` (có fallback an toàn) giúp mọi widget tự động đổi màu khi theme thay đổi.
-- [app_section_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart):
+- [app_section_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_section_header.dart):
   - Chuyển màu tiêu đề section sang sử dụng `AppColors.textMainOf(context)`, đổi màu đồng bộ tức thì theo thiết lập người dùng.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Trong thanh AppBar: Tiêu đề màn hình và các icon hành động (Làm mới, Thêm) tự động nhận diện `themeManager.textMain`.
   - Trong `mobileApp`: Lớp hình nền lấy trực tiếp từ `themeManager.bgImagePath`.
   - Trong bảng Tiện ích học sinh (`_showMoreBottomSheet`): Thêm mục menu "Giao diện & Cá nhân hóa" (icon `palette_outlined`).
@@ -1398,13 +1398,13 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + Mục 1: Chọn màu chữ giao diện với 4 ô bấm trực quan (Vòng tròn màu sắc + huy hiệu tích chọn + tên màu).
     + Mục 2: Lưới GridView 2 cột hiển thị 8 thumbnail hình nền có tên tiếng Việt, dải gradient chân ảnh và nhãn "Đang dùng" nổi bật khi được chọn.
     + Thao tác trực tiếp (Instant Live Feedback): Thay đổi hình nền hoặc màu chữ lập tức phản chiếu lên màn hình mà không cần khởi động lại.
-- [theme_manager_customization_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/theme_manager_customization_test.dart):
+- [theme_manager_customization_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/theme_manager_customization_test.dart):
   - Xây dựng 5 unit test kiểm thử toàn diện: trạng thái mặc định, danh sách 8 ảnh, chuyển đổi màu chữ, chuyển đổi hình nền, và phục hồi trạng thái từ SharedPreferences.
 - **Tinh chỉnh độ mờ nền học đường (Soft Focus Refinement)**:
   - Đáp ứng phản hồi của người dùng về độ mờ: Giảm độ mờ từ `sigma: 8px` xuống **`sigma: 2.0px` (Mờ nhẹ Soft Focus)** và lớp phủ trắng từ `30%` xuống **`8%` (`alpha: 0.08`)**.
   - Kết quả: Ảnh trường học giữ được 90% chi tiết sắc nét, trong trẻo, rực rỡ; đồng thời các Card, List, Button màu trắng đục 100% nổi khối 3D rõ nét, loại bỏ hoàn toàn cảm giác "nhạt nhòa/đục sữa".
-  - Áp dụng đồng bộ cho cả [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) và [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart).
-  - Dọn dẹp thẻ meta viewport thừa trong [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html) loại bỏ cảnh báo trùng lặp viewport trên Flutter Web.
+  - Áp dụng đồng bộ cho cả [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) và [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart).
+  - Dọn dẹp thẻ meta viewport thừa trong [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html) loại bỏ cảnh báo trùng lặp viewport trên Flutter Web.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
 - `flutter analyze lib/core/theme/ lib/core/widgets/ lib/screens/login_screen.dart lib/features/student/screens/student_dashboard_screen.dart`: **No issues found! (0 warnings, 0 errors)**.
@@ -1420,7 +1420,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - **Tùy biến màn hình toàn diện**: Thiết kế lại giao diện Bảng điểm thành một màn hình Tab độc lập (`_buildMarksTab()`), hiển thị toàn màn hình đồng bộ phong cách với Trang chủ hay Lịch học.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Mở rộng thanh điều hướng `BottomNavigationBar` từ 5 items thành **6 items**:
     1. Trang chủ (`Icons.home_outlined` / `Icons.home`) — Index 0
     2. Lịch học (`Icons.calendar_today_outlined` / `Icons.calendar_today`) — Index 1
@@ -1434,11 +1434,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + **Bộ lọc đợt kiểm tra**: Filter chips cuộn ngang gồm `Tất cả`, `Giữa kỳ`, `Định kỳ`, `Cuối kỳ`.
     + **Thẻ điểm từng môn học**: Thẻ trắng 100% bo góc 12px viền phẳng, icon môn học trực quan (`_getSubjectIcon`), tên môn học đồng bộ màu chữ chủ đề (`AppColors.textMainOf(context)`), điểm số to rõ ràng, huy hiệu xếp loại môn và thanh đo tiến trình `LinearProgressIndicator`.
     + **Thẻ Đánh giá Rèn luyện & Nhận xét GVCN**: Khung đánh giá hạnh kiểm `Tốt (Xuất sắc)` và lời nhận xét khích lệ từ giáo viên chủ nhiệm.
-    + **Chuẩn hóa màu thương hiệu Xanh dương (`AppColors.primary` - `#2457C5`)**: Đổi toàn bộ các chi tiết bị lệch màu xanh lá (Huy hiệu Học lực Xuất sắc, Điểm giỏi >= 8.0, Huy hiệu hạnh kiểm rèn luyện, icon cúp) sang **màu Xanh dương thương hiệu Astra**, tạo diện mạo học thuật uy tín và đồng bộ tuyệt đối với Trang chủ và Lịch học.
+    + **Chuẩn hóa màu thương hiệu Xanh dương (`AppColors.primary` - `#2457C5`)**: Đổi toàn bộ các chi tiết bị lệch màu xanh lá (Huy hiệu Học lực Xuất sắc, Điểm giỏi >= 8.0, Huy hiệu hạnh kiểm rèn luyện, icon cúp) sang **màu Xanh dương thương hiệu Đại Việt**, tạo diện mạo học thuật uy tín và đồng bộ tuyệt đối với Trang chủ và Lịch học.
     + Hỗ trợ kéo để tải lại dữ liệu từ máy chủ API (`RefreshIndicator`).
   - Cập nhật menu Tiện ích học sinh (`_showMoreBottomSheet`): Bấm vào "Bảng điểm & Kết quả học tập" sẽ chuyển thẳng tới Tab 4.
   - Loại bỏ hoàn toàn BottomSheet nhỏ cũ `_showMarksBottomSheet()` không còn dùng.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật `TC-NAV-01` kiểm tra thanh BottomNavigationBar có đủ 6 items, vị trí icon Bảng điểm ở index 4 và Thông báo ở index 5.
   - Bổ sung `TC-NAV-08`: Kiểm tra chuyển tab sang Bảng điểm hiển thị thẻ KPI điểm trung bình GPA và danh sách môn học.
   - Bổ sung `TC-NAV-09`: Kiểm tra điều hướng trực tiếp từ menu Tiện ích Thêm sang tab Bảng điểm.
@@ -1457,7 +1457,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Toàn bộ giao diện phải tuân thủ nghiêm ngặt chuẩn mực **Flat Square Design (BorderRadius.zero)**: viền phẳng sắc nét 1.0px, cạnh vuông vức, loại bỏ hoàn toàn các góc bo tròn (`BorderRadius.circular`) để đồng bộ tuyệt đối với các tab Trang chủ, Lịch học, Sách học và Bài tập.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - **Khung App Web Mobile (`mobileApp` & Khung ngoài)**:
     + Đổi `ClipRRect(borderRadius: BorderRadius.circular(kIsWeb ? 20 : 0))` sang `BorderRadius.zero`.
     + Đổi `Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)))` sang `BorderRadius.zero`.
@@ -1493,10 +1493,10 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Chuyển đổi biểu tượng nút mở menu tiện ích trên AppBar từ dấu 3 chấm (`Icons.more_horiz`) thành biểu tượng **Cài đặt hình bánh răng cưa (`Icons.settings_outlined`)**.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Thay đổi icon trong `actions` của `AppBar`: từ `Icons.more_horiz` $\rightarrow$ `Icons.settings_outlined`.
   - Cập nhật tooltip từ `'Thêm'` $\rightarrow$ `'Cài đặt & Tiện ích'`.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật các test case `TC-NAV-02`, `TC-NAV-04`, `TC-NAV-09` tìm kiếm và tương tác với icon `Icons.settings_outlined`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1516,7 +1516,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Chuẩn mực thiết kế: Tuân thủ tuyệt đối **Flat Square Design (BorderRadius.zero)**, viền phẳng sắc nét 1.0px (`AppColors.border`), màu thương hiệu xanh dương Đại Việt (`AppColors.primary`).
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Khai báo state `bool _isWeeklyView = false;` để lưu trạng thái chuyển đổi giữa chế độ Ngày và chế độ Tuần toàn bộ.
   - Xây dựng thanh Segmented Control chuyển đổi `[ Theo ngày | Theo tuần (Toàn bộ) ]` tại `_buildTimeTab()` ngay dưới thanh điều hướng tuần:
     + Thiết kế phẳng vuông vức `BorderRadius.zero`, viền 1.0px `AppColors.border`.
@@ -1527,7 +1527,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + Tự động nhận diện và làm nổi bật ngày hiện tại (`isToday`): viền xanh dương 1.5px, nền header pha màu sơ cấp nhạt 8%, huy hiệu "Hôm nay" sắc nét.
     + Thống kê số tiết học trên header mỗi ngày (ví dụ: `4 tiết`).
     + Danh sách từng tiết học hiển thị bằng widget chuẩn `LessonRow`, hỗ trợ tương tác chạm mở hộp thoại chi tiết tiết học (`_showLessonDetailModal`).
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Bổ sung 3 test cases tự động mới:
     + `TC-NAV-10`: Mặc định Lịch học ở chế độ "Theo ngày" và hiển thị các tabs Thứ 2 – Thứ 6.
     + `TC-NAV-11`: Bấm "Theo tuần (Toàn bộ)" chuyển sang chế độ Weekly full view và hiển thị đủ 5 ngày trong tuần (Thứ Hai $\rightarrow$ Thứ Sáu) kèm badge số tiết học.
@@ -1548,18 +1548,18 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Tự nhiên hóa tính năng tải lại dữ liệu bằng cử chỉ vuốt kéo xuống (`RefreshIndicator`) ở mọi tab màn hình.
 - Bố trí 2 điểm chạm tác vụ nhanh cho **Cài đặt & Tiện ích** và **Đăng xuất tài khoản**:
   + **Điểm 1 (Đầu trang)**: Hàng nút phẳng vuông vức sắc nét tích hợp ngay dưới Thẻ cá nhân học sinh (Hero Card).
-  + **Điểm 2 (Cuối trang)**: Khối Footer chân trang sau khi cuộn hết nội dung Tab Trang chủ, kèm dòng nhận diện bản quyền Astra School Portal.
+  + **Điểm 2 (Cuối trang)**: Khối Footer chân trang sau khi cuộn hết nội dung Tab Trang chủ, kèm dòng nhận diện bản quyền Đại Việt School Portal.
 - Chuẩn mực thiết kế: Tuân thủ tuyệt đối **Flat Square Design (BorderRadius.zero)**, viền phẳng 1.0px, chống tràn màn hình với `FittedBox`.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Gỡ bỏ thuộc tính `actions` khỏi `AppBar`, đưa thanh tiêu đề về trạng thái Clean Minimalist.
   - Bao bọc toàn bộ các Tab cuộn (Tab 0 Trang chủ, Tab 1 Lịch học Ngày & Tuần, Tab 2 Sách học, Tab 3 Bài tập LMS, Tab 4 Bảng điểm, Tab 5 Bảng tin) bằng `RefreshIndicator` kết nối với `_loadAllData`.
   - Cập nhật Thẻ cá nhân học sinh (`Hero Card`): Bổ sung vạch phân cách 1px và 2 nút tác vụ phẳng `[ Cài đặt & Tiện ích ]` và `[ Đăng xuất ]`.
   - Bổ sung khối **Footer chân trang** vào cuối `_buildHomeTab()`: 2 nút bấm phẳng `[ Cài đặt giao diện ]` và `[ Đăng xuất tài khoản ]` bọc trong `FittedBox(fit: BoxFit.scaleDown)` để triệt tiêu hoàn toàn rủi ro tràn giao diện trên mọi kích thước màn hình điện thoại; dòng thông tin bản quyền trường liên cấp.
   - Cập nhật hộp thoại `_logout()`: thiết kế phẳng `BorderRadius.zero` cho cả `AlertDialog`, nút `Hủy` và nút `Đăng xuất`.
   - Chuẩn hóa huy hiệu `MỚI` trong tab Thông báo sang `BorderRadius.zero`.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật `TC-NAV-02`: Xác thực AppBar tinh giản không chứa action buttons (`actions == null`), xác thực `RefreshIndicator` sẵn sàng cho cử chỉ vuốt kéo.
   - Cập nhật `TC-NAV-04`: Thao tác chạm nút `Cài đặt & Tiện ích` trên Hero Card mở BottomSheet tiện ích học sinh.
   - Cập nhật `TC-NAV-09`: Thao tác chạm nút `Cài đặt & Tiện ích` mở tiện ích để chuyển nhanh sang Bảng điểm.
@@ -1575,19 +1575,19 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 ### GIAI ĐOẠN 29: TÍCH HỢP NAVIGATION DRAWER BÊN HÔNG MÀN HÌNH (SIDEBAR DRAWER) VỚI CỬ CHỈ VUỐT MÉP TRÁI, ĐỔ BÓNG TINH TẾ & THIẾT KẾ PHẲNG TRANG NHÃ
 
 **1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
-- Thắc mắc/yêu cầu từ người dùng: *"chạm vào mép trái để vuốt ra một Drawer bên hông màn hình. Nội dung trong Drawer: Phần trên: Ảnh đại diện + Thẻ thông tin học sinh Astra. Danh mục: Cài đặt giao diện & Màu sắc, Đổi mật khẩu, Trợ giúp & Liên hệ nhà trường. Nút Đồng bộ / Tải lại dữ liệu. Đáy Drawer: Nút Đăng xuất cố định. làm đừng màu mè quá nhé senior dev. lên /plan cho tôi"* và *"nút ☰ có lẽ không cần đâu. chỉ cần vuốt thôi. với cả cho drawer đổ bóng tinh tế nhé"*.
+- Thắc mắc/yêu cầu từ người dùng: *"chạm vào mép trái để vuốt ra một Drawer bên hông màn hình. Nội dung trong Drawer: Phần trên: Ảnh đại diện + Thẻ thông tin học sinh Đại Việt. Danh mục: Cài đặt giao diện & Màu sắc, Đổi mật khẩu, Trợ giúp & Liên hệ nhà trường. Nút Đồng bộ / Tải lại dữ liệu. Đáy Drawer: Nút Đăng xuất cố định. làm đừng màu mè quá nhé senior dev. lên /plan cho tôi"* và *"nút ☰ có lẽ không cần đâu. chỉ cần vuốt thôi. với cả cho drawer đổ bóng tinh tế nhé"*.
 - Triển khai thanh điều hướng trượt bên hông (Navigation Drawer) với các tiêu chuẩn cốt lõi:
   1. **Cử chỉ vuốt tự nhiên từ mép trái**: Kích hoạt mở Drawer khi học sinh chạm và vuốt từ cạnh trái màn hình (`drawerEdgeDragWidth: 60.0`, `drawerEnableOpenDragGesture: true`).
   2. **Thanh AppBar sạch sẽ 100% (No Hamburger Button)**: Khóa hoàn toàn icon menu ☰ tự sinh của Flutter bằng `automaticallyImplyLeading: false`.
   3. **Đổ bóng tinh tế (Subtle Soft Shadow)**: Sử dụng bóng mờ thanh lịch đa lớp nhẹ `BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: Offset(4, 0))`.
   4. **Thẩm mỹ phẳng chuẩn mực (Flat Square Design)**: Không bo góc (`BorderRadius.zero`), viền phẳng sắc nét 1.0px (`AppColors.border`), màu sắc trang nhã, không màu mè.
   5. **Nội dung cấu trúc hoàn chỉnh**:
-     - *Header*: Ảnh đại diện / Avatar chữ cái phẳng + Thẻ thông tin học sinh Astra (Tên, Mã HS, Cấp học, Lớp, GVCN, Trường Phổ thông Liên cấp Astra).
+     - *Header*: Ảnh đại diện / Avatar chữ cái phẳng + Thẻ thông tin học sinh Đại Việt (Tên, Mã HS, Cấp học, Lớp, GVCN, Trường Phổ thông Liên cấp Đại Việt).
      - *Body (Danh mục)*: Cài đặt giao diện & Màu sắc, Đổi mật khẩu tài khoản học sinh, Trợ giúp & Liên hệ nhà trường, Đồng bộ / Tải lại dữ liệu.
-     - *Footer (Đáy cố định)*: Nút Đăng xuất tài khoản viền đỏ phẳng 1px + Số hiệu phiên bản Astra Portal v2.4.
+     - *Footer (Đáy cố định)*: Nút Đăng xuất tài khoản viền đỏ phẳng 1px + Số hiệu phiên bản Đại Việt Portal v2.4.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Khai báo cấu hình Scaffold:
     + `drawer: _buildStudentDrawer()`
     + `drawerEnableOpenDragGesture: true`
@@ -1598,9 +1598,9 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
     + Đổ bóng tinh tế viền phải: `BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: Offset(4, 0))` kết hợp đường biên sắc nét `Border(right: BorderSide(color: AppColors.border, width: 1.0))`.
     + Xây dựng `_buildDrawerItem()` bằng `InkWell` + `Container` thay vì `ListTile` trong `DecoratedBox` nhằm triệt tiêu hoàn toàn cảnh báo splash vô hình của Flutter.
     + Thêm hộp thoại phẳng `_showChangePasswordDialog()`: Hỗ trợ học sinh đổi mật khẩu an toàn với xác thực mật khẩu cũ/mới, viền phẳng `BorderRadius.zero`.
-    + Thêm hộp thoại phẳng `_showSupportDialog()`: Cung cấp tổng đài hỗ trợ 1900 8888, email hỗ trợ và địa chỉ văn phòng giáo vụ Astra.
-    + Nút Đăng xuất cố định ở đáy bọc viền đỏ `AppColors.error.withValues(alpha: 0.4)` và hiển thị dòng phiên bản Astra School Portal v2.4.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+    + Thêm hộp thoại phẳng `_showSupportDialog()`: Cung cấp tổng đài hỗ trợ 1900 8888, email hỗ trợ và địa chỉ văn phòng giáo vụ Đại Việt.
+    + Nút Đăng xuất cố định ở đáy bọc viền đỏ `AppColors.error.withValues(alpha: 0.4)` và hiển thị dòng phiên bản Đại Việt School Portal v2.4.
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Bổ sung test case tự động `TC-NAV-14`:
     + Kiểm tra Drawer mặc định ẩn khi mới vào màn hình.
     + Mở Drawer qua thao tác `scaffoldState.openDrawer()`.
@@ -1627,11 +1627,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   4. Đảm bảo cử chỉ vuốt từ mép trái mở Sidebar Navigation Drawer vẫn hoạt động trơn tru 100%.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Xóa bỏ thuộc tính `appBar: AppBar(...)` khỏi `Scaffold`.
   - Bọc khối `body: SafeArea(child: Column(children: [DemoModeBanner(), Expanded(...)]))` bảo vệ vùng hiển thị sát đỉnh màn hình.
   - Dọn dẹp sạch sẽ biến không còn sử dụng `textMainColor` và phương thức thừa `_getAppBarTitle()`.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật test case `TC-NAV-02`: Đổi tên thành *"Clean layout without top AppBar; Pull-to-Refresh indicator exists"*, xác nhận `find.byType(AppBar)` đạt `findsNothing`, và xác nhận `RefreshIndicator` hoạt động bình thường.
   - Cập nhật test case `TC-NAV-03`: Xác nhận chuyển tab Thông báo hiển thị tiêu đề và nội dung bài viết tin tức đầy đủ.
 
@@ -1650,17 +1650,17 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
 - Giữ nguyên thiết kế phẳng vuông vức: Tất cả các khung thẻ tuyệt đối không bo góc (`borderRadius: BorderRadius.zero`).
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- [app_colors.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart):
+- [app_colors.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_colors.dart):
   - Khai báo token màu và độ dày chuẩn:
     + `static const Color cardBorder = Colors.black;`
     + `static const double cardBorderWidth = 1.0;`
-- [material_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart):
+- [material_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart):
   - Cập nhật container ngoài và khung icon 40x40 sang viền đen `AppColors.cardBorder` (width 1.0) và `borderRadius: BorderRadius.zero`.
-- [homework_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart):
+- [homework_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/homework_card.dart):
   - Cập nhật container thẻ bài tập sang viền đen `AppColors.cardBorder` (width 1.0) và `borderRadius: BorderRadius.zero`.
-- [app_empty_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_empty_card.dart):
+- [app_empty_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_empty_card.dart):
   - Cập nhật container thẻ rỗng sang viền đen `AppColors.cardBorder` (width 1.0) và `borderRadius: BorderRadius.zero`.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - **Tab 0 (Trang chủ):** Header cá nhân học sinh, nút "Cài đặt & Tiện ích", khung danh sách tiết học hôm nay, Khung Footer trang chủ và nút "Cài đặt giao diện" chuyển sang viền `AppColors.cardBorder` (width 1.0), `borderRadius: BorderRadius.zero`.
   - **Tab 1 (Lịch học):** Khung bộ chuyển đổi "Theo ngày / Theo tuần", khung danh sách tiết học, khung từng ngày thường trong chế độ "Xem tuần" chuyển sang `AppColors.cardBorder` (width 1.0).
   - **Tab 2 (Sách giáo khoa):** Banner tóm tắt sách học liệu đầu tab, các ChoiceChip môn học chưa active chuyển viền sang `AppColors.cardBorder`.
@@ -1668,7 +1668,7 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   - **Tab 4 (Bảng điểm):** Hero KPI Card (Điểm trung bình học kỳ), FilterChips đợt kiểm tra, Thẻ điểm chi tiết từng môn học, Thẻ "Đánh giá Rèn luyện & Khen thưởng" chuyển sang viền `AppColors.cardBorder`.
   - **Tab 5 (Thông báo):** Banner tóm tắt đầu tab, FilterChips phạm vi, Thẻ thông báo đã đọc và ô icon chuông vuông chuyển sang viền `AppColors.cardBorder`.
   - **Modals, Drawers & BottomSheets:** Thẻ thông tin học sinh trong BottomSheet Tiện ích, Thẻ chi tiết môn học và Khung nhắc nhở trong Modal chi tiết tiết học, Icon box trong Drawer và Thẻ chọn Hình nền/Bảng màu đều đồng bộ viền `AppColors.cardBorder`.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Bổ sung test case tự động `TC-NAV-15`: Xác nhận MaterialCard và HomeworkCard đều có viền màu `Colors.black`, độ dày `1.0px` và góc vuông `BorderRadius.zero`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1688,12 +1688,12 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   3. **Tinh Gọn Thẻ Môn Học:** Loại bỏ hoàn toàn thanh tiến độ (`LinearProgressIndicator`) và khoảng đệm thừa ở các thẻ môn học, giúp danh sách điểm số thoáng đãng, tập trung trực tiếp vào môn học, tên bài kiểm tra, điểm số và nhãn xếp loại.
 
 **2. Chi Tiết Kỹ Thuật Đã Thực Hiện:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Chuẩn hóa tên danh hiệu `academicRank`: `'Xuất sắc'`, `'Giỏi'`, `'Khá'`, `'Rèn luyện'`, `'Chưa xếp loại'`.
   - Bổ sung `rankIcon` linh hoạt theo từng bậc học lực (`Icons.emoji_events_rounded`, `Icons.workspace_premium_rounded`, `Icons.military_tech_outlined`, `Icons.trending_up_rounded`).
   - Tái cấu trúc Hero KPI Card: tách padding vào phần nội dung trên, đặt đường kẻ đen ngang 1px tràn viền, và dùng `IntrinsicHeight` với đường phân cách dọc màu đen 1px kết nối chạm đáy card.
   - Loại bỏ `LinearProgressIndicator` và biến cục bộ không dùng `progress` trong danh sách thẻ môn học.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật test case `TC-NAV-08` & `TC-NAV-09` xác nhận giao diện hiển thị `'Xuất sắc'` và xác nhận `LinearProgressIndicator` không còn tồn tại.
   - Bổ sung test case tự động `TC-NAV-16`: Kiểm thử Hero KPI Card có box xếp loại chứa icon huy chương lớn, text `'Xuất sắc'`, tối thiểu 3 container đường kẻ màu đen, và không có thanh tiến độ ở thẻ môn học.
 
@@ -1714,11 +1714,11 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   3. **Khung Box Footer Sát Đáy Tuyệt Đối (Khoảng Cách px = 0):** Cập nhật `ListView` padding thành `EdgeInsets.fromLTRB(16, 20, 16, 0)` và xóa bỏ khoảng đệm thừa `SizedBox(height: 16)` ở cuối danh sách. Khi cuộn xuống hết trang, cạnh đáy của khung box footer tiếp xúc trực tiếp 100% với mép trên của `BottomNavigationBar` (khoảng cách 0px), tạo cảm giác liền mạch, vững chãi và hoàn thiện cao cấp.
 
 **2. Chi Tiết Kỹ Thuật Đã Thực Hiện:**
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Cập nhật `_buildHomeTab` `ListView(padding: const EdgeInsets.fromLTRB(16, 20, 16, 0))`.
   - Thay thế cụm 2 nút Row bằng 1 nút duy nhất `Đăng xuất tài khoản` full-width.
   - Loại bỏ `const SizedBox(height: 16)` ở cuối danh sách.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật test case `TC-NAV-13`: Xác nhận Footer không còn chữ "Cài đặt giao diện", chỉ hiển thị duy nhất "Đăng xuất tài khoản" và kích hoạt modal xác nhận đăng xuất chuẩn xác.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1743,33 +1743,33 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   2. **Tương tác chạm Thẻ Tiêu đề (Clickable Student Header Card):** Toàn bộ thẻ thông tin học sinh ở đỉnh trang chủ được bọc trong `InkWell` với hiệu ứng gợn sóng tinh tế, bổ sung icon mũi tên `Icons.chevron_right` trực quan. Khi học sinh chạm vào bất cứ đâu trên thẻ, ứng dụng tự động mở Modal Sheet "Tiện ích học sinh & Cài đặt", thống nhất luồng thao tác.
   3. **Xây dựng luồng Tên trường (School Name Flow) xuyên suốt Backend & Frontend:**
      - **Backend (Spring Boot):**
-       + `EducationLevel`: Bổ sung thuộc tính `defaultSchoolName` (`Trường Tiểu học Astra`, `Trường THCS Astra`, `Trường THPT Astra`) và phương thức `getDefaultSchoolName()`.
+       + `EducationLevel`: Bổ sung thuộc tính `defaultSchoolName` (`Trường Tiểu học Đại Việt`, `Trường THCS Đại Việt`, `Trường THPT Đại Việt`) và phương thức `getDefaultSchoolName()`.
        + `StudentProfileDto`: Khai báo trường dữ liệu `schoolName` trong DTO và Builder.
        + `StudentPortalService`: Ánh xạ dữ liệu `schoolName` từ cấp học của học sinh qua `level.getDefaultSchoolName()` khi trả về thông tin cá nhân.
      - **Frontend (Flutter):**
        + `EducationLevelHelper`: Bổ sung phương thức `getSchoolName(EducationLevel level, [String? customSchoolName])` trả về tên trường chuẩn theo từng cấp học.
-       + Thẻ học sinh trang chủ, Modal tiện ích và Drawer: Hiển thị tên trường (`Trường THPT Astra`) trong chuỗi thông tin lớp học, giáo viên chủ nhiệm.
+       + Thẻ học sinh trang chủ, Modal tiện ích và Drawer: Hiển thị tên trường (`Trường THPT Đại Việt`) trong chuỗi thông tin lớp học, giáo viên chủ nhiệm.
        + Khắc phục sự cố tràn giao diện trên màn hình kích thước nhỏ trong `_showMoreBottomSheet` bằng `SingleChildScrollView` kết hợp `ConstrainedBox(maxHeight: 90% screen)`.
 
 **2. Chi Tiết Kỹ Thuật Đã Thực Hiện:**
-- [EducationLevel.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
+- [EducationLevel.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
   - Bổ sung constructor parameter `defaultSchoolName` và getter `getDefaultSchoolName()`.
-- [StudentProfileDto.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
+- [StudentProfileDto.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
   - Khai báo trường `private String schoolName;` với `@Data @Builder`.
-- [StudentPortalService.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java):
+- [StudentPortalService.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java):
   - Ánh xạ `.schoolName(level.getDefaultSchoolName())` vào profile trả về.
-- [EducationLevelTest.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
+- [EducationLevelTest.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
   - Bổ sung test case `TC-LEVEL-07: EducationLevel provides accurate default school names for each level`.
-- [education_level.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/enums/education_level.dart):
+- [education_level.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/enums/education_level.dart):
   - Hiện thực `EducationLevelHelper.getSchoolName()`.
-- [education_level_helper_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/education_level_helper_test.dart):
+- [education_level_helper_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/education_level_helper_test.dart):
   - Bổ sung test case `TC-FLUTTER-LEVEL-07: getSchoolName returns proper school name for THPT, THCS, TIEU_HOC`.
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Thêm `_getTimeGreeting([DateTime? time])` tính toán lời chào theo buổi sáng/chiều/tối.
-  - Thêm `schoolName` vào profile mẫu (`Trường THPT Astra`).
+  - Thêm `schoolName` vào profile mẫu (`Trường THPT Đại Việt`).
   - Nâng cấp Thẻ tiêu đề trang chủ với `InkWell(onTap: _showMoreBottomSheet)`, lời chào thời gian, tên trường, và icon `Icons.chevron_right`.
   - Nâng cấp `_showMoreBottomSheet` với `SingleChildScrollView` tránh lỗi tràn viền giao diện.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Bổ sung test case tự động `TC-NAV-17`: Xác nhận thẻ học sinh hiển thị lời chào theo thời gian, tên trường THPT và sự kiện click mở tiện ích thành công.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1790,25 +1790,25 @@ Sau đợt rà soát khó tính theo góc nhìn Senior QA, đã phát hiện và
   4. **Đồng bộ Mock Data chuẩn THPT Lớp 10:** Thay thế toàn bộ dữ liệu mock còn sót lại từ Tiểu học trong `student_dashboard_screen.dart` (môn Tiếng Việt, Tự nhiên & Xã hội, bài tập Phép nhân, SGK Toán 1) sang chuẩn THPT GDPT 2018 (môn Ngữ văn, Vật lý, Hóa học; thời khóa biểu lớp 10; bài tập và bộ SGK lớp 10 Kết nối tri thức).
 
 **2. Chi Tiết Kỹ Thuật Đã Thực Hiện:**
-- [EducationLevel.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
+- [EducationLevel.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/enums/EducationLevel.java):
   - Khai báo trường `fullName` và `shortName`, bổ sung getters `getFullName()` và `getShortName()`.
-- [StudentProfileDto.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
+- [StudentProfileDto.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java):
   - Khai báo `@Builder.Default` cho 3 trường `educationLevel`, `educationLevelName`, `schoolName`.
-- [EducationLevelTest.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
+- [EducationLevelTest.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/EducationLevelTest.java):
   - Bổ sung test case `TC-LEVEL-08` (kiểm tra `fullName` và `shortName`) và `TC-LEVEL-09` (kiểm tra `@Builder.Default` trong `StudentProfileDto`).
-- [education_level.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/enums/education_level.dart):
+- [education_level.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/enums/education_level.dart):
   - Hiện thực hóa `EducationLevelHelper.fromString(dynamic value)`.
   - Nâng cấp `EducationLevelHelper.fromGrade(dynamic grade, [dynamic levelStr])`.
-- [education_level_helper_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/education_level_helper_test.dart):
+- [education_level_helper_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/education_level_helper_test.dart):
   - Bổ sung `TC-FLUTTER-LEVEL-08` (kiểm thử `fromString` với các định dạng chuỗi enum API) và `TC-FLUTTER-LEVEL-09` (kiểm thử `fromGrade` với tên cấp học chữ và `levelStr`).
-- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+- [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
   - Thêm `'educationLevel': 'HIGH_SCHOOL'`, `'educationLevelName': 'THPT'` vào `_getMockProfile()`.
   - Cập nhật 4 vị trí tính `educationLevel` sử dụng cả `grade` và `educationLevel`.
   - Cập nhật `_getMockMarks()`: Chuyển Tiếng Việt $\rightarrow$ Ngữ văn (9.0đ), Tự nhiên & Xã hội $\rightarrow$ Vật lý (9.5đ), Hóa học (9.0đ).
   - Cập nhật `_getLessonsForDay()`: Thời khóa biểu lớp 10 THPT (Toán, Ngữ văn, Tiếng Anh, Vật lý, Hóa học, Lịch sử, Tin học, GDQP-AN).
   - Cập nhật `_getMockHomework()`: Bài tập hàm số bậc hai, Đọc hiểu văn bản Chiến thắng Mtao Mxây, Trắc nghiệm động học chất điểm.
   - Cập nhật `_getMockMaterials()`: Bộ SGK Toán 10, Ngữ văn 10, Vật lý 10, Tiếng Anh 10, Hóa học 10 Kết nối tri thức.
-- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
+- [student_dashboard_nav_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart):
   - Cập nhật assertions trong `TC-NAV-08` và `TC-NAV-10` kiểm tra hiển thị môn `Ngữ văn` thay vì `Tiếng Việt`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -1876,11 +1876,11 @@ DTB năm = (DTB_HK1 + DTB_HK2×2) / 3
   4. **Frontend AuthService:** Thiếu cơ chế fallback an toàn `allowFallback` trong môi trường debug khi Backend chưa sẵn sàng hoặc gặp lỗi mạng.
 
 ### 2. Các Thay Đổi Kỹ Thuật (Implementation Details)
-- **Migration Flyway ([V5__vietnamese_markbook_fields.sql](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V5__vietnamese_markbook_fields.sql)):**
+- **Migration Flyway ([V5__vietnamese_markbook_fields.sql](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/db/migration/V5__vietnamese_markbook_fields.sql)):**
   - Thêm các cột `exam_type`, `semester`, `tx_index`, `comment`, `academic_year_id` vào bảng `marks`.
   - Backfill dữ liệu cũ với giá trị mặc định (`THUONG_XUYEN`, `semester = 1`) an toàn, idempotent.
   - Tạo chỉ mục `idx_marks_student_year_sem` tối ưu truy vấn học bạ.
-- **Backend Seeder ([DataSeeder.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java)):**
+- **Backend Seeder ([DataSeeder.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java)):**
   - Tự động seed 3 lớp học chuẩn: Lớp 1A (`1-A`), Lớp 6A (`6-A`), Lớp 10A (`10-A`).
   - Tự động seed 3 tài khoản User & Profile Student:
     - `student01` / `student123` (Nguyễn Minh Anh - Lớp 1A - Tiểu học)
@@ -1888,9 +1888,9 @@ DTB năm = (DTB_HK1 + DTB_HK2×2) / 3
     - `student03` / `student123` (Lê Hoàng Long - Lớp 10A - THPT)
   - Đồng bộ `Enrollment` cho năm học `2026-2027` và liên kết phụ huynh `9910157611` qua `GuardianStudent` (ReBAC).
   - Seed điểm số mẫu (TX, GK, CK) các môn Toán, Anh cho học sinh Cấp 2 và Cấp 3.
-- **Backend Auth Controller ([AuthController.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java)):**
+- **Backend Auth Controller ([AuthController.java](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/AuthController.java)):**
   - Bổ sung fallback xác thực học sinh qua `admissionNumber` (`STU001`, `STU002`, `STU003`).
-- **Frontend Auth Service ([auth_service.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart)):**
+- **Frontend Auth Service ([auth_service.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart)):**
   - Bổ sung cờ `allowFallback = isDemoMode || (_isDemoModeOverride != false && FeatureFlags.useDemoFallback)`.
   - Bổ sung thông tin trường học và cấp học (`schoolName`, `educationLevel`, `educationLevelName`) vào `_tryDemoLogin`.
 
@@ -1915,8 +1915,8 @@ DTB năm = (DTB_HK1 + DTB_HK2×2) / 3
   - `POST /api/auth/signin` (`student01`): HTTP 200 OK, JWT sinh thành công.
   - `POST /api/auth/signin` (`student02`): HTTP 200 OK, JWT sinh thành công.
   - `POST /api/auth/signin` (`student03`): HTTP 200 OK, JWT sinh thành công.
-  - `GET /api/student-portal/profile` (`student02`): HTTP 200 OK, `SECONDARY` - `THCS` - `Trường THCS Astra`.
-  - `GET /api/student-portal/profile` (`student03`): HTTP 200 OK, `HIGH_SCHOOL` - `THPT` - `Trường THPT Astra`.
+  - `GET /api/student-portal/profile` (`student02`): HTTP 200 OK, `SECONDARY` - `THCS` - `Trường THCS Đại Việt`.
+  - `GET /api/student-portal/profile` (`student03`): HTTP 200 OK, `HIGH_SCHOOL` - `THPT` - `Trường THPT Đại Việt`.
   - `GET /api/student-portal/marks` (`student02`, `student03`): HTTP 200 OK, trả về bảng điểm đầy đủ kèm xếp loại Tốt.
 
 ---
@@ -1925,11 +1925,11 @@ DTB năm = (DTB_HK1 + DTB_HK2×2) / 3
 
 ### 1. Phạm Vi Triển Khai (Scope of Work)
 - **Backend (Spring Boot):**
-  - Mở rộng [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java) và [`StudentPortalController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/StudentPortalController.java): Bổ sung endpoint bảo mật `@GetMapping("/markbook")` (`GET /api/student-portal/markbook`) trả về toàn bộ cấu trúc học bạ điện tử `StudentMarkbookDto` của học sinh đăng nhập.
-  - Tích hợp kiểm thử tích hợp tự động [`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java): Thêm test case `TC-MARKBOOK-STU-01` xác thực học bạ cho cả 3 cấp học (`student01` - PRIMARY, `student02` - SECONDARY, `student03` - HIGH_SCHOOL).
+  - Mở rộng [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java) và [`StudentPortalController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/StudentPortalController.java): Bổ sung endpoint bảo mật `@GetMapping("/markbook")` (`GET /api/student-portal/markbook`) trả về toàn bộ cấu trúc học bạ điện tử `StudentMarkbookDto` của học sinh đăng nhập.
+  - Tích hợp kiểm thử tích hợp tự động [`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java): Thêm test case `TC-MARKBOOK-STU-01` xác thực học bạ cho cả 3 cấp học (`student01` - PRIMARY, `student02` - SECONDARY, `student03` - HIGH_SCHOOL).
 - **Frontend (Flutter):**
-  - Cập nhật [`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_portal_service.dart): Thêm phương thức `getMyMarkbook({String? academicYearId})`.
-  - Thiết kế lại toàn diện giao diện Tab Bảng điểm trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  - Cập nhật [`student_portal_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/student_portal_service.dart): Thêm phương thức `getMyMarkbook({String? academicYearId})`.
+  - Thiết kế lại toàn diện giao diện Tab Bảng điểm trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
     - **Header Trang bìa Sổ học bạ Quốc gia:** Tên trường viết hoa, logo trường, badge cấp học theo chuẩn màu chuyên nghiệp.
     - **Bộ chọn Học kỳ (Semester Selector):** Dropdown Học kỳ I, Học kỳ II, Cả năm (gợi mở/disable an toàn nếu chưa đến kỳ).
     - **Hero KPI Card:** Điểm trung bình học kỳ, Rank Box xếp loại học lực với viền đen tương phản, tỷ lệ bài điểm tối đa 10/10.
@@ -1938,10 +1938,10 @@ DTB năm = (DTB_HK1 + DTB_HK2×2) / 3
     - **Cấp 3 (THPT - TT 22/2021):** Thẻ Tiêu chuẩn & Dự báo Danh hiệu Học sinh Giỏi / Xuất sắc kèm công thức chuẩn Bộ GD&ĐT: $\text{ĐTBmhk} = \frac{\sum \text{ĐĐGtx} + 2\text{ĐĐGgk} + 3\text{ĐĐGck}}{\text{Số bài ĐĐGtx} + 5}$.
     - **Dual View Mode:** Chuyển đổi linh hoạt giữa Dạng Thẻ Accordion (cho mobile) và Bảng Sổ điểm điện tử Grid (`DataTable` cuộn ngang).
     - **Phiếu Báo Điểm A4 Modal:** Xem trước bản in chuẩn mẫu văn bản hành chính Việt Nam (Quốc hiệu, Tiêu ngữ, Bảng tổng hợp điểm, Chữ ký GVCN & Hiệu trưởng).
-  - Bổ sung bộ test widget trong [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart) và kiểm thử điều hướng trong [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart).
+  - Bổ sung bộ test widget trong [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart) và kiểm thử điều hướng trong [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart).
 
 ### 2. Kết Quả Kiểm Chứng (Verification Results)
-- **Backend Integration Test ([`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java)):**
+- **Backend Integration Test ([`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java)):**
   - `TC-AUTH-STU-01`: Đăng nhập & xem hồ sơ Cấp 1 (`student01`) — **PASSED**
   - `TC-AUTH-STU-02`: Đăng nhập & xem hồ sơ Cấp 2 (`student02`) — **PASSED**
   - `TC-AUTH-STU-03`: Đăng nhập & xem hồ sơ Cấp 3 (`student03`) — **PASSED**
@@ -1973,7 +1973,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 
 1. **[CRITICAL] Broken Object Level Authorization (BOLA / IDOR) trên `GET /api/marks/student/{studentId}/markbook`**:
    - *Hiện trạng phát hiện*: Endpoint chỉ kiểm tra authentication cơ bản, trong `MarksController` và `MarksService` hoàn toàn thiếu bước xác thực quyền sở hữu của vai trò `STUDENT`. Một học sinh (`student01`) sau khi đăng nhập có thể truyền `studentId` của bất kỳ bạn học nào (`student03`) và đọc trọn vẹn toàn bộ điểm số, xếp loại và nhận xét học bạ.
-   - *Khắc phục*: Tích hợp [`SchoolAccessPolicy.verifyCanAccessStudent(auth, studentId)`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java). Nếu học sinh xem ID khác hoặc phụ huynh xem học sinh không phải con mình, hệ thống ném `AccessDeniedException` và trả về chuẩn HTTP `403 Forbidden`.
+   - *Khắc phục*: Tích hợp [`SchoolAccessPolicy.verifyCanAccessStudent(auth, studentId)`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java). Nếu học sinh xem ID khác hoặc phụ huynh xem học sinh không phải con mình, hệ thống ném `AccessDeniedException` và trả về chuẩn HTTP `403 Forbidden`.
 
 2. **[HIGH] BOLA / Phân Quyền Giáo Viên trên `POST /api/marks` & `POST /api/marks/bulk`**:
    - *Hiện trạng phát hiện*: Giáo viên bộ môn (ví dụ Toán) có thể gửi request nhập hoặc sửa điểm cho môn khác (ví dụ Văn, Tiếng Anh) mà không bị từ chối nếu biết ID môn học.
@@ -1985,14 +1985,14 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 
 4. **[MEDIUM] Lệch Quy Chuẩn Xếp Loại Kết Quả Học Tập & Khen Thưởng (Thông tư 22/2021/TT-BGDĐT)**:
    - *Hiện trạng phát hiện*: Cấp 2 và Cấp 3 tính điểm trung bình cộng tất cả các môn rồi xếp loại theo thang cũ ("Giỏi", "Khá", "Trung bình", "Yếu"). Theo Điều 9 Thông tư 22/2021, kết quả học tập của học sinh được đánh giá theo 4 mức: **Tốt**, **Khá**, **Đạt**, **Chưa đạt**. Đồng thời Điều 15 quy định danh hiệu khen thưởng cuối năm gồm: **Học sinh Xuất sắc** và **Học sinh Giỏi**.
-   - *Khắc phục*: Bổ sung các phương thức chuyên biệt trong [`MarksCalculationHelper.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/MarksCalculationHelper.java):
+   - *Khắc phục*: Bổ sung các phương thức chuyên biệt trong [`MarksCalculationHelper.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/MarksCalculationHelper.java):
      - `evaluateAcademicResultTT22`: Phân loại Tốt, Khá, Đạt, Chưa đạt dựa trên ĐTB tất cả các môn đánh giá bằng điểm số và kết quả môn ĐGNX (Đạt).
      - `evaluateHonorTitleTT22`: Đánh giá danh hiệu "Học sinh Xuất sắc" (Học lực Tốt + Rèn luyện Tốt + ít nhất 6 môn có ĐTBmhk >= 9.0) và "Học sinh Giỏi" (Học lực Tốt + Rèn luyện Tốt).
      - Bổ sung trường `honorTitle` vào `StudentMarkbookResponse` (Backend) và `StudentMarkbook` (Frontend).
 
 5. **[MEDIUM] Toàn Vẹn Dữ Liệu Tầng CSDL & Flyway Migration V6**:
    - *Hiện trạng phát hiện*: Bảng `marks` chưa có Check Constraint chặn điểm âm hoặc lớn hơn 10.0 ở mức Database, đồng thời chưa có Partial Unique Index để chống trùng lặp điểm thi giữa kỳ/cuối kỳ (`EXAM_GK`, `EXAM_CK`) khi nhiều request gửi đồng thời.
-   - *Khắc phục*: Tạo file migration [`V6__markbook_constraints_and_validation.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V6__markbook_constraints_and_validation.sql):
+   - *Khắc phục*: Tạo file migration [`V6__markbook_constraints_and_validation.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/db/migration/V6__markbook_constraints_and_validation.sql):
      - `chk_marks_score_range`: Ràng buộc `score IS NULL OR (score >= 0.0 AND score <= 10.0)`.
      - `chk_marks_semester`: Ràng buộc `semester IS NULL OR semester IN (1, 2)`.
      - `idx_unique_exam_gk_ck`: Partial Unique Index cho cặp `(student_id, subject_id, academic_year_id, semester, exam_type)` khi `exam_type IN ('EXAM_GK', 'EXAM_CK')`.
@@ -2007,34 +2007,34 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 ### 2. Chi Tiết File Thay Đổi & Nâng Cấp
 
 - **Backend (Spring Boot):**
-  - [`TeachingAssignmentRepository.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/repository/TeachingAssignmentRepository.java): Thêm method `findByTeacherIdAndSchoolClassIdAndSubjectIdAndAcademicYearIsCurrentTrue`.
-  - [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java): Tích hợp hàm `verifyTeacherCanGradeSubject`.
-  - [`BulkMarksRequest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/request/BulkMarksRequest.java): Bổ sung `academicYearId`, `semester`, `examType`, `txIndex`.
-  - [`MarksRepository.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/repository/MarksRepository.java): Thêm truy vấn tìm điểm theo học sinh, môn, học kỳ, năm học và loại thi.
-  - [`MarksCalculationHelper.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/MarksCalculationHelper.java): Tích hợp thuật toán xếp loại TT22 và đánh giá danh hiệu khen thưởng `evaluateHonorTitleTT22`.
-  - [`StudentMarkbookResponse.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/response/StudentMarkbookResponse.java): Thêm trường `honorTitle`.
-  - [`MarksService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/MarksService.java): Áp dụng `SchoolAccessPolicy`, validate khoảng điểm, lưu đầy đủ thông tin học bạ trong `saveBulkMarks`, thêm `updateSingleMark` và `deleteSingleMark`.
-  - [`MarksController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/MarksController.java): Cập nhật endpoint với `Authentication`, mở endpoint `PUT /api/marks/{id}` và `DELETE /api/marks/{id}`.
-  - [`V6__markbook_constraints_and_validation.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V6__markbook_constraints_and_validation.sql): Tạo mới script migration Flyway V6.
-  - [`MarksCalculationHelperTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/util/MarksCalculationHelperTest.java): Mở rộng bộ kiểm thử TT22 (`TC-CALC-22` -> `TC-CALC-28`).
-  - [`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java): Thêm test `SEC-MARK-01` (chặn học sinh xem điểm người khác) và `SEC-MARK-02` (chặn giáo viên nhập điểm môn không dạy).
+  - [`TeachingAssignmentRepository.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/repository/TeachingAssignmentRepository.java): Thêm method `findByTeacherIdAndSchoolClassIdAndSubjectIdAndAcademicYearIsCurrentTrue`.
+  - [`SchoolAccessPolicy.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/security/SchoolAccessPolicy.java): Tích hợp hàm `verifyTeacherCanGradeSubject`.
+  - [`BulkMarksRequest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/request/BulkMarksRequest.java): Bổ sung `academicYearId`, `semester`, `examType`, `txIndex`.
+  - [`MarksRepository.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/repository/MarksRepository.java): Thêm truy vấn tìm điểm theo học sinh, môn, học kỳ, năm học và loại thi.
+  - [`MarksCalculationHelper.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/MarksCalculationHelper.java): Tích hợp thuật toán xếp loại TT22 và đánh giá danh hiệu khen thưởng `evaluateHonorTitleTT22`.
+  - [`StudentMarkbookResponse.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/response/StudentMarkbookResponse.java): Thêm trường `honorTitle`.
+  - [`MarksService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/MarksService.java): Áp dụng `SchoolAccessPolicy`, validate khoảng điểm, lưu đầy đủ thông tin học bạ trong `saveBulkMarks`, thêm `updateSingleMark` và `deleteSingleMark`.
+  - [`MarksController.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/controller/MarksController.java): Cập nhật endpoint với `Authentication`, mở endpoint `PUT /api/marks/{id}` và `DELETE /api/marks/{id}`.
+  - [`V6__markbook_constraints_and_validation.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/db/migration/V6__markbook_constraints_and_validation.sql): Tạo mới script migration Flyway V6.
+  - [`MarksCalculationHelperTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/util/MarksCalculationHelperTest.java): Mở rộng bộ kiểm thử TT22 (`TC-CALC-22` -> `TC-CALC-28`).
+  - [`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java): Thêm test `SEC-MARK-01` (chặn học sinh xem điểm người khác) và `SEC-MARK-02` (chặn giáo viên nhập điểm môn không dạy).
 
 - **Frontend (Flutter):**
-  - [`markbook.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/models/markbook.dart): Bổ sung `honorTitle` và sửa hàm `isNarrativeOnly` đóng chuẩn trong class.
-  - [`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart): Thêm banner vinh danh danh hiệu khen thưởng, bổ sung màu sắc xếp loại chuẩn TT22 (Tốt, Khá, Đạt, Chưa đạt).
-  - [`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart): Nâng cấp giao diện Phụ huynh với bộ chọn Học kỳ I / Học kỳ II / Cả năm, nút xem trước và xuất Phiếu báo điểm khổ A4 chuẩn hành chính.
+  - [`markbook.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/models/markbook.dart): Bổ sung `honorTitle` và sửa hàm `isNarrativeOnly` đóng chuẩn trong class.
+  - [`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart): Thêm banner vinh danh danh hiệu khen thưởng, bổ sung màu sắc xếp loại chuẩn TT22 (Tốt, Khá, Đạt, Chưa đạt).
+  - [`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart): Nâng cấp giao diện Phụ huynh với bộ chọn Học kỳ I / Học kỳ II / Cả năm, nút xem trước và xuất Phiếu báo điểm khổ A4 chuẩn hành chính.
 
 ---
 
 ### 3. Kết Quả Kiểm Chứng Thực Tế (Verified Test Results)
 
-- **Backend Unit Tests ([`MarksCalculationHelperTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/util/MarksCalculationHelperTest.java)):**
+- **Backend Unit Tests ([`MarksCalculationHelperTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/util/MarksCalculationHelperTest.java)):**
   - `TC-CALC-01` -> `TC-CALC-21`: Công thức ĐTBmhk, ĐTBmcn, xếp loại Cấp 1 & Cấp 3 — **PASSED**
   - `TC-CALC-22` -> `TC-CALC-26`: Xếp loại kết quả học tập TT22 (Tốt, Khá, Đạt, Chưa đạt) — **PASSED**
   - `TC-CALC-27` -> `TC-CALC-28`: Đánh giá danh hiệu khen thưởng TT22 (Học sinh Xuất sắc, Học sinh Giỏi) — **PASSED**
   - **Tổng kết:** **28 / 28 tests PASSED (100%)**.
 
-- **Backend Security & ReBAC Tests ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):**
+- **Backend Security & ReBAC Tests ([`SecurityReBACTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/SecurityReBACTest.java)):**
   - `SEC-MARK-01`: Học sinh `STU_A` cố tình đọc điểm `STU_B` -> Bị chặn với HTTP **403 Forbidden** — **PASSED**
   - `SEC-MARK-02`: Giáo viên bộ môn cố tình nhập điểm môn không được phân công giảng dạy -> Bị chặn với HTTP **403 Forbidden** — **PASSED**
   - Toàn bộ các ca ReBAC phụ huynh, học sinh, tải học liệu, duyệt đơn nghỉ: **16 / 16 tests PASSED (100%)**.
@@ -2083,7 +2083,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 4. **[HIGH] BUG-04: Ràng Buộc CSDL Cho Phép Điểm > 10.0 (Thang 100 Cũ)**:
    - *Hiện trạng*: Ràng buộc `chk_marks_score_range` trong migration V6 cho phép điểm số đến 100.0 (`score <= 100`). Điều này không bảo vệ được dữ liệu thang điểm 10.0 của chương trình GDPT 2018 ở tầng database.
    - *Khắc phục*: 
-     - Tạo migration Flyway [`V7__fix_markbook_score_range_and_conduct.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V7__fix_markbook_score_range_and_conduct.sql).
+     - Tạo migration Flyway [`V7__fix_markbook_score_range_and_conduct.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/db/migration/V7__fix_markbook_score_range_and_conduct.sql).
      - Backfill an toàn các bản ghi điểm cũ (ID 1, 2, 3) từ thang 100 về thang 10 (`score / 10.0`, `max_score = 10.0`).
      - Xóa constraint cũ và tạo mới: `CHECK (score IS NULL OR (score >= 0.0 AND score <= 10.0))`.
 
@@ -2143,11 +2143,11 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   - File mới: `images/school.jpg` (2.0 MB, độ phân giải cao, toàn cảnh trường học rực rỡ, sắc nét).
   - Đồng bộ file sang môi trường web: Đã copy `school.jpg` sang `frontend/web/images/school.jpg`.
 - **Cập nhật mã nguồn**:
-  - [theme_manager.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/theme_manager.dart): Cập nhật preset đầu tiên `key: 'school'`, `assetPath: 'images/school.jpg'` và biến khởi tạo mặc định `_bgImagePath = 'images/school.jpg'`.
-  - [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart): Thay đổi hình nền màn hình đăng nhập sang `images/school.jpg`.
-  - [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Cập nhật fallback path sang `images/school.jpg` ở cả container app và modal chọn theme.
-  - [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html): Đổi background loading screen sang `url("images/school.jpg")`.
-  - [theme_manager_customization_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Cập nhật expectation cho `TC-THEME-01` (`images/school.jpg`) và `TC-THEME-02` (`'school'`).
+  - [theme_manager.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/theme_manager.dart): Cập nhật preset đầu tiên `key: 'school'`, `assetPath: 'images/school.jpg'` và biến khởi tạo mặc định `_bgImagePath = 'images/school.jpg'`.
+  - [login_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart): Thay đổi hình nền màn hình đăng nhập sang `images/school.jpg`.
+  - [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Cập nhật fallback path sang `images/school.jpg` ở cả container app và modal chọn theme.
+  - [index.html](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html): Đổi background loading screen sang `url("images/school.jpg")`.
+  - [theme_manager_customization_test.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Cập nhật expectation cho `TC-THEME-01` (`images/school.jpg`) và `TC-THEME-02` (`'school'`).
 
 **3. Kết Quả Kiểm Thử & Kiểm Chứng Thực Tế:**
 - `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings** (13 info deprecation/print sẵn có).
@@ -2181,16 +2181,16 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   - Khi chọn Cả năm, các cột tự động chuyển thành: `Môn học`, `ĐTB HK1`, `ĐTB HK2 (x2)`, `ĐTB Cả năm`, `Xếp loại Cả năm` (loại bỏ các cột TX/GK/CK vô lý và khắc phục lỗi lấy nhầm dữ liệu của HK1).
 - **Tái cấu trúc Module Bảng điểm (Modularization)**:
   - Tạo mới thư mục `frontend/lib/features/student/widgets/marks/` gồm 9 component chuyên trách:
-    1. [student_marks_tab.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart): Container quản lý State cục bộ của Tab Bảng điểm.
-    2. [marks_hero_kpi_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart): Thẻ Hero KPI ĐTB, Rank Box icon cúp vàng, các đường ngăn cách đen chuẩn phẳng.
-    3. [marks_national_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_national_header.dart): Trang bìa Sổ học bạ Quốc gia.
-    4. [marks_semester_selector.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_semester_selector.dart): Bộ chọn học kỳ phẳng vuông vức.
-    5. [marks_accordion_list.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart): Danh sách thẻ môn học mở rộng.
-    6. [marks_grid_table_view.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart): Sổ điểm điện tử `DataTable` cuộn ngang.
-    7. [marks_criteria_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart): Bảng tiêu chí danh hiệu TT22 (THPT) và TT27 (Tiểu học).
-    8. [marks_endorsement_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_endorsement_card.dart): Đánh giá rèn luyện & nhận xét GVCN.
-    9. [marks_a4_print_preview.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart): Modal xem trước và in phiếu điểm A4.
-  - Rút gọn [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) từ **5,104 dòng** xuống còn **3,720 dòng** (giảm gần **1,400 dòng code** thừa).
+    1. [student_marks_tab.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart): Container quản lý State cục bộ của Tab Bảng điểm.
+    2. [marks_hero_kpi_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart): Thẻ Hero KPI ĐTB, Rank Box icon cúp vàng, các đường ngăn cách đen chuẩn phẳng.
+    3. [marks_national_header.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_national_header.dart): Trang bìa Sổ học bạ Quốc gia.
+    4. [marks_semester_selector.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_semester_selector.dart): Bộ chọn học kỳ phẳng vuông vức.
+    5. [marks_accordion_list.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart): Danh sách thẻ môn học mở rộng.
+    6. [marks_grid_table_view.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart): Sổ điểm điện tử `DataTable` cuộn ngang.
+    7. [marks_criteria_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart): Bảng tiêu chí danh hiệu TT22 (THPT) và TT27 (Tiểu học).
+    8. [marks_endorsement_card.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_endorsement_card.dart): Đánh giá rèn luyện & nhận xét GVCN.
+    9. [marks_a4_print_preview.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart): Modal xem trước và in phiếu điểm A4.
+  - Rút gọn [student_dashboard_screen.dart](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) từ **5,104 dòng** xuống còn **3,720 dòng** (giảm gần **1,400 dòng code** thừa).
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
 - `flutter analyze --no-fatal-infos`: **0 errors, 0 warnings**.
@@ -2206,20 +2206,20 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - Khắc phục triệt để lỗ hổng fallback gán nhầm điểm HK1 làm điểm Cả năm hoặc gán nhầm điểm Cả năm làm điểm HK2 khi học sinh chưa tổng kết đủ 2 học kỳ.
 
 **2. Chi Tiết Khắc Phục Kỹ Thuật:**
-- **Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+- **Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
   + Thay thế biểu thức ternary lồng nhau (`final avg = _selectedSemester == 2 ? (s.semester2?.avg ?? s.yearAvg) : ...`) bằng cấu trúc kiểm tra học kỳ minh bạch.
   + Nhánh HK1: Chỉ lấy `s.semester1?.avg`.
   + Nhánh HK2: Chỉ lấy `s.semester2?.avg`.
   + Nhánh Cả năm: Ưu tiên `s.yearAvg`. Nếu `s.yearAvg == null` và học sinh có đủ điểm cả 2 học kỳ, hệ thống tính động chính xác theo công thức $ĐTB_{mcn} = \frac{ĐTB_{mhk1} + 2 \times ĐTB_{mhk2}}{3}$. Nếu thiếu 1 trong 2 kỳ, trả về `null` (hiển thị `-` và xếp loại `—`), tuyệt đối không gán nhầm điểm HK1.
-- **Bản In Phiếu Báo Điểm A4 ([`marks_a4_print_preview.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart))**:
+- **Bản In Phiếu Báo Điểm A4 ([`marks_a4_print_preview.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_a4_print_preview.dart))**:
   + Chuẩn hóa logic tính điểm từng kỳ và Cả năm tương tự, loại bỏ fallback sai lệch `s.semester1?.avg ?? s.yearAvg`.
-- **Tổng Hợp ĐTB Chung Màn Hình Học Sinh ([`student_marks_tab.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart))**:
+- **Tổng Hợp ĐTB Chung Màn Hình Học Sinh ([`student_marks_tab.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/student_marks_tab.dart))**:
   + Cập nhật vòng lặp tính ĐTB chung theo kỳ: Khi chọn Cả năm, nếu `s.yearAvg == null` thì tính động theo tỷ trọng (1:2), bảo đảm ĐTB chung trên Hero KPI Card luôn chuẩn xác 100%.
-- **Danh Sách Thẻ Môn Học Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
+- **Danh Sách Thẻ Môn Học Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
   + Cập nhật logic tính điểm `avg` cho từng thẻ môn học theo công thức chuẩn.
-- **Sổ Điểm Điện Tử Grid Table ([`marks_grid_table_view.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart))**:
+- **Sổ Điểm Điện Tử Grid Table ([`marks_grid_table_view.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_grid_table_view.dart))**:
   + Cột `ĐTB Năm` và `Xếp loại Cả năm` trong cả bảng chi tiết và bảng tổng hợp được tính động theo công thức Bộ GD&ĐT, loại bỏ hoàn toàn fallback lấy nhầm điểm của 1 kỳ.
-- **Mô Phỏng Danh Hiệu Học Sinh Giỏi/Xuất Sắc ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+- **Mô Phỏng Danh Hiệu Học Sinh Giỏi/Xuất Sắc ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
   + Đảo ngược thứ tự ưu tiên: Ưu tiên điểm Cả năm (hoặc tính Cả năm theo TT22 nếu đủ 2 kỳ) trước khi dự báo từ điểm học kỳ gần nhất.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu:**
@@ -2244,22 +2244,22 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - Đoạn văn / Đề thi / Trắc nghiệm / Lời giải: Dùng **Be Vietnam Pro** (Regular / Medium) — chuẩn xác tuyệt đối cho các bài thi THPT Quốc gia phức tạp.
 
 **2. Chi Tiết Khắc Phục Kỹ Thuật:**
-- **Xây dựng module Typography tập trung ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+- **Xây dựng module Typography tập trung ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
   + Cung cấp hàm `buildTextTheme(EducationLevel level, {bool isDark})` sinh đủ 15 TextStyles chuẩn Material 3 TextTheme theo cấp học.
   + Semantic TextStyles: `title`, `button`, `score`, `question`, `body`, `quote`.
   + Tích hợp cơ chế fallback font toàn diện chống lỗi dấu tiếng Việt: `['Be Vietnam Pro', 'Nunito', 'Roboto', 'sans-serif']`.
   + Tích hợp helper `_createStyle` phân biệt thông minh giữa môi trường test runner (0ms, offline) và production runtime (Google Fonts CDN).
-- **Nâng cấp Quản lý Giao diện ([`theme_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/theme_manager.dart))**:
+- **Nâng cấp Quản lý Giao diện ([`theme_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/theme_manager.dart))**:
   + Bổ sung biến trạng thái `EducationLevel _educationLevel` và phương thức `setEducationLevel(EducationLevel level)`.
   + Tự động lưu và khôi phục cấp học người dùng từ `SharedPreferences`.
-- **Cấu hình ThemeData Ứng dụng ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart))**:
+- **Cấu hình ThemeData Ứng dụng ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/main.dart))**:
   + Áp dụng `fontFamily` và `textTheme: AppTypography.buildTextTheme(...)` động cho cả Light Theme và Dark Theme.
-- **Chuẩn hóa Hằng số TextStyles ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+- **Chuẩn hóa Hằng số TextStyles ([`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart))**:
   + Cập nhật `AppTextStyles` tự động kế thừa từ `Theme.of(context).textTheme`, thay thế hoàn toàn cấu hình cứng font `Outfit` cũ.
-- **Đồng bộ màn hình Học sinh & Bài tập ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart), [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart))**:
+- **Đồng bộ màn hình Học sinh & Bài tập ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart), [`student_homework_result_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_homework_result_screen.dart))**:
   + Tự động cập nhật `themeManager.setEducationLevel(...)` khi tải profile học sinh.
   + Áp dụng `AppTypography.question` cho đề bài và `AppTypography.body` cho các đáp án trắc nghiệm, lời giải chi tiết.
-- **Xây dựng bộ kiểm thử mới ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/app_typography_test.dart))**:
+- **Xây dựng bộ kiểm thử mới ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/app_typography_test.dart))**:
   + 6 ca kiểm thử bao phủ toàn bộ các trường hợp cấp 1, cấp 2, cấp 3, textTheme, semantic styles và quản lý state.
 
 ---
@@ -2270,19 +2270,19 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - Senior QA rà soát toàn diện dự án để phát hiện và xử lý triệt để các điểm "cấn" (bất cập về UI/UX, lệch font nhận diện thương hiệu, màn hình còn sót font cứng hoặc chưa đồng bộ cấp học).
 
 **2. Các Điểm Bất Cập Phát Hiện & Giải Pháp Kỹ Thuật:**
-- **Điểm cấn 1 — Màn hình khởi động Splash Screen ([`splash_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/splash_screen.dart))**:
+- **Điểm cấn 1 — Màn hình khởi động Splash Screen ([`splash_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/splash_screen.dart))**:
   + *Phát hiện*: Chữ "Giáo Dục Đại Việt" tại màn hình Splash vẫn dùng font `GoogleFonts.outfit` cũ và danh sách fallback không có font tiếng Việt chuẩn, gây lệch nhận diện thương hiệu với màn hình Đăng nhập và Dashboard.
   + *Khắc phục*: Chuyển sang `GoogleFonts.plusJakartaSans` (Font tiêu đề hiện đại, dứt khoát) kết hợp `AppTypography.fontFamilyFallback` toàn diện (`['Be Vietnam Pro', 'Nunito', 'Roboto', ...]`), bảo đảm hiển thị chuẩn sắc nét trên mọi nền tảng di động và web.
-- **Điểm cấn 2 — Bảng Điểm & Phiếu Báo Điểm Khổ A4 Phụ Huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+- **Điểm cấn 2 — Bảng Điểm & Phiếu Báo Điểm Khổ A4 Phụ Huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
   + *Phát hiện*: Khi phụ huynh xem học bạ của con, màn hình chưa tự động đồng bộ cấp học của con vào `ThemeManager`, khiến học sinh Tiểu học vẫn phải hiển thị giao diện với font chữ mặc định của THPT; đồng thời modal Phiếu báo điểm A4 dùng nhiều TextStyle thô chưa có Typography thích ứng.
   + *Khắc phục*: Tự động đọc `EducationLevelHelper.fromString(data.educationLevel)` và cập nhật `ThemeManager.setEducationLevel(level)` khi tải học bạ thành công. Áp dụng `AppTypography.title`, `AppTypography.body`, `AppTypography.score`, `AppTypography.button` cho cả bảng điểm, tiêu đề, và modal Phiếu in A4.
-- **Điểm cấn 3 — Bảng Điểm Học Bạ Chuẩn Bộ GD&ĐT ([`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart))**:
+- **Điểm cấn 3 — Bảng Điểm Học Bạ Chuẩn Bộ GD&ĐT ([`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart))**:
   + *Phát hiện*: Component dùng chung cho cả Học sinh và Phụ huynh vẫn dùng các `TextStyle` thô với kích thước và font mặc định, chưa phản ánh tinh thần tươi vui (Fredoka/Nunito) của cấp 1 hay năng động chuẩn Gen Z (Plus Jakarta Sans/Be Vietnam Pro) của cấp 2 & 3.
   + *Khắc phục*: Đọc `level` từ `markbook.educationLevel` và đồng bộ Typography toàn bộ component: tên học sinh & tiêu đề bảng (`AppTypography.title`), điểm số TX/GK/CK/DTB (`AppTypography.score`), tên môn học & nhận xét đánh giá (`AppTypography.body`), thẻ xếp loại & huy hiệu cấp học (`AppTypography.button`).
-- **Điểm cấn 4 — Web Loading Screen & CSS Font Stack ([`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+- **Điểm cấn 4 — Web Loading Screen & CSS Font Stack ([`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html))**:
   + *Phát hiện*: Màn hình chờ ban đầu khi tải Web chưa khai báo các font mới trong CSS stack, dễ gây hiện tượng giật font (FOUC - Flash of Unstyled Text) khi Flutter Canvas hoàn tất khởi chạy.
   + *Khắc phục*: Bổ sung preconnect Google Fonts và cập nhật `font-family` CSS ưu tiên `"Plus Jakarta Sans", "Be Vietnam Pro"` trước các font hệ thống.
-- **Điểm cấn 5 — Cải tiến Thư viện Typography ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+- **Điểm cấn 5 — Cải tiến Thư viện Typography ([`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
   + *Khắc phục*: Bổ sung tham số `fontStyle` cho `AppTypography.body` và cung cấp alias `fontFamilyFallback` trỏ tới `fontFallback`, hỗ trợ linh hoạt các đoạn ghi chú in nghiêng (như chức danh ký số GVCN, Hiệu trưởng).
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
@@ -2300,16 +2300,16 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - Chuyển đổi toàn diện sang kiến trúc **Local Asset-First (100% Offline)**: Cấu hình `GoogleFonts.config.allowRuntimeFetching = false;` để cấm tải font qua HTTP CDN, triệt tiêu hoàn toàn rủi ro mạng và hiện tượng giật font FOUC.
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- **Dọn dẹp & Tổ chức cấu trúc Font ([`assets/fonts/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/assets/fonts))**:
+- **Dọn dẹp & Tổ chức cấu trúc Font ([`assets/fonts/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/assets/fonts))**:
   + Xóa 4 tệp `.zip` rác: `Be_Vietnam_Pro,Fredoka,Nunito,Plus_Jakarta_Sans.zip`, `Fredoka,Nunito,Plus_Jakarta_Sans.zip`, `Fredoka,Plus_Jakarta_Sans.zip`, `Plus_Jakarta_Sans.zip`.
   + Xóa các thư mục giải nén con trùng lặp và các font weights không dùng đến (Thin, ExtraLight, Black, Condensed, Expanded).
   + Chuẩn hóa 4 thư mục phẳng: `BeVietnamPro/` (5 files), `Fredoka/` (4 files), `Nunito/` (5 files), `PlusJakartaSans/` (5 files). Tổng cộng 19 tệp `.ttf` tinh gọn (~1.8 MB).
-- **Khai báo Font Assets ([`pubspec.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/pubspec.yaml))**:
+- **Khai báo Font Assets ([`pubspec.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/pubspec.yaml))**:
   + Đăng ký đầy đủ 4 families: `Fredoka`, `Nunito`, `Plus Jakarta Sans`, `Be Vietnam Pro` kèm weights (400, 500, 600, 700) và style italic vào khối `fonts:`.
-- **Thiết lập Khóa Mạng CDN ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart), [`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
+- **Thiết lập Khóa Mạng CDN ([`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/main.dart), [`app_typography.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_typography.dart))**:
   + Thêm `AppTypography.initialize()` thực thi `GoogleFonts.config.allowRuntimeFetching = false;` ngay đầu hàm `main()`.
   + Nâng cấp `_createStyle` với cơ chế bọc `try-catch` an toàn tuyệt đối, ưu tiên local asset font và fallback font hệ thống chống lỗi dấu tiếng Việt.
-- **Bổ sung Ca Kiểm Thử Local Asset-First ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/app_typography_test.dart))**:
+- **Bổ sung Ca Kiểm Thử Local Asset-First ([`app_typography_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/app_typography_test.dart))**:
   + Bổ sung `TC-TYPO-07`: Xác nhận `AppTypography.initialize()` vô hiệu hóa thành công runtime HTTP fetching và đảm bảo fontFallback đầy đủ.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
@@ -2331,14 +2331,14 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Avatar người dùng: Giữ hình tròn (`CircleAvatar`).
 
 **2. Chi Tiết Thực Hiện Kỹ Thuật:**
-- **Thiết lập Token & Hằng số Tập trung ([`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart), [`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart))**:
+- **Thiết lập Token & Hằng số Tập trung ([`app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_colors.dart), [`constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart))**:
   + Bổ sung `cardRadius = 4.0;` và `cardBorderRadius = BorderRadius.all(Radius.circular(cardRadius));` vào cả hai hệ thống theme hằng số.
 - **Chuẩn hóa Shared Core Widgets**:
-  + [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Bo góc 4px cho khung card ngoài và icon container.
-  + [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Bo góc 4px cho toàn bộ card, badge nộp bài và các nút hành động (Xem chi tiết, Làm bài, Xem kết quả).
-  + [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_empty_card.dart) & [`app_card_error_with_retry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_card_error_with_retry.dart): Bo góc 4px kèm viền đen chuẩn.
-  + [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Nút "Xem tất cả" hạ từ 6px về 4px.
-- **Chuẩn hóa Màn hình Dashboard Học Sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+  + [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart): Bo góc 4px cho khung card ngoài và icon container.
+  + [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/homework_card.dart): Bo góc 4px cho toàn bộ card, badge nộp bài và các nút hành động (Xem chi tiết, Làm bài, Xem kết quả).
+  + [`app_empty_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_empty_card.dart) & [`app_card_error_with_retry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_card_error_with_retry.dart): Bo góc 4px kèm viền đen chuẩn.
+  + [`app_section_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_section_header.dart): Nút "Xem tất cả" hạ từ 6px về 4px.
+- **Chuẩn hóa Màn hình Dashboard Học Sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   + Thẻ Hero profile học sinh, badge cấp học, nút Settings / Logout, thẻ Demo mode banner bo góc 4px.
   + Thẻ "Lịch học hôm nay" (`todayLessons`): Bo 4px kèm `clipBehavior: Clip.antiAlias` ngăn chặn tràn màu nền ở góc bo.
   + Thẻ Đăng xuất footer: Bo 4px.
@@ -2346,7 +2346,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Tab Sách học: Banner giới thiệu và ChoiceChips môn học bo 4px.
   + Tab Bài tập: Banner hướng dẫn bo 4px.
   + Tab Thông báo: ChoiceChips phân loại, Notice cards và icon container bo 4px.
-- **Chuẩn hóa Module Học bạ & Bảng điểm ([`marks/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/))**:
+- **Chuẩn hóa Module Học bạ & Bảng điểm ([`marks/`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/))**:
   + `marks_national_header.dart`: Khung Quốc hiệu, icon trường, badge cấp học, nút In phiếu điểm bo 4px.
   + `marks_hero_kpi_card.dart`: Thẻ Hero KPI và Rank Box cúp vàng bo 4px kèm `Clip.antiAlias`.
   + `marks_semester_selector.dart`: Bộ 3 nút chọn kỳ bo 4px.
@@ -2355,20 +2355,20 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + `marks_endorsement_card.dart`: Khung nhận xét, badge rèn luyện và khung con dấu BGH bo 4px.
   + `marks_a4_print_preview.dart`: Giữ bo đỉnh 16px cho bottom sheet, nút tải PDF bo 4px.
   + `student_marks_tab.dart`: Banner demo mode bo 4px.
-  + [`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart): Chuẩn hóa từ 12px/20px/10px/8px về `AppColors.cardBorderRadius` (4px).
-- **Chuẩn hóa Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
+  + [`markbook_table_widget.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/markbook_table_widget.dart): Chuẩn hóa từ 12px/20px/10px/8px về `AppColors.cardBorderRadius` (4px).
+- **Chuẩn hóa Màn hình Phụ huynh ([`parent_marks_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/parent/screens/parent_marks_screen.dart))**:
   + Nút In phiếu điểm và bộ 3 nút chọn kỳ chuyển sang bo 4px, modal xem trước A4 bo đỉnh 16px.
 - **Cập nhật & Đồng bộ Bộ Test Widget**:
-  + [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật TC-NAV-13 xác nhận AlertDialog popup Đăng xuất có bo góc 4px (`BorderRadius.circular(4)`); TC-NAV-15 xác nhận nút Đăng xuất bo góc 4px (`BorderRadius.circular(4)`).
-  + [`app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/app_section_header_test.dart): Cập nhật TC-HEADER-02 và TC-HEADER-04 xác nhận nút "Xem tất cả" bo góc 4px.
-  + [`theme_manager_customization_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Đồng bộ các nhãn font family tiếng Việt theo cập nhật typography.
+  + [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật TC-NAV-13 xác nhận AlertDialog popup Đăng xuất có bo góc 4px (`BorderRadius.circular(4)`); TC-NAV-15 xác nhận nút Đăng xuất bo góc 4px (`BorderRadius.circular(4)`).
+  + [`app_section_header_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/app_section_header_test.dart): Cập nhật TC-HEADER-02 và TC-HEADER-04 xác nhận nút "Xem tất cả" bo góc 4px.
+  + [`theme_manager_customization_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/unit/theme_manager_customization_test.dart): Đồng bộ các nhãn font family tiếng Việt theo cập nhật typography.
 - **Hoàn thiện Bo Góc 4px Toàn Bộ Hộp Thoại (Dialog & AlertDialog Popups)**:
-  + [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  + [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
     - Popup xác nhận Đăng xuất (`_logout()`): Chuyển `AlertDialog` từ `BorderRadius.zero` sang `BorderRadius.circular(AppColors.cardRadius)` (4px) kèm viền `AppColors.cardBorder` 1px; các nút Hủy (`TextButton`) và Đăng xuất (`ElevatedButton`) bo góc 4px.
     - Popup Đổi mật khẩu (`_showChangePasswordDialog()`): `AlertDialog`, input fields (`OutlineInputBorder`), nút Hủy & Cập nhật bo góc 4px.
     - Popup Trợ giúp & Liên hệ (`_showSupportDialog()`): `AlertDialog` và nút Đã hiểu bo góc 4px.
     - Dialog Xem chi tiết thông báo (`_showNoticeDetailModal()`): `Dialog`, badge đối tượng và nút Đã hiểu bo góc 4px.
-  + [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart):
+  + [`student_take_homework_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_take_homework_screen.dart):
     - Popup Xác nhận nộp bài & Thoát làm bài: `AlertDialog`, box cảnh báo và các nút hành động bo góc 4px.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
@@ -2393,11 +2393,11 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Tái cấu trúc điểm thành phần chi tiết thành bảng 3 hàng ngang: bên trái là Tiêu đề thành phần điểm, bên phải là Điểm số cụ thể (giải pháp tối ưu responsive cho giao diện di động hẹp tránh tràn dòng điểm thường xuyên `ĐĐGtx`).
 
 **2. Chi Tiết Khắc Phục Kỹ Thuật:**
-- **Khối Hero KPI Card ([`marks_hero_kpi_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart))**:
+- **Khối Hero KPI Card ([`marks_hero_kpi_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_hero_kpi_card.dart))**:
   + Điều chỉnh cấu trúc `_buildKpiMiniItem`: Đặt nhãn `label` lên trên cùng (`fontSize: 10.5`, `FontWeight.w600`, `letterSpacing: 0.3`, `color: AppColors.textSub`).
   + Loại bỏ hoàn toàn khối `Container` chứa `Icon` ở bên trái.
   + Phóng to font của `value` từ `13.5px` lên `15.5px`, `FontWeight.w900`, `color: AppColors.textMainOf(context)`, căn giữa tinh tế.
-- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
   + Loại bỏ `Icon(Icons.stars, color: Color(0xFFEF5350))` ở tiêu đề thẻ.
   + Loại bỏ `Icon(Icons.check_box)` / `Icons.check_box_outline_blank` ở từng dòng.
   + Xây dựng Bảng ô lưới (Grid Table) 2 cột x 5 hàng trong khung viền 1px bo góc 4px (`AppColors.cardBorderRadius`):
@@ -2407,7 +2407,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - Hàng 3 (Môn Khống Chế): Không có môn nào $< 6.5$ (hoặc chưa đạt Đ) $\leftrightarrow$ Môn điểm thấp nhất và trạng thái đạt chuẩn.
     - Hàng 4 (Kết Quả Chung Cuộc): Tổng kết xếp loại $\leftrightarrow$ Huy hiệu danh hiệu (ví dụ: `ĐẠT HỌC SINH GIỎI 🏆` hoặc `Cần thêm...`).
     - Các hàng phân cách bởi vạch kẻ mảnh 1px `AppColors.cardBorder`.
-- **Thẻ Môn Học Accordion Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
+- **Thẻ Môn Học Accordion Mở Rộng ([`marks_accordion_list.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_accordion_list.dart))**:
   + Thay thế widget ô con `_buildScoreSubCell` cũ bằng bảng `_buildScoreRow`:
     - Cột trái (flex 62%): Tên thành phần điểm kèm hệ số (VD: `ĐĐGtx (Đánh giá thường xuyên x1)`).
     - Vạch ngăn dọc 1px `AppColors.cardBorder`.
@@ -2444,17 +2444,17 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
 - **Backend (Spring Boot)**:
-  + [`WebNetworkConfig.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/config/WebNetworkConfig.java): Đăng ký `ShallowEtagHeaderFilter` Bean cho các đường dẫn `/api/*`.
-  + [`application.properties`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/application.properties): Đổi `spring.jpa.show-sql=false`, bổ sung cấu hình Tomcat keep-alive và thread pool.
-  + [`WebNetworkEtagTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/WebNetworkEtagTest.java): Kiểm thử tự động chứng thực ETag header được sinh và phản hồi `304 Not Modified` khi gửi `If-None-Match`.
+  + [`WebNetworkConfig.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/config/WebNetworkConfig.java): Đăng ký `ShallowEtagHeaderFilter` Bean cho các đường dẫn `/api/*`.
+  + [`application.properties`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/resources/application.properties): Đổi `spring.jpa.show-sql=false`, bổ sung cấu hình Tomcat keep-alive và thread pool.
+  + [`WebNetworkEtagTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/WebNetworkEtagTest.java): Kiểm thử tự động chứng thực ETag header được sinh và phản hồi `304 Not Modified` khi gửi `If-None-Match`.
 - **Frontend Core Network**:
-  + [`network_cache_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/network_cache_manager.dart): Quản lý In-Memory Cache, ETag entries, timestamp và hỗ trợ `invalidate` theo tiền tố URL.
-  + [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/network/api_client.dart): Singleton `_sharedHttpClient`, Request Deduplication qua `_inFlightGets`, ETag 304 resolution, Isolate decoding (`compute(_parseJsonInBackground, bytes)`), Exponential Backoff Retry và tự động invalidate cache khi mutation (`post`/`put`/`delete`).
+  + [`network_cache_manager.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/network_cache_manager.dart): Quản lý In-Memory Cache, ETag entries, timestamp và hỗ trợ `invalidate` theo tiền tố URL.
+  + [`api_client.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/network/api_client.dart): Singleton `_sharedHttpClient`, Request Deduplication qua `_inFlightGets`, ETag 304 resolution, Isolate decoding (`compute(_parseJsonInBackground, bytes)`), Exponential Backoff Retry và tự động invalidate cache khi mutation (`post`/`put`/`delete`).
 - **Frontend Services Migration**:
-  + Chuẩn hóa 100% các service: [`marks_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/marks_service.dart), [`homework_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/homework_service.dart), [`student_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/student_service.dart), [`attendance_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/attendance_service.dart), [`teacher_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/teacher_service.dart), [`fee_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/fee_service.dart), [`leave_request_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/leave_request_service.dart), [`school_class_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/school_class_service.dart).
+  + Chuẩn hóa 100% các service: [`marks_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/marks_service.dart), [`homework_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/homework_service.dart), [`student_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/student_service.dart), [`attendance_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/attendance_service.dart), [`teacher_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/teacher_service.dart), [`fee_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/fee_service.dart), [`leave_request_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/leave_request_service.dart), [`school_class_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/school_class_service.dart).
 - **Frontend UI/UX**:
-  + [`app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Widget Skeleton Shimmer bo góc 4px phẳng không phụ thuộc thư viện ngoài.
-  + [`network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Banner nổi thông báo trạng thái mạng mềm mại, hỗ trợ nút "Thử lại".
+  + [`app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Widget Skeleton Shimmer bo góc 4px phẳng không phụ thuộc thư viện ngoài.
+  + [`network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Banner nổi thông báo trạng thái mạng mềm mại, hỗ trợ nút "Thử lại".
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
 - **Backend Test (`./mvnw test -Dtest=WebNetworkEtagTest`)**:
@@ -2478,29 +2478,29 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Nguy cơ nghẽn giao diện (UI Blocking)**: Luồng khởi động cũ đợi tuần tự từng tác vụ I/O khiến thời gian tải ban đầu bị kéo dài không cần thiết.
 
 **2. Giải Pháp Kiến Trúc & Thiết Kế (Senior Dev, Senior Network & Senior Design):**
-- **Đồng bộ hóa giao diện chờ Web Loader ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**:
+- **Đồng bộ hóa giao diện chờ Web Loader ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html))**:
   + Chuyển toàn bộ CSS loader sang tone màu nền trắng `#FFFFFF`, chữ xám đen `#202124`.
   + Chuẩn hóa hộp thông báo tải "Cổng Thông Tin Giáo Dục Đại Việt" với viền mỏng phẳng `1px solid #DADCE0`, bo góc chuẩn hệ thống `4px`, loại bỏ hoàn toàn đổ bóng mờ, spinner xoay xanh `#2457C5`.
-- **Hoạt ảnh Mascot "Sách đi bộ" vẽ thuần Vector bằng code ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart))**:
+- **Hoạt ảnh Mascot "Sách đi bộ" vẽ thuần Vector bằng code ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart))**:
   + Sử dụng `CustomPainter` vẽ 100% bằng hình chữ nhật phẳng (`canvas.drawRect`), không cần bất kỳ tệp hình ảnh PNG hay tài nguyên ngoài nào, tối ưu kích thước bundle và 0ms độ trễ giải mã ảnh.
   + Chu trình chuyển động mượt mà: (1) Sách bước vào từ lề trái kèm nhún chân và đung đưa tay (0.0 – 0.4) $\rightarrow$ (2) Đứng giữa màn hình vẫy tay chào thân thiện kèm tên thương hiệu và tagline (0.4 – 0.7) $\rightarrow$ (3) Bước ra lề phải (0.7 – 1.0).
   + Tự động thích ứng tỷ lệ co giãn (`scaleFor`) theo độ rộng màn hình (từ điện thoại màn hình nhỏ đến màn hình máy tính lớn).
-- **Luồng khởi động song song tối ưu hiệu năng ([`app_bootstrap_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/app_bootstrap_service.dart) & [`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_gate.dart))**:
-  + `_bootstrapFuture` được kích hoạt ngay lập tức từ `initState` của `AdminApp` trong [`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/main.dart), chạy song song cùng lúc với hoạt ảnh Mascot.
+- **Luồng khởi động song song tối ưu hiệu năng ([`app_bootstrap_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/app_bootstrap_service.dart) & [`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/intro_gate.dart))**:
+  + `_bootstrapFuture` được kích hoạt ngay lập tức từ `initState` của `AdminApp` trong [`main.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/main.dart), chạy song song cùng lúc với hoạt ảnh Mascot.
   + Kiểm tra đọc `SharedPreferences`, validate JWT token với timeout ngắn 1.5s, nhận diện quyền vai trò (`Student`, `Teacher`, `Admin`, `Parent`, `ForceChangePassword`).
   + Cơ chế `holdLimit` thông minh: Nếu animation kết thúc trước khi bootstrap xong, ứng dụng giữ tư thế vẫy tay tối đa 1.0 giây rồi tự động chuyển tiếp, không bao giờ làm treo hoặc khóa app của người dùng.
 - **Trợ năng và tôn trọng người dùng**:
   + **Chạm bỏ qua (Instant Skip)**: Người dùng chạm bất kỳ đâu trên màn hình để ngay lập tức vào màn hình đích.
   + **Tôn trọng chế độ giảm chuyển động (Reduced Motion)**: Nhận diện cài đặt OS qua `MediaQuery.disableAnimations`, hiển thị hình tĩnh Mascot đứng yên trong 700ms thay vì ép người dùng xem chuyển động.
-  + **Quy tắc tần suất thông minh & Chế độ Demo/Dev ([`intro_policy.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_policy.dart))**: Trong môi trường Demo/Dev (`kDebugMode` hoặc `ApiConstants.isDemoMode`), Mascot luôn hiển thị mỗi lần mở để phục vụ kiểm thử và nghiệm thu trực quan; trên Production áp dụng quy tắc 6 giờ/lần.
-  + **Thích ứng Dark Mode cao cấp ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart) & [`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html))**: Tự động chuyển sang `IntroPalette.dark` với nền tối `#202124`, bìa sách xanh dạ quang `#8AB4F8` phát sáng, chân tay `#E8EAED`, con ngươi mắt `#202124`; Web Loader đồng bộ `@media (prefers-color-scheme: dark)`.
-  + **Đồng bộ thời lượng Web lên 2.0s ([`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_gate.dart))**: Nâng thời lượng Web từ 1.0s lên 2.0s đồng bộ với Mobile giúp người dùng ngắm trọn hoạt ảnh vẫy tay thư thái và đọc rõ tên thương hiệu.
-  + **Phối Hợp Liền Mạch 2 Pha Giữa Web Loader & Màn Chào Mừng Flutter ([`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html) & [`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_gate.dart))**:
+  + **Quy tắc tần suất thông minh & Chế độ Demo/Dev ([`intro_policy.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/intro_policy.dart))**: Trong môi trường Demo/Dev (`kDebugMode` hoặc `ApiConstants.isDemoMode`), Mascot luôn hiển thị mỗi lần mở để phục vụ kiểm thử và nghiệm thu trực quan; trên Production áp dụng quy tắc 6 giờ/lần.
+  + **Thích ứng Dark Mode cao cấp ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart) & [`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html))**: Tự động chuyển sang `IntroPalette.dark` với nền tối `#202124`, bìa sách xanh dạ quang `#8AB4F8` phát sáng, chân tay `#E8EAED`, con ngươi mắt `#202124`; Web Loader đồng bộ `@media (prefers-color-scheme: dark)`.
+  + **Đồng bộ thời lượng Web lên 2.0s ([`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/intro_gate.dart))**: Nâng thời lượng Web từ 1.0s lên 2.0s đồng bộ với Mobile giúp người dùng ngắm trọn hoạt ảnh vẫy tay thư thái và đọc rõ tên thương hiệu.
+  + **Phối Hợp Liền Mạch 2 Pha Giữa Web Loader & Màn Chào Mừng Flutter ([`web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html) & [`intro_gate.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/intro_gate.dart))**:
     - **Pha 1 (Phòng chờ tải web - Web Loader HTML/SVG)**: Trong thời gian trình duyệt tải mã nguồn, Mascot Sách chạy vòng lặp tuần hoàn (Infinite Loop) kèm dòng chữ ấm áp *"Đợi một tí nhé..."* (3 chấm nhấp nháy tuần tự). Góc xoay tay tại 0% và 100% khớp tuyệt đối (`rotate(0deg)`), tích hợp `@media (prefers-reduced-motion: reduce)`.
     - **Pha 2 (Màn chào mừng thương hiệu - Flutter `IntroGate`)**: Ngay khi Flutter nạp xong khung hình đầu tiên (`flutter-first-frame`), Web Loader mờ dần trong 350ms để chuyển giao trọn vẹn màn hình cho Flutter `IntroGate`: Chú sách bước vào giữa, **VẪY TAY CHÀO** nồng nhiệt (giữ nguyên vẹn "cái chào" yêu thích), hiện lên Logo & Tiêu đề in hoa **GIÁO DỤC ĐẠI VIỆT** kèm slogan *“Luôn đi cùng con đến trường”* rồi bước vào màn hình chính.
     - **Kết quả**: Không còn hiện tượng 3 pha lặp lại; chuỗi trải nghiệm diễn ra tự nhiên như một câu chuyện hoạt hình: *Đợi tải $\to$ Vẫy tay chào mừng $\to$ Vào ứng dụng.*
     - Đồng bộ `tagline` của `IntroGate` trong `main.dart` thành *“Luôn đi cùng con đến trường”*.
-  + **Tùy biến người dùng ([`intro_setting_tile.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/intro_setting_tile.dart))**: Tích hợp công tắc "Hiệu ứng mở app" trực tiếp vào trang Cài đặt / Thông tin cá nhân ([`profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/profile_screen.dart)).
+  + **Tùy biến người dùng ([`intro_setting_tile.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/intro_setting_tile.dart))**: Tích hợp công tắc "Hiệu ứng mở app" trực tiếp vào trang Cài đặt / Thông tin cá nhân ([`profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/profile_screen.dart)).
 
   + **Đồng Bộ Hình Học 100% (Geometry & Visual Parity) & Phụ Kiện Cuốn Sách Nhỏ (Mini-Book)**:
     - **Đồng bộ kích thước nhân vật ($1:1$)**: Nâng container `.mascot-runner` từ `120px x 140px` lên chuẩn `138px x 163px` ($110 \times 1.25 = 137.5 \approx 138\text{px}$). Bìa sách ở Pha 1 đạt đúng chính xác **$85\text{px} \times 90\text{px}$**, trùng khít $100\%$ với kích thước hiển thị của chú sách trong Flutter `IntroGate`, xóa bỏ hoàn toàn hiện tượng nhảy tỷ lệ (scale pop).
@@ -2509,13 +2509,13 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - **Phụ kiện Cuốn Sách Nhỏ (Mini-Book)**: Bổ sung cuốn sách nhỏ xinh xắn với bìa cam hổ phách `#D97706`, gáy sách đậm `#B45309`, khối trang giấy trắng `#FFFFFF`, ngôi sao 4 cánh, hiệu ứng lật mở bìa, lật trang, dây bookmark đung đưa và các tia sao lấp lánh; loại bỏ vệt sáng quét chéo thừa; tinh chỉnh góc xoay `rotate(4deg)` và tọa độ `translate(76, 36)` ngả tự nhiên vào thân người chú sách; đặt ngón cái về bên trái bàn tay ($x=74.5..79$) ôm chắc lấy gáy sách chuẩn xác theo giải phẫu học.
 
 **3. Kết Quả Kiểm Thử Thực Tế (Rule 5):**
-- **Kiểm thử Vector Mascot & Hình học Bước chuyển ([`book_mascot_painter_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/book_mascot_painter_test.dart))**:
+- **Kiểm thử Vector Mascot & Hình học Bước chuyển ([`book_mascot_painter_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/core/intro/book_mascot_painter_test.dart))**:
   + ✅ **11 / 11 tests PASSED**: Kiểm tra góc tay `waveAngle` đúng các mốc, nội suy tuyến tính chính xác, hàm co giãn `scaleFor` giới hạn trong [80, 120] đơn vị, kiểm thử vẽ an toàn trên cả bảng màu Light (`standard`) và Dark Mode (`IntroPalette.dark`).
-- **Kiểm thử Vòng đời & Tương tác IntroGate ([`intro_gate_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_gate_test.dart))**:
+- **Kiểm thử Vòng đời & Tương tác IntroGate ([`intro_gate_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/core/intro/intro_gate_test.dart))**:
   + ✅ **10 / 10 tests PASSED**: Xác thực tự động chuyển màn khi chạy hết thời lượng 2.0s, bỏ qua intro khi policy từ chối, chạm bất kỳ đâu bỏ qua tức thì không lặp lại, chế độ giảm chuyển động (Reduced Motion), cơ chế giữ tư thế khi khởi động chậm, tự phục hồi khi khởi động lỗi, tự động nhận diện theme tối khi hệ thống là Dark Mode, và **tự động vào thẳng màn hình đích trên Web (`skipOnWeb = true`)**.
-- **Kiểm thử Quy tắc Tần suất ([`intro_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/intro/intro_policy_test.dart))**:
+- **Kiểm thử Quy tắc Tần suất ([`intro_policy_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/core/intro/intro_policy_test.dart))**:
   + ✅ **6 / 6 tests PASSED**: Xác thực lần đầu cài app thì hiển thị, trong vòng 6 giờ không hiển thị lại (Production), sau 6 giờ hiển thị lại (Production), chế độ Demo/Dev luôn hiển thị dù chưa đủ 6 giờ, tôn trọng tùy chọn tắt của người dùng trong Cài đặt, tự động phát hiện và xử lý an toàn khi đồng hồ hệ thống bị chỉnh lùi.
-- **Kiểm thử Khởi động Song song ([`app_bootstrap_service_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/services/app_bootstrap_service_test.dart))**:
+- **Kiểm thử Khởi động Song song ([`app_bootstrap_service_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/core/services/app_bootstrap_service_test.dart))**:
   + ✅ **5 / 5 tests PASSED**: Xác thực chưa đăng nhập $\rightarrow$ `LoginScreen`; session hỏng thiếu roles $\rightarrow$ dọn dẹp và điều hướng `LoginScreen`; cờ `mustChangePassword` $\rightarrow$ `ForceChangePasswordScreen`; định tuyến chính xác theo quyền Student $\rightarrow$ `StudentDashboardScreen`, Admin $\rightarrow$ `DashboardScreen`.
 - **Tổng số ca kiểm thử toàn bộ dự án ([`flutter test`])**:
   + ✅ **132 / 132 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
@@ -2548,16 +2548,16 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
 - **Token Trung Tâm**:
-  + [`frontend/lib/core/theme/app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/app_colors.dart): `static const double cardRadius = 16.0;`
-  + [`frontend/lib/utils/constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/utils/constants.dart): `static const double cardRadius = 16.0;`
+  + [`frontend/lib/core/theme/app_colors.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/app_colors.dart): `static const double cardRadius = 16.0;`
+  + [`frontend/lib/utils/constants.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/utils/constants.dart): `static const double cardRadius = 16.0;`
 - **Chuẩn Hóa Widget Viết Cứng & Phân Cấp**:
-  + [`frontend/lib/core/widgets/app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Dùng `AppColors.cardBorderRadius`.
-  + [`frontend/lib/core/widgets/network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Dùng `AppColors.cardBorderRadius`.
-  + [`frontend/lib/screens/login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart): Chip demo dùng `BorderRadius.circular(8.0)`.
-  + [`frontend/lib/features/teacher/screens/teacher_profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/teacher/screens/teacher_profile_screen.dart): Badge điểm danh dùng `BorderRadius.circular(8.0)`.
-  + [`frontend/lib/features/admin/screens/teacher_full_report_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/admin/screens/teacher_full_report_screen.dart): Badge phê duyệt dùng `BorderRadius.circular(8.0)`.
+  + [`frontend/lib/core/widgets/app_shimmer.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/app_shimmer.dart): Dùng `AppColors.cardBorderRadius`.
+  + [`frontend/lib/core/widgets/network_status_banner.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/network_status_banner.dart): Dùng `AppColors.cardBorderRadius`.
+  + [`frontend/lib/screens/login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart): Chip demo dùng `BorderRadius.circular(8.0)`.
+  + [`frontend/lib/features/teacher/screens/teacher_profile_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/teacher/screens/teacher_profile_screen.dart): Badge điểm danh dùng `BorderRadius.circular(8.0)`.
+  + [`frontend/lib/features/admin/screens/teacher_full_report_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/admin/screens/teacher_full_report_screen.dart): Badge phê duyệt dùng `BorderRadius.circular(8.0)`.
 - **Cập Nhật Test Suite**:
-  + [`frontend/test/widgets/student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật kiểm tra `AppColors.cardRadius` (16.0).
+  + [`frontend/test/widgets/student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart): Cập nhật kiểm tra `AppColors.cardRadius` (16.0).
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
 - **Phân tích tĩnh (`flutter analyze lib/`)**:
@@ -2584,15 +2584,15 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - Tính toán điểm môn thấp nhất `minScore` thực tế để kiểm tra tiêu chí khống chế $\ge 6.5$.
     - Tự động hiển thị chính xác cho mọi diện học sinh: Học sinh Xuất sắc, Học sinh Giỏi, Học sinh Khá, Học sinh Đạt và Chưa đạt (các tiêu chí không thỏa mãn tự động hiển thị **"Chưa đạt"** thay vì viết cứng).
 - **Senior QA**:
-  + Cập nhật test case `TC-ADAPTIVE-03` trong [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart) khớp với text mới "Học sinh giỏi".
+  + Cập nhật test case `TC-ADAPTIVE-03` trong [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart) khớp với text mới "Học sinh giỏi".
   + Chạy kiểm thử tự động toàn diện toàn bộ test suite dự án.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
+- **Thẻ Tiêu Chuẩn Danh Hiệu THPT ([`marks_criteria_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/marks/marks_criteria_card.dart))**:
   + Xây dựng đường thẳng dọc chia 2 cột từ Header xuống toàn bộ các hàng đối soát qua `IntrinsicHeight`.
   + Thay thế widget container box màu cũ ở cột kết quả bằng text trực tiếp căn giữa (`Alignment.center`).
   + Đổi toàn bộ nhãn: "Đạt", "Học sinh giỏi", "Học sinh xuất sắc", "Chưa đạt" (hoàn toàn không có icon cúp hay sao).
-- **Kiểm Thử Frontend ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+- **Kiểm Thử Frontend ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
   + Cập nhật kỳ vọng test case TC-ADAPTIVE-03 sang `find.textContaining('Học sinh giỏi')`.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
@@ -2614,7 +2614,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Tạm thời comment ẩn thanh bar chọn 4 vai trò (Học sinh, Phụ huynh, Giáo viên, Quản trị).
   + Thu gọn thanh chạm điền nhanh tài khoản demo: tạm thời ẩn 3 chip Giáo viên, Admin và Phụ huynh; chỉ giữ lại 3 chip Học sinh (HS Cấp 1, HS Cấp 2, HS Cấp 3).
 - **Senior Dev**:
-  + Dùng comment dạng khối `/* ... */` và dòng `//` trong [`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart) để bảo toàn 100% mã nguồn, sẵn sàng mở lại bất cứ khi nào cần.
+  + Dùng comment dạng khối `/* ... */` và dòng `//` trong [`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart) để bảo toàn 100% mã nguồn, sẵn sàng mở lại bất cứ khi nào cần.
   + Thêm annotation `// ignore: unused_element` trên `_buildRoleButton` để đảm bảo code sạch 100% không cảnh báo linter.
   + Giá trị mặc định `_selectedRole = UserRole.student` được giữ nguyên vẹn, đảm bảo luồng đăng nhập học sinh hoạt động hoàn hảo.
 - **Senior QA**:
@@ -2622,7 +2622,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Chạy toàn bộ test suite `flutter test` chứng thực không có hồi quy.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Màn Hình Đăng Nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/screens/login_screen.dart))**:
+- **Màn Hình Đăng Nhập ([`login_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/screens/login_screen.dart))**:
   + Comment ẩn dòng 435-465: Tiêu đề chọn vai trò và Container thanh bar 4 vai trò.
   + Comment ẩn dòng 499-501: 3 chip demo `Giáo viên`, `Admin`, `Phụ huynh`.
   + Bổ sung `// ignore: unused_element` trước `_buildRoleButton`.
@@ -2641,15 +2641,15 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 **1. Mục Tiêu & Yêu Cầu Thiết Kế (Senior Dev & Senior QA):**
 - **Yêu cầu người dùng**: Nút đăng xuất tài khoản ở footer trong trang chủ không cần có box bo góc bên ngoài, bỏ đi để giao diện đáy trang thông thoáng, tự nhiên.
 - **Senior Dev**:
-  + Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), loại bỏ chiếc `Container` màu trắng bao bọc ngoài cùng.
+  + Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), loại bỏ chiếc `Container` màu trắng bao bọc ngoài cùng.
   + Đổi màu nền nút "Đăng xuất tài khoản" từ nền đỏ nhạt sang màu trắng tinh khôi (`color: Colors.white`) kết hợp viền mảnh `AppColors.cardBorder` bo góc 16px, icon và chữ màu đỏ `AppColors.error` nổi bật, tinh tế và thanh lịch.
   + Thay khối bọc ngoài bằng `Padding` gọn gàng (`padding: const EdgeInsets.only(top: 8, bottom: 16)`).
 - **Senior QA**:
   + Chạy `flutter analyze lib/` chứng thực 0 lỗi.
-  + Chạy kiểm thử widget test [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart) (17/17 tests PASS bao gồm TC-NAV-13 kiểm tra nút đăng xuất footer và dialog xác nhận).
+  + Chạy kiểm thử widget test [`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart) (17/17 tests PASS bao gồm TC-NAV-13 kiểm tra nút đăng xuất footer và dialog xác nhận).
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Màn Hình Dashboard Học Sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+- **Màn Hình Dashboard Học Sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   + Chuyển đổi khối Footer Trang Chủ từ `Container` có khung viền trắng sang `Padding` thuần túy.
   + Đổi màu nền nút đăng xuất sang `Colors.white` và viền `AppColors.cardBorder`.
 
@@ -2659,7 +2659,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 ### GIAI ĐOẠN 40: TÍCH HỢP THẺ CON VẬT BẠN ĐỒNG HÀNH (ANIMAL MASCOT CLASS CARD) CHO HỌC SINH TIỂU HỌC
 
 **1. Mục Tiêu & Yêu Cầu Thiết Kế (Senior Design & Senior Dev & Senior QA):**
-- **Yêu cầu người dùng**: Áp dụng file thiết kế mẫu [`animal-card.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/animal-card.html) vào ứng dụng Flutter Astra; viết rõ luồng nghiệp vụ (Flow), API Backend Spring Boot, tối ưu hóa công nghệ kết xuất và giao diện.
+- **Yêu cầu người dùng**: Áp dụng file thiết kế mẫu [`animal-card.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/animal-card.html) vào ứng dụng Flutter Đại Việt; viết rõ luồng nghiệp vụ (Flow), API Backend Spring Boot, tối ưu hóa công nghệ kết xuất và giao diện.
 - **Senior Design**:
   + Chuẩn hóa thẩm mỹ hệ thống: Thẻ chữ nhật bo góc ngoài **16px**, các ô con bên trong bo góc **8px** (Nested Radius chuẩn mực).
   + Hạ độ dày viền từ 4px/3px (HTML) xuống **1.5px** thanh thoát, tinh tế, vừa vặn trên màn hình mobile.
@@ -2670,21 +2670,21 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + **Thuật toán băm tất định (Deterministic Hashing)**: Triển khai chuẩn FNV-1a 32-bit trên Dart kết hợp phép nhân nguyên thủy và biến đổi Avalanche, đảm bảo cùng một học sinh (Tên + Ngày sinh) luôn luôn ra cố định 1 linh vật bạn đồng hành, khớp 100% kết quả với JavaScript trong `animal-card.html`.
   + **Backend Spring Boot**: Mở rộng `StudentProfileDto` và `StudentPortalService` bổ sung `homeroomTeacherName` tự động lấy từ giáo viên chủ nhiệm của lớp học.
 - **Senior QA**:
-  + Viết kiểm thử tự động toàn diện trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart).
+  + Viết kiểm thử tự động toàn diện trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/primary_animal_card_test.dart).
   + Kiểm chứng `mvn test-compile` phía Backend: **BUILD SUCCESS**.
   + Kiểm chứng `flutter analyze`: **0 errors, 0 warnings**.
   + Kiểm chứng `flutter test`: Toàn bộ **140 / 140 tests PASSED (100%)**.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
 - **Backend Spring Boot**:
-  + [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java): Bổ sung thuộc tính `private String homeroomTeacherName` và các constructors.
-  + [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java): Trong hàm `getProfileByUserId`, truy vấn `activeClass.getEffectiveHomeroomTeacher()` và gán `homeroomTeacherName`.
+  + [`StudentProfileDto.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/payload/dto/StudentProfileDto.java): Bổ sung thuộc tính `private String homeroomTeacherName` và các constructors.
+  + [`StudentPortalService.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/StudentPortalService.java): Trong hàm `getProfileByUserId`, truy vấn `activeClass.getEffectiveHomeroomTeacher()` và gán `homeroomTeacherName`.
 - **Frontend Flutter**:
-  + [`animal_mascot_data.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/animal_mascot_data.dart): Định nghĩa enum `AnimalMascotType`, model 10 linh vật, bộ tiện ích `MascotHashUtil` (hàm `stripAccents`, `makeKey`, `hashString` FNV-1a, `pickAnimal`).
-  + [`animal_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/animal_mascot_painter.dart): `CustomPainter` vẽ thân mình + cánh tay vẫy và đầu của 10 con vật chuẩn xác theo mẫu SVG gốc.
-  + [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart): Thẻ nhận diện bo góc 16px, 4 ô thông tin bo góc 8px (TÊN LỚP, NGÀY, HỌC SINH, GIÁO VIÊN), thanh hành động và badge bạn đồng hành.
-  + [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Điều phối hiển thị `PrimaryAnimalIdentityCard` khi `educationLevel == EducationLevel.primary`.
-  + [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart): Bộ test kiểm tra tính tất định của FNV-1a và widget rendering.
+  + [`animal_mascot_data.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/animal_mascot_data.dart): Định nghĩa enum `AnimalMascotType`, model 10 linh vật, bộ tiện ích `MascotHashUtil` (hàm `stripAccents`, `makeKey`, `hashString` FNV-1a, `pickAnimal`).
+  + [`animal_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/animal_mascot_painter.dart): `CustomPainter` vẽ thân mình + cánh tay vẫy và đầu của 10 con vật chuẩn xác theo mẫu SVG gốc.
+  + [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart): Thẻ nhận diện bo góc 16px, 4 ô thông tin bo góc 8px (TÊN LỚP, NGÀY, HỌC SINH, GIÁO VIÊN), thanh hành động và badge bạn đồng hành.
+  + [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart): Điều phối hiển thị `PrimaryAnimalIdentityCard` khi `educationLevel == EducationLevel.primary`.
+  + [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/primary_animal_card_test.dart): Bộ test kiểm tra tính tất định của FNV-1a và widget rendering.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
 - **Biên dịch Backend (`./mvnw test-compile -DskipTests`)**:
@@ -2704,7 +2704,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 **1. Mục Tiêu & Vấn Đề Gốc Rễ (Senior QA & Senior Dev):**
 - **Vấn đề người dùng phản hồi**: Người dùng chạy `flutter run -d chrome`, gặp lỗi biên dịch font/compiler crash và báo cáo: *"QA senior kiểm tra lại đi xem có phần nào lỗi không? vì hiện tại tài khoản học sinh cấp 1 tôi không thấy gì cả"*.
 - **Nguyên nhân cốt lõi (Root Cause)**:
-  1. **Lỗi Compiler Crash Web (`intro_flutter/`)**: Thư mục `intro_flutter/` chứa 35 lỗi tham chiếu package ngoại lai (`package:your_app/...`); khi chạy Chrome hoặc build web, Dart frontend_server quét qua và văng lỗi (*"The Dart compiler exited unexpectedly"*). Đã loại trừ bằng `analyzer.exclude: [..., 'intro_flutter/**']` trong [`analysis_options.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/analysis_options.yaml).
+  1. **Lỗi Compiler Crash Web (`intro_flutter/`)**: Thư mục `intro_flutter/` chứa 35 lỗi tham chiếu package ngoại lai (`package:your_app/...`); khi chạy Chrome hoặc build web, Dart frontend_server quét qua và văng lỗi (*"The Dart compiler exited unexpectedly"*). Đã loại trừ bằng `analyzer.exclude: [..., 'intro_flutter/**']` trong [`analysis_options.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/analysis_options.yaml).
   2. **Lỗi Học Sinh Cấp 1 bị đè thành Cấp 3**: Trong `student_dashboard_screen.dart`, phương thức `_loadAllData()` có cờ `FeatureFlags.useDemoFallback == true` trong `kDebugMode`. Trước đó, fast-path gọi hàm mock cũ bị gán cứng `grade: '10'`, `educationLevel: 'HIGH_SCHOOL'`. Bất kể học sinh đăng nhập `student01` hay chọn chip Cấp 1, hồ sơ luôn bị đè thành Cấp 3 THPT, khiến `PrimaryAnimalIdentityCard` không bao giờ được render.
   3. **Độ trễ bất đồng bộ và Indeterminate Loader Animation**: Khi nạp `SharedPreferences` trong `_loadAllData()`, async microtask gap khiến `_isLoading` giữ giá trị `true` trong frame đầu tiên, kích hoạt `CircularProgressIndicator` lặp vô tận khiến 22 widget tests bị `pumpAndSettle timed out`.
 - **Giải pháp xử lý (Architectural Solution)**:
@@ -2716,14 +2716,14 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   4. Đồng bộ hóa thông tin người dùng trong `auth_service.dart`: Đảm bảo `demoUserData` của `student01` có đầy đủ `loginUsername: 'student01'`, `grade: '1'`, `educationLevel: 'PRIMARY'`, `homeroomTeacherName: 'Cô Nguyễn Thị Lan'`.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Frontend Configuration ([`analysis_options.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/analysis_options.yaml))**:
+- **Frontend Configuration ([`analysis_options.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/analysis_options.yaml))**:
   + Bổ sung `'intro_flutter/**'` vào danh sách loại trừ phân tích của analyzer, giải phóng triệt để 35 lỗi package ngoại lai.
-- **Dịch vụ Xác thực ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart))**:
+- **Dịch vụ Xác thực ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart))**:
   + Thêm biến tĩnh `static Map<String, dynamic>? currentSessionUser` lưu cache phiên đăng nhập.
   + Cập nhật `login()` gán `currentSessionUser = data` khi đăng nhập online thành công.
   + Cập nhật `_tryDemoLogin()` gán `currentSessionUser = demoUserData` với thông tin chuẩn phân cấp giáo dục (`student01` là Lớp 1A Tiểu học).
   + Cập nhật `logout()` dọn dẹp sạch sẽ `currentSessionUser = null`.
-- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   + Triển khai `_getAdaptiveMockProfileSync()` và `_syncProfileWithStoredSession()`.
   + Tối ưu hóa `_loadAllData()` và `_loadProfile()` giải quyết triệt để cảnh báo `use_build_context_synchronously`.
 
@@ -2732,13 +2732,13 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + ✅ **BUILD SUCCESS** (`✓ Built build/web` không còn lỗi compiler).
 - **Phân tích tĩnh Frontend (`flutter analyze lib/features/student/screens/student_dashboard_screen.dart`)**:
   + ✅ **0 errors, 0 warnings** (sạch lỗi 100%).
-- **Kiểm thử Thích ứng Cấp học ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+- **Kiểm thử Thích ứng Cấp học ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
   + ✅ **5 / 5 tests PASSED (100%)**.
-- **Kiểm thử Điều hướng Dashboard ([`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
+- **Kiểm thử Điều hướng Dashboard ([`student_dashboard_nav_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_dashboard_nav_test.dart))**:
   + ✅ **17 / 17 tests PASSED (100%)**.
-- **Kiểm thử Thẻ Con Vật Cấp 1 ([`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart))**:
+- **Kiểm thử Thẻ Con Vật Cấp 1 ([`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/primary_animal_card_test.dart))**:
   + ✅ **8 / 8 tests PASSED (100%)**.
-- **Kiểm thử Cơ chế Xác thực Dự phòng ([`auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
+- **Kiểm thử Cơ chế Xác thực Dự phòng ([`auth_fallback_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/network/auth_fallback_test.dart))**:
   + ✅ **9 / 9 tests PASSED (100%)**.
 - **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
   + ✅ **140 / 140 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
@@ -2752,7 +2752,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Câu hỏi của người dùng**: *"ok nhưng tại sao học sinh cấp 2 và cấp 3 cũng có hình con vật?"*
 - **Nguyên nhân cốt lõi (Root Cause)**:
   1. Khi người dùng đăng nhập tài khoản Cấp 2 (`student02`) hoặc Cấp 3 (`student03`), response trả về từ endpoint `/api/auth/signin` của Backend Spring Boot chỉ chứa `{"token":"...", "id":2, "username":"student02", "roles":["STUDENT"]}` (không có trường `grade` và `educationLevel`).
-  2. Trong hàm `_getAdaptiveMockProfileSync()` của [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
+  2. Trong hàm `_getAdaptiveMockProfileSync()` của [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart):
      - `rawGrade = userData['grade']?.toString() ?? ''` -> trả về chuỗi rỗng `''`.
      - `rawLevel = userData['educationLevel']?.toString()` -> trả về `null`.
      - `EducationLevelHelper.fromGrade('', null)` khi nhận chuỗi rỗng: `int.tryParse('') ?? 1` -> kết quả là `1`, dẫn tới `g <= 5` luôn trả về `EducationLevel.primary`!
@@ -2765,14 +2765,14 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   4. Ngoài ra, fast-path trong `_loadAllData()` trước đó `return` ngay khi có `FeatureFlags.useDemoFallback`, không nạp dữ liệu thật ngầm từ `/api/student-portal/profile`.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   - Tái cấu trúc hàm `_getAdaptiveMockProfileSync()` với thứ tự ưu tiên nhận diện chuẩn xác:
     * Nhánh Cấp 2 THCS (`isSec`): Nhận diện nếu `username` chứa `student02`, `hocsinh2`, `6a`, hoặc `rawLevel` chứa `SEC`, hoặc `rawGrade` là 6, 7, 8, 9. Trả về hồ sơ THCS Lớp 6A (`Trần Bảo Nam`, GVCN Thầy Nguyễn Văn Nam, `educationLevel: 'SECONDARY'`).
     * Nhánh Cấp 3 THPT (`isHigh`): Nhận diện nếu `username` chứa `student03`, `hocsinh3`, `10a`, hoặc `rawLevel` chứa `HIGH`/`THPT`, hoặc `rawGrade` là 10, 11, 12. Trả về hồ sơ THPT Lớp 10A1 (`Lê Hoàng Long`, GVCN Cô Lê Thu Hà, `educationLevel: 'HIGH_SCHOOL'`).
     * Nhánh Cấp 1 Tiểu học (`isPrim`): Nhận diện nếu `username` chứa `student01`, `hocsinh1`, `1a`, hoặc `rawLevel` chứa `PRIM`, hoặc `rawGrade` từ 1..5. Trả về hồ sơ Lớp 1A (`Hoàng Văn Thư`, GVCN Cô Nguyễn Thị Lan, `educationLevel: 'PRIMARY'`).
     * Mặc định Fallback: Nếu không xác định được cấp, mặc định là Cấp 3 THPT (`Nguyễn Minh Anh`, Grade 10) để bảo toàn các standalone/widget tests.
   - Cập nhật `_syncProfileWithStoredSession()`: Tự động kích hoạt `_loadProfile()` ngầm trong nền để đồng bộ dữ liệu thật từ Backend Spring Boot port 8081 khi có phiên làm việc trực tuyến.
-- **Kiểm thử Widget Test ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+- **Kiểm thử Widget Test ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
   - Bổ sung test case `TC-ADAPTIVE-06: Secondary and High School students do NOT display PrimaryAnimalIdentityCard; only Primary student displays it`:
     * Kiểm chứng `student03` (Cấp 3): Hiển thị Lớp 10A1, **TUYỆT ĐỐI KHÔNG CÓ** `PrimaryAnimalIdentityCard`.
     * Kiểm chứng `student02` (Cấp 2): Hiển thị Lớp 6A, **TUYỆT ĐỐI KHÔNG CÓ** `PrimaryAnimalIdentityCard`.
@@ -2781,7 +2781,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Thực Tế (Rule 5):**
 - **Phân tích tĩnh Frontend (`flutter analyze lib/features/student/screens/student_dashboard_screen.dart`)**:
   + ✅ **0 errors, 0 warnings** (No issues found in 4.7s).
-- **Kiểm thử Widget Phân Cấp Học Sinh ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+- **Kiểm thử Widget Phân Cấp Học Sinh ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
   + ✅ **6 / 6 tests PASSED (100% pass)**.
 - **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
   + ✅ **141 / 141 tests PASSED (100% pass, 0 failures, 0 errors, 0 skipped)**.
@@ -2806,7 +2806,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
      ```
   2. Người dùng yêu cầu: *"QA senior kiểm tra backend và FE đi. nhớ kiểm tra cả luồng api nữa xem có gì cấn cấn không"*.
 - **Nguyên nhân cốt lõi (Root Cause)**:
-  1. **Ngoại lệ Lifecycle Build**: Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), `_loadAllData()` được gọi trực tiếp trong `initState()`. Do fast-path chạy đồng bộ không có `await`, lời gọi `Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level)` kích hoạt `notifyListeners()` ngay trong frame mount đầu tiên của widget tree, vi phạm quy tắc vòng đời Flutter State và gây crash DDC compiler trên Chrome debug.
+  1. **Ngoại lệ Lifecycle Build**: Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), `_loadAllData()` được gọi trực tiếp trong `initState()`. Do fast-path chạy đồng bộ không có `await`, lời gọi `Provider.of<ThemeManager>(context, listen: false).setEducationLevel(level)` kích hoạt `notifyListeners()` ngay trong frame mount đầu tiên của widget tree, vi phạm quy tắc vòng đời Flutter State và gây crash DDC compiler trên Chrome debug.
   2. **Luồng API bị "cấn" (Blocked Live Sync)**: Trong `_loadAllData()`, khối lệnh `if (ApiConstants.isDemoMode || FeatureFlags.useDemoFallback) return;` làm dừng quá trình nạp dữ liệu quá sớm. Khi người dùng chạy debug mode (`kDebugMode = true`), cờ `useDemoFallback` bật khiến ứng dụng chỉ hiển thị mock data mà hoàn toàn không kích hoạt các API Backend thật (`/marks`, `/attendance`, `/homework`, `/materials`, `/notices`).
   3. **Độ trễ lấy JWT Token trên Web**: `getToken()` trong `auth_service.dart` chỉ đọc từ secure storage / shared preferences không đồng bộ, đôi khi gây trễ trong microtask đầu tiên khi gắn header `Authorization: Bearer <token>`.
   4. **Log Backend**:
@@ -2814,22 +2814,22 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
      - `Warning: Could not decrypt value, returning as-is (legacy unencrypted data)`: Đây là cơ chế fallback có chủ đích của JPA Converter (`EncryptionConfig.java`) để tương thích ngược an toàn với dữ liệu seed chưa mã hóa AES-GCM.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+- **Màn hình Dashboard Học sinh ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
   - Bổ sung hàm bảo vệ `_safeUpdateThemeEducationLevel(EducationLevel level)` sử dụng `WidgetsBinding.instance.addPostFrameCallback((_) { ... })`. Đảm bảo toàn bộ các lời gọi cập nhật Provider và theme chỉ thực thi sau khi frame build hiện tại đã kết thúc hoàn chỉnh.
   - Tái thiết kế kiến trúc `_loadAllData()` theo mô hình **Progressive Hybrid Live Sync**:
     * **Pha 1 (0ms Instant Render)**: Nạp ngay mock profile/data thích ứng cấp học để UI sẵn sàng lập tức, loại bỏ hoàn toàn màn hình trắng.
     * **Pha 2 (Background Live Sync)**: Nếu không phải môi trường demo tĩnh thuần túy (`!ApiConstants.isDemoMode`), tự động chạy song song trong nền các API backend thật: `_loadProfile()`, `_loadAttendance()`, `_loadMarks()`, `_loadHomework()`, `_loadMaterials()`, `_loadNotices()`. Dữ liệu từ CSDL PostgreSQL sẽ cập nhật đè lên state một cách mượt mà; nếu backend tắt, giữ nguyên dữ liệu fallback an toàn.
-- **Dịch vụ Xác thực ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/services/auth_service.dart))**:
+- **Dịch vụ Xác thực ([`auth_service.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/services/auth_service.dart))**:
   - Tối ưu `getToken()`: Ưu tiên trả về ngay `currentSessionUser['token']` nếu có trong bộ nhớ cache để header `Authorization: Bearer <token>` luôn tức thời và tin cậy 100% trên cả Web và Mobile.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
-- **Kiểm thử Tích hợp Backend ([`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java))**:
+- **Kiểm thử Tích hợp Backend ([`StudentAuthIntegrationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentAuthIntegrationTest.java))**:
   + Chạy lệnh: `./mvnw test -Dtest=StudentAuthIntegrationTest`
   + Kết quả: ✅ **Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 — BUILD SUCCESS (100% pass)**.
   + Xác nhận: Luồng đăng nhập và lấy hồ sơ/học bạ cho cả 3 cấp (`student01` - PRIMARY, `student02` - SECONDARY, `student03` - HIGH_SCHOOL) và mã định danh `STU002` phản hồi HTTP 200 OK chuẩn xác.
 - **Phân tích tĩnh Frontend (`flutter analyze lib/features/student/screens/student_dashboard_screen.dart`)**:
   + ✅ **0 errors, 0 warnings** (No issues found in 6.5s).
-- **Kiểm thử Widget Thích ứng ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
+- **Kiểm thử Widget Thích ứng ([`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart))**:
   + ✅ **6 / 6 tests PASSED (100% pass)**.
 - **Kiểm thử toàn bộ Test Suite Frontend (`flutter test`)**:
   + ✅ **141 / 141 tests PASSED (100% test suite, 0 failures, 0 errors, 0 skipped)**.
@@ -2845,13 +2845,13 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   *"cái pha 1 lúc loading khi vào app cái mà 'đợt 1 chút nhé tại sao nó chiều dài và chiều rộng không cố định khung điện thoại mà tại sao tôi có thể di được màn lúc đó. như thế sẽ bị trường hợp không thấy chú sách"*.
 - **Phân tích kỹ thuật chuyên sâu (Root Cause Analysis)**:
   1. **Tại sao người dùng di/kéo được màn lúc loading?**:
-     - Trong thẻ `<head>` của [`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html), hoàn toàn **thiếu thẻ `<meta name="viewport">`**. Khi thiếu thẻ này, mọi trình duyệt di động (Safari iOS, Chrome Mobile, Webview hoặc Chrome DevTools Device Toolbar) sẽ giả định trang web là desktop 980px, tự động kích hoạt tính năng kéo pan và pinch-to-zoom tự do.
+     - Trong thẻ `<head>` của [`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html), hoàn toàn **thiếu thẻ `<meta name="viewport">`**. Khi thiếu thẻ này, mọi trình duyệt di động (Safari iOS, Chrome Mobile, Webview hoặc Chrome DevTools Device Toolbar) sẽ giả định trang web là desktop 980px, tự động kích hoạt tính năng kéo pan và pinch-to-zoom tự do.
      - CSS của `html, body` và `#loading-screen` thiếu các thuộc tính khóa cử chỉ (`touch-action: none; overscroll-behavior: none; -webkit-overflow-scrolling: auto; user-select: none; position: fixed; inset: 0;`). Điều này khiến thao tác vuốt của ngón tay gây ra hiện tượng cuộn đàn hồi (rubber-band bounce/pan), làm toàn bộ giao diện bị trôi lệch khỏi tầm mắt.
      - Các phần tử `.mascot-track`, `.track-ground-line`, `.track-ground-bricks` dùng `width: 100vw;`. Khi trình duyệt có thanh cuộn hoặc thanh điều hướng, `100vw` vượt quá chiều rộng khung nhìn (`document.documentElement.scrollWidth > window.innerWidth`), tạo ra thanh cuộn ngang tiềm ẩn cho phép người dùng kéo màn hình sang hai bên.
   2. **Tại sao không cố định khung điện thoại?**:
      - Màn hình Web Loader (`.loader-stage`) không được giới hạn `max-width` theo tỷ lệ chuẩn khung điện thoại di động (mobile-first frame). Trên màn hình máy tính hoặc khi co giãn cửa sổ, đường chạy và chú sách bị dãn nở rộng khắp `100vw`, và khi chú sách chạy `translateX(min(320px, 40vw))` sẽ chạy ra rất xa tâm mắt nhìn, không giữ được tỷ lệ cân đối chuẩn điện thoại.
 
-**2. Chi Tiết Triển Khai Kỹ Thuật ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html)):**
+**2. Chi Tiết Triển Khai Kỹ Thuật ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html)):**
 1. **Bổ sung thẻ `<meta name="viewport">` chuẩn PWA / Mobile Web**:
    ```html
    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -2916,11 +2916,11 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
      - Việc giảm `opacity: 0` tại mốc 50% khiến chú sách bị mờ đục và biến mất ngay khi còn nửa người trong màn hình, tạo cảm giác đường đi ngắn cụt lủn và không tự nhiên.
      - Người dùng mong muốn chú sách phải sải bước chạy **băng qua hết toàn bộ mép phải của màn hình mobile** (100% cơ thể đi ra ngoài màn hình một cách tự nhiên), rồi sau đó từ ngoài mép trái bước vào lại giữa màn hình.
   2. **Triệt tiêu nguy cơ ngoại lệ `setState() or markNeedsBuild() called during build`**:
-     - Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), việc nạp mock profile đồng bộ trong `initState()` không cần gọi `setState(() {})` vì framework tự động gọi `build()` ngay sau `initState()`.
+     - Trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart), việc nạp mock profile đồng bộ trong `initState()` không cần gọi `setState(() {})` vì framework tự động gọi `build()` ngay sau `initState()`.
      - Lời gọi cập nhật Theme Provider `setEducationLevel(level)` và tiến trình Live Sync `_loadAllData()` được chuyển trọn vẹn vào `WidgetsBinding.instance.addPostFrameCallback((_) { ... })`, đảm bảo 100% chỉ thực thi sau khi frame đầu tiên đã hoàn thành dựng xong.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-1. **Mở rộng toàn diện biên độ chạy trong [`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html)**:
+1. **Mở rộng toàn diện biên độ chạy trong [`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html)**:
    - Cập nhật `@keyframes runnerTrackMotion`:
      * **0% - 24%**: Đứng chính giữa vẫy tay chào vui vẻ (`translateX(0)`).
      * **24% - 49.5%**: Sải bước chạy dài sang phải, giữ nguyên `opacity: 1` sắc nét. Tại mốc 49.5%, đạt tọa độ `translateX(calc(50% + 100px))`. Mép trái của chú sách vượt qua cạnh phải màn hình `(50% + 100px) - 69px = 50% + 31px > 50%`. Toàn bộ 100% cơ thể chú sách đi ra khỏi mép phải màn hình mobile một cách hoàn chỉnh.
@@ -2928,7 +2928,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
      * **54%**: Chú sách xuất hiện sẵn sàng ở vị trí ngoài mép trái màn hình với `opacity: 1`.
      * **54% - 85%**: Bước đều nhịp nhàng từ ngoài mép trái màn hình vào lại chính giữa sân khấu (`translateX(0)`).
      * **85% - 100%**: Đứng vững chãi ở tâm sân khấu chào đón người dùng.
-2. **Chuẩn hóa vòng đời Widget trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+2. **Chuẩn hóa vòng đời Widget trong [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
    - Khởi tạo trực tiếp biến state `_profile`, `_attendance`, `_marks`, v.v. trong `initState()` mà không gọi `setState()`.
    - Bọc toàn bộ các cập nhật provider và gọi `_loadAllData()` trong `WidgetsBinding.instance.addPostFrameCallback`.
 
@@ -2955,7 +2955,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     * Do đó, biểu thức trước đó `translateX(calc(50% + 100px))` bị CSS engine tính thành `(138px * 0.5) + 100px = 69px + 100px = 169px`.
     * Trong khi đó, trên màn hình điện thoại di động (ví dụ iPhone 14/15 rộng 393px), khoảng cách từ tâm màn hình đến mép phải là $393 / 2 = 196.5\text{px}$.
     * Vì $169\text{px} < 196.5\text{px}$, tâm chú sách thậm chí còn chưa chạm tới mép phải màn hình, và mép trái chú sách còn nằm lại trong màn hình tới $196.5 - (169 - 69) = 96.5\text{px}$! Thân chú sách vẫn còn nằm lù lù trong màn hình mà animation đã hết chu kỳ, tạo cảm giác bị kẹt hoặc cắt cụt.
-  - **Giải pháp học tập từ Pha 2 ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart))**:
+  - **Giải pháp học tập từ Pha 2 ([`book_mascot_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/intro/book_mascot_painter.dart))**:
     * Trong Flutter Pha 2: `half = size.width / 2 + unitW / 2 * s`.
     * Để chuyển đổi chuẩn xác sang CSS Pha 1:
       - Nửa bề rộng màn hình/khung di động: `min(50vw, 240px)`.
@@ -2966,7 +2966,7 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
       - Pha 2 dùng `Curves.easeInCubic` ($f(p) = p^3$) khi lao ra ngoài và `Curves.easeOutCubic` khi bước vào giữa.
       - Pha 1 chuyển đổi sang CSS: `cubic-bezier(0.32, 0, 0.67, 0)` khi lao ra mép phải và `cubic-bezier(0.33, 1, 0.68, 1)` khi bước từ ngoài mép trái vào giữa.
 
-**2. Chi Tiết Triển Khai Kỹ Thuật ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/web/index.html)):**
+**2. Chi Tiết Triển Khai Kỹ Thuật ([`frontend/web/index.html`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/web/index.html)):**
 - Cập nhật `@keyframes runnerTrackMotion`:
   ```css
   /* 0% - 24%: Đứng chính giữa vẫy tay chào */
@@ -3026,17 +3026,17 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   * **Tính nhất quán**: Sử dụng chung hàm phân loại thời gian `SkyTimeHelper` và `_getTimeGreeting()` theo `now.hour`.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-1. **Tạo mới [`primary_sky_greeting_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_sky_greeting_header.dart)**:
+1. **Tạo mới [`primary_sky_greeting_header.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/primary_sky_greeting_header.dart)**:
    - Enum `SkyTimePeriod { morning, afternoon, evening }` và `SkyTimeHelper`.
    - `SkyCelestialPainter`: CustomPainter 100% Vector vẽ hình ảnh thiên nhiên "chỉ 1 nửa phần trên hiện" (`ClipRect` + `CustomPaint`), độ phân giải vô cực, không nhòe vỡ, tải siêu nhẹ trên GPU.
    - `PrimarySkyGreetingHeader`: Dải banner cong nhẹ với gradient màu kem ấm (sáng), xanh ngọc pastel (chiều), tím chàm dịu mắt (tối), hiển thị song song biểu tượng bầu trời và lời chào kèm tên học sinh.
-2. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
+2. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
    - Tích hợp `PrimarySkyGreetingHeader` tại phần đỉnh của thẻ con vật.
    - Bảo toàn trọn vẹn 100% bố cục 4 ô thông tin, cột linh vật vẫy tay ở mép phải và thanh tác vụ dưới cùng.
-3. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+3. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
    - Truyền `timeOverride: now` vào `PrimaryAnimalIdentityCard` để đồng bộ thời gian thực.
    - Cấp 2 và Cấp 3 giữ nguyên 100% Card học thuật tối giản hiện hữu.
-4. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
+4. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
    - Kiểm tra hiển thị chính xác lời chào buổi sáng, chiều, tối.
    - Kiểm tra tên học sinh xuất hiện ở cả banner bầu trời và ô thông tin.
 
@@ -3076,14 +3076,14 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   * **Bảo toàn 100% Cấp 2 và Cấp 3**: Card học thuật nền trắng chuẩn mực của THCS và THPT giữ nguyên vẹn 100%.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-1. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
+1. **Cập nhật [`primary_animal_identity_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/widgets/mascot/primary_animal_identity_card.dart)**:
    - Thêm lớp `PrimaryBoxStyle` chuẩn hóa 4 thông số: `bgColor`, `borderColor`, `tagBgColor`, `textColor`.
    - Cung cấp 4 style hằng số: `classStyle`, `dateStyle`, `studentStyle`, `teacherStyle`.
    - Cập nhật `_buildInfoBox` vẽ nền màu pastel nhạt và viền bo góc 8px tiệp màu sắc nét 1.5px.
    - Nâng cấp dải khẩu hiệu capsule và 2 nút bấm Tiện ích / Đăng xuất với màu pastel tương ứng.
-2. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+2. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
    - Đồng bộ ThemeManager trong `initState` và `_safeUpdateThemeEducationLevel` bằng `Future.microtask` tránh xung đột build phase.
-3. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
+3. **Bổ sung Widget Test trong [`primary_animal_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/primary_animal_card_test.dart)**:
    - Kiểm tra chính xác bảng màu Pastel của 4 box con, viền 1.5px, thẻ ngoài nền kem và các nút tác vụ.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
@@ -3107,17 +3107,17 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
 - **Yêu cầu người dùng**:
   *"tốt . giờ đến các cái box sách đọc mới, bài tập cần làm....... ở các trang chủ, lịch học.... ở cấp 1. senior design lên /plan nhỉ"*
 - **Phân tích thiết kế chuyên sâu (Senior UI/UX Guidelines cho Tiểu học)**:
-  * **Hệ Thống Đa Sắc Pastel Tuần Hoàn (5-Tone Rainbow Pastel Palette)**: Tạo mới [`PrimaryPalette`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/primary_palette.dart) làm Single Source of Truth cho toàn bộ ứng dụng:
+  * **Hệ Thống Đa Sắc Pastel Tuần Hoàn (5-Tone Rainbow Pastel Palette)**: Tạo mới [`PrimaryPalette`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/primary_palette.dart) làm Single Source of Truth cho toàn bộ ứng dụng:
     - Tone 0: Xanh Da Trời Pastel (`skyBlue`: `#F0F7FF` / `#93C5FD` / `#3B82F6` / `#1E40AF`).
     - Tone 1: Vàng Mật Ong Pastel (`warmAmber`: `#FFFBEB` / `#FCD34D` / `#F59E0B` / `#92400E`).
     - Tone 2: Hồng Dâu Pastel (`sweetBlossom`: `#FDF2F8` / `#F472B6` / `#EC4899` / `#9D174D`).
     - Tone 3: Xanh Bạc Hà Mint Pastel (`freshMint`: `#F0FDF4` / `#6EE7B7` / `#10B981` / `#065F46`).
     - Tone 4: Tím Oải Hương Lavender Pastel (`lavender`: `#F5F3FF` / `#C4B5FD` / `#8B5CF6` / `#6D28D9`).
   * **Đồng bộ hóa Card & Row dùng chung**:
-    - [`MaterialCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nền pastel dịu nhẹ theo tone, icon PDF container bo tròn 10px nền trắng nổi bật.
-    - [`HomeworkCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nút "Làm bài" bo tròn dạng viên kẹo (pill) 20px xinh xắn, nút "Đã nộp" viền xanh lá mint.
-    - [`LessonRow`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Khi `isPrimary == true`, badge "Tiết X" bo góc 6px với nền pastel của tiết, viền sắc nét, chữ đậm, đường kẻ phân cách pastel dịu nhẹ.
-  * **Trang chủ & Lịch học Cấp 1 ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
+    - [`MaterialCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nền pastel dịu nhẹ theo tone, icon PDF container bo tròn 10px nền trắng nổi bật.
+    - [`HomeworkCard`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/homework_card.dart): Khi `isPrimary == true`, bo góc 14px, viền 1.5px, nút "Làm bài" bo tròn dạng viên kẹo (pill) 20px xinh xắn, nút "Đã nộp" viền xanh lá mint.
+    - [`LessonRow`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/lesson_row.dart): Khi `isPrimary == true`, badge "Tiết X" bo góc 6px với nền pastel của tiết, viền sắc nét, chữ đậm, đường kẻ phân cách pastel dịu nhẹ.
+  * **Trang chủ & Lịch học Cấp 1 ([`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart))**:
     - **Trang chủ (Tab 0)**: Cả 3 khối Sách đọc mới, Bài tập cần làm, Lịch học hôm nay đều có viền khung ngoài pastel `#93C5FD` bo góc 16px, các thẻ bài/sách bên trong luân phiên đổi màu sắc cầu vồng sinh động.
     - **Trang Lịch học (Tab 1)**: Bộ chuyển đổi chế độ xem bo cong 12px, tab Thứ 2 - Thứ 6 highlight pastel bo tròn. Chế độ "Theo tuần (Toàn bộ)" hiển thị 5 ngày từ Thứ 2 đến Thứ 6 thành 5 khung thẻ Pastel Cầu Vồng rực rỡ, ngày hiện tại có huy hiệu `Hôm nay ✨` và viền nổi bật.
     - **Trang Sách học (Tab 2) & Bài tập (Tab 3)**: Tự động đồng bộ luân phiên đa sắc pastel khi `isPrimary == true`.
@@ -3125,22 +3125,22 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
     - Tất cả các tham số `isPrimary` đều mặc định là `false`. Học sinh Cấp 2, Cấp 3 và các role Giáo viên, Phụ huynh giữ nguyên 100% Card học thuật viền đen phẳng (`AppColors.cardBorder`), không có bất kỳ ảnh hưởng nào.
 
 **2. Chi Tiết Triển Khai Kỹ Thuật:**
-1. **Tạo mới [`primary_palette.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/theme/primary_palette.dart)**:
+1. **Tạo mới [`primary_palette.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/theme/primary_palette.dart)**:
    - Cung cấp `PrimaryBoxStyle` và `PrimaryPalette` với 5 màu chuẩn tuần hoàn và hàm `getStyle(index)`.
-2. **Cập nhật [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/material_card.dart)**:
+2. **Cập nhật [`material_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/material_card.dart)**:
    - Thêm `isPrimary` và `paletteIndex`. Tách biệt hoàn toàn nhánh render Cấp 1 và Cấp 2/3.
-3. **Cập nhật [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/homework_card.dart)**:
+3. **Cập nhật [`homework_card.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/homework_card.dart)**:
    - Thêm `isPrimary` và `paletteIndex`. Nâng cấp nút "Làm bài" thành pill button đa sắc khi ở Cấp 1.
-4. **Cập nhật [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/widgets/lesson_row.dart)**:
+4. **Cập nhật [`lesson_row.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/core/widgets/lesson_row.dart)**:
    - Thêm `isPrimary` và `paletteIndex`. Render badge tiết học pastel bo góc 6px.
-5. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
+5. **Cập nhật [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart)**:
    - Tích hợp `isPrimary` và truyền tuần tự `paletteIndex` vào các danh sách ở Tab 0, Tab 1, Tab 2, Tab 3.
    - Nâng cấp `_buildWeeklyTimetable` với 5 khung thẻ Pastel Cầu Vồng cho 5 ngày học.
 6. **Bổ sung Widget Test toàn diện**:
-   - [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/material_card_test.dart): Test `isPrimary: true` render đúng màu pastel và bo góc 14px.
-   - [`homework_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/homework_card_test.dart): Test `isPrimary: true` render đúng màu pastel và pill button.
-   - [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/lesson_row_test.dart): Test `isPrimary: true` render đúng màu badge pastel.
-   - [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart): Thêm `TC-ADAPTIVE-07` kiểm thử Cấp 1 hiển thị thẻ trang chủ và lịch tuần 5 ngày cầu vồng.
+   - [`material_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/material_card_test.dart): Test `isPrimary: true` render đúng màu pastel và bo góc 14px.
+   - [`homework_card_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/homework_card_test.dart): Test `isPrimary: true` render đúng màu pastel và pill button.
+   - [`lesson_row_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/lesson_row_test.dart): Test `isPrimary: true` render đúng màu badge pastel.
+   - [`student_adaptive_dashboard_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Đại Việt/Project-GD/frontend/test/widgets/student_adaptive_dashboard_test.dart): Thêm `TC-ADAPTIVE-07` kiểm thử Cấp 1 hiển thị thẻ trang chủ và lịch tuần 5 ngày cầu vồng.
 
 **3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5):**
 - **Phân tích tĩnh Frontend (`flutter analyze`)**:
@@ -3159,6 +3159,75 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + Giao diện Cấp 1 giờ đây đồng bộ tuyệt đối về ngôn ngữ thiết kế đa sắc Pastel: Từ Thẻ con vật, Lời chào Mặt Trời, Sách đọc mới, Bài tập cần làm, đến Lịch học hôm nay và Lịch tuần 5 ngày cầu vồng đều ngập tràn sắc màu vui tươi, dịu mắt, cực kỳ hấp dẫn và thân thiện với học sinh Tiểu học.
   + Giao diện Cấp 2 và Cấp 3 hoàn toàn giữ vững tính nghiêm túc, học thuật chuẩn mực với viền đen sắc nét.
 
+---
 
+### GIAI ĐOẠN 50: BÁO CÁO KIỂM ĐỊNH TOÀN DIỆN HỆ THỐNG & ĐỐI SOÁT CHẤT LƯỢNG (SENIOR QA AUDIT)
 
+**1. Kết Quả Kiểm Thử Thực Tế (Rule 5 Compliance):**
+- **Kiểm thử tự động Frontend (`flutter test`)**:
+  + ✅ **150 / 150 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+  + Toàn bộ các ca kiểm thử Widget, Navigation, Adaptive Dashboard, Design System, Data Isolation đều vượt qua thành công.
+- **Biên dịch Web Release (`flutter build web`)**:
+  + ✅ **✓ Built build/web** hoàn tất thành công trong 72.6s (exit code 0).
+- **Khởi chạy Web Debug trên Chrome (`flutter run -d chrome`)**:
+  + ✅ Trình biên dịch Dart (`dartdevc`) biên dịch và kết nối debug service trên Chrome thành công, không còn lỗi compiler crash.
+- **Phân tích tĩnh (`flutter analyze`)**:
+  + 0 lỗi biên dịch, 2 cảnh báo deprecation API Radio (`groupValue`, `onChanged`) trong `teacher_create_homework_screen.dart` (khuyến nghị nâng cấp RadioGroup trong đợt refactor tới).
+
+**2. Các Vấn Đề Đã Xử Lý Ngay:**
+- **Triệt tiêu tàn tích hardcode 'Lớp 3A' trong Tab Thông Báo**:
+  + Tại [`student_dashboard_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_dashboard_screen.dart) dòng 4251, sửa fallback filter audience chip từ `'Lớp 3A'` sang `'Lớp 10A1'` để nhất quán 100% với default mock profile THPT.
+
+**3. Danh Sách Các Điểm "Cấn" Cần Lưu Ý & Đề Xuất Xử Lý (Senior QA Findings):**
+1. **Phân hệ Học phí Phụ huynh ([`parent_fees_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/parent/screens/parent_fees_screen.dart))**:
+   - *Hiện trạng*: Còn sót lại mã nguồn mẫu cũ từ dự án trường học Ấn Độ ("Ashadeep School"): hiển thị ký hiệu tiền tệ Rupee `₹` thay vì `đ` (`FormatUtils.formatCurrency`), giao diện hoàn toàn tiếng Anh ("Fee Payment", "Total Pending", "Tuition Fee"), và hardcode `studentId: 'student123'` trong nút thanh toán Razorpay.
+   - *Đề xuất*: Việt hóa toàn diện màn hình học phí, chuyển đơn vị tiền tệ sang VNĐ qua `FormatUtils.formatCurrency`, truyền dynamic `widget.studentId` vào luồng thanh toán.
+2. **Quy chuẩn Thang điểm Backend (Migration V6 vs V7 & [`MarksCalculationHelper.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/MarksCalculationHelper.java))**:
+   - *Hiện trạng*: Script `V6` trước đây đặt constraint `score <= 100`, dự án đã kịp thời bổ sung `V7__fix_markbook_score_range_and_conduct.sql` để đưa về thang điểm 10 chuẩn Việt Nam (`score <= 10.0`). Tuy nhiên, phần javadoc comment trong `MarksCalculationHelper.java` (dòng 101-107) vẫn mô tả xếp loại theo thang điểm cũ TT58 ("Xuất sắc", "Giỏi", "Khá", "Trung bình", "Yếu", "Kém") dù code thực tế đã chuẩn hóa 4 mức theo Thông tư 22/2021 ("Tốt", "Khá", "Đạt", "Chưa đạt").
+   - *Đề xuất*: Cập nhật javadoc đồng bộ với Thông tư 22 để tránh gây hiểu nhầm cho lập trình viên mới.
+3. **Tiêu chuẩn Xét Mức "Tốt" Thông tư 22/2021/TT-BGDĐT**:
+   - *Hiện trạng*: Hàm `evaluateAcademicResultTT22` kiểm tra điều kiện có ít nhất 6 môn ĐTB ≥ 8.0, nhưng chưa kiểm tra điều kiện bắt buộc: *"phải có ít nhất 1 trong 3 môn Toán, Ngữ văn, Ngoại ngữ đạt từ 8,0 trở lên"* do đầu vào hiện tại chỉ nhận danh sách `List<BigDecimal> subjectAverages` thuần túy mà không gắn kèm mã môn.
+   - *Đề xuất*: Nâng cấp DTO truyền vào gồm cả định danh môn học để kiểm tra trọn vẹn điều kiện môn tiên quyết khi xếp loại học lực.
+
+---
+
+### GIAI ĐOẠN 51: TÍCH HỢP HIỆU ỨNG LẬT TRANG SÁCH 3D (PAGEFLIPVIEW) VÀO TRÌNH ĐỌC SÁCH HỌC SINH (STUDENTBOOKREADERSCREEN)
+
+**1. Mục Tiêu & Yêu Cầu Của Người Dùng:**
+- Chuyển đổi trải nghiệm đọc sách điện tử của học sinh từ dạng chuyển làn trượt ngang `PageView` truyền thống sang hiệu ứng **lật trang 3D chân thực (Page Flip / Curl Physics)**, cho phép kéo mép trang, vuốt góc sách như một cuốn sách giáo khoa thật.
+- Đảm bảo hiệu năng tối đa: 60 FPS mượt mà trên Canvas, RAM cố định 20–25MB nhờ cơ chế cửa sổ trượt 3 trang (`PageImageWindow`), không rò rỉ bộ nhớ đồ họa (`ui.Image.dispose()`).
+- Tích hợp Chế độ kép (Dual-Mode): Mặc định là **Chế độ Lật sách 3D 📖**, hỗ trợ nút chuyển đổi tức thì sang **Chế độ Phóng to chi tiết 🔍** (`InteractiveViewer`) để zoom xem bài học nhỏ/ảnh chi tiết.
+- Nguồn ảnh Hybrid (`MaterialPdfPageImageSource`): Tải ảnh trang PDF từ backend API streaming (`GET /api/materials/files/{fileId}/pages/{page}?dpi=...`) khi có mạng/file PDF, và tự động vẽ bài học số hóa bằng `PictureRecorder` khi ngoại tuyến hoặc bài mẫu demo.
+- Bảo toàn tuyệt đối tính toàn vẹn hệ thống (Zero Regression) cho toàn bộ 150+ tests hiện hữu.
+
+**2. Chi Tiết Thực Hiện Kỹ Thuật:**
+- **Lõi `lib/core/page_flip/`**:
+  + [`fold_geometry.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/fold_geometry.dart): Tính toán vector pháp tuyến, đường nếp gấp, thuật toán cắt đa giác Sutherland-Hodgman, và ma trận phản chiếu điểm affine 2D.
+  + [`page_fold_painter.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/page_fold_painter.dart): `CustomPainter` vẽ 3 lớp polygon (trang đang lật mặt trước, mặt sau trang lật, và trang bên dưới được hé lộ) với đổ bóng `LinearGradient` nếp gập và bóng phản chiếu dịu mắt 6% cho học sinh.
+  + [`page_image_window.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/page_image_window.dart): Bộ quản lý cửa sổ trượt 3 trang (trước, hiện tại, sau), giải phóng `image.dispose()` ngay khi ra khỏi cửa sổ, chỉ nạp 1 ảnh/lần để giữ đỉnh RAM cực thấp.
+  + [`page_flip_view.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/page_flip_view.dart): Widget tương tác cử chỉ hoàn chỉnh: kéo góc sách, vuốt nhanh theo quán tính (`FlingAnimation`), chạm mép 40% trái/phải, phím điều hướng bàn phím, và nhãn trợ năng `Semantics`.
+  + [`material_pdf_page_image_source.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/material_pdf_page_image_source.dart): Nguồn ảnh Hybrid kết nối backend API `GET /api/materials/files/{fileId}/pages/{pageNum}` và vẽ bài học số hóa offline bằng `ui.PictureRecorder`.
+- **Nâng cấp Màn hình [`student_book_reader_screen.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/features/student/screens/student_book_reader_screen.dart)**:
+  + Tích hợp `PageFlipView` làm chế độ đọc sách mặc định.
+  + Thêm nút chuyển đổi chế độ trên AppBar (icon `Icons.zoom_in` / `Icons.auto_stories`) với tooltip và SnackBar hướng dẫn.
+  + Thanh Chapter Banner thông tin trên đầu trang hiển thị tên chương học (`_currentChapterTitle`) và huy hiệu chế độ đọc (`Chế độ Lật 3D` / `Chế độ Phóng to`).
+  + Đồng bộ 2 chiều toàn diện giữa Slider thanh tiến độ, nút chuyển trang Trước/Sau, Mục lục BottomSheet và trạng thái của `PageFlipController` / `PageController`.
+  + Thích ứng màu nền giấy và nếp gấp linh hoạt theo Chế độ Ban ngày (`#FCFBF7`) và Ban đêm (`#1E1E1E`).
+- **Cấu hình & Tối ưu Lint**:
+  + Thêm `page_flip_flutter/**` vào mục `analyzer.exclude` trong [`analysis_options.yaml`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/analysis_options.yaml) để bỏ qua thư mục package nguồn mẫu, tránh gây xung đột phân tích tĩnh.
+
+**3. Kết Quả Kiểm Thử & Nghiệm Thu Toàn Diện (Rule 5 Compliance):**
+- **Kiểm thử Đơn vị & Tích hợp Lật trang 3D (`flutter test test/core/page_flip/ test/widgets/student_book_reader_test.dart`)**:
+  + ✅ `fold_geometry_test.dart`: **11 / 11 tests PASSED**.
+  + ✅ `page_image_window_test.dart`: **4 / 4 tests PASSED**.
+  + ✅ `page_flip_view_test.dart`: **8 / 8 tests PASSED**.
+  + ✅ `student_book_reader_test.dart`: **4 / 4 tests PASSED** (TC-READER-01: Khởi chạy mặc định lật 3D; TC-READER-02: Toggle chuyển chế độ 3D/Zoom; TC-READER-03: Mục lục nhảy trang chính xác; TC-READER-04: Đánh dấu Bookmark & Đổi Chế độ Ban đêm).
+  + 👉 **Tổng cộng cụm Page Flip & Reader: 27 / 27 tests PASSED (100%)**.
+- **Kiểm thử Tương thích Thẻ Sách (`material_card_test.dart`)**:
+  + ✅ **6 / 6 tests PASSED** (Bao gồm ca mở sách từ thẻ, giải phóng bộ nhớ, và SGK Toán 1 lật 118 trang).
+- **Kiểm thử Toàn bộ Test Suite Frontend (`flutter test`)**:
+  + ✅ **177 / 177 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
+  + Toàn bộ 150 test cũ và 27 test mới hoàn toàn vượt qua, xác nhận Zero Regression tuyệt đối.
+- **Phân tích tĩnh (`flutter analyze`)**:
+  + ✅ **0 errors, 0 warnings** trên toàn bộ mã nguồn của dự án (chỉ còn 2 cảnh báo info `deprecated_member_use` cũ từ trước ở `teacher_create_homework_screen.dart`).
 

@@ -18,8 +18,8 @@ class AuthService {
   static Map<String, dynamic>? currentSessionUser;
 
   AuthService({http.Client? client, bool? isDemoMode})
-      : _httpClient = client,
-        _isDemoModeOverride = isDemoMode;
+    : _httpClient = client,
+      _isDemoModeOverride = isDemoMode;
 
   bool get isDemoMode => _isDemoModeOverride ?? ApiConstants.isDemoMode;
   http.Client get _client => _httpClient ?? http.Client();
@@ -72,16 +72,23 @@ class AuthService {
         return {
           'success': false,
           'locked': true,
-          'message': data['message'] ??
+          'message':
+              data['message'] ??
               'Tài khoản đã bị tạm khóa do nhập sai mật khẩu 5 lần. Vui lòng thử lại sau 15 phút.',
         };
       } else {
         // Trong môi trường debug/demo fallback, nếu tài khoản demo chuẩn chưa kịp nạp vào DB
-        final allowFallback = isDemoMode || (_isDemoModeOverride != false && FeatureFlags.useDemoFallback);
+        final allowFallback =
+            isDemoMode ||
+            (_isDemoModeOverride != false && FeatureFlags.useDemoFallback);
         if (allowFallback) {
           final u = username.trim().toLowerCase();
-          if (u == 'student01' || u == 'student02' || u == 'student03' ||
-              u == 't001' || u == 'admin' || u == '9910157611') {
+          if (u == 'student01' ||
+              u == 'student02' ||
+              u == 'student03' ||
+              u == 't001' ||
+              u == 'admin' ||
+              u == '9910157611') {
             final demoRes = await _tryDemoLogin(username, password);
             if (demoRes['success'] == true) {
               return demoRes;
@@ -91,19 +98,23 @@ class AuthService {
         final data = jsonDecode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Tài khoản hoặc mật khẩu không chính xác.',
+          'message':
+              data['message'] ?? 'Tài khoản hoặc mật khẩu không chính xác.',
         };
       }
     } catch (e) {
       // TUYỆT ĐỐI KHÔNG SILENT FALLBACK TRÊN BẢN PRODUCTION:
       // Kích hoạt demo login khi có cờ isDemoMode hoặc khi _isDemoModeOverride != false và FeatureFlags.useDemoFallback
-      final allowFallback = isDemoMode || (_isDemoModeOverride != false && FeatureFlags.useDemoFallback);
+      final allowFallback =
+          isDemoMode ||
+          (_isDemoModeOverride != false && FeatureFlags.useDemoFallback);
       if (allowFallback) {
         return _tryDemoLogin(username, password);
       }
       return {
         'success': false,
-        'message': 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.',
+        'message':
+            'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.',
       };
     }
   }
@@ -133,7 +144,7 @@ class AuthService {
         'className': 'Lớp 1A',
         'classTeacher': 'Cô Nguyễn Thị Lan',
         'homeroomTeacherName': 'Cô Nguyễn Thị Lan',
-        'schoolName': 'Trường Tiểu học Astra',
+        'schoolName': 'Trường Tiểu học Đại Việt',
         'educationLevel': 'PRIMARY',
         'educationLevelName': 'Tiểu học',
         'dob': '2020-10-20',
@@ -155,7 +166,7 @@ class AuthService {
         'className': 'Lớp 6A',
         'classTeacher': 'Thầy Nguyễn Văn Nam',
         'homeroomTeacherName': 'Thầy Nguyễn Văn Nam',
-        'schoolName': 'Trường THCS Astra',
+        'schoolName': 'Trường THCS Đại Việt',
         'educationLevel': 'SECONDARY',
         'educationLevelName': 'THCS',
         'dob': '2014-08-20',
@@ -177,7 +188,7 @@ class AuthService {
         'className': 'Lớp 10A',
         'classTeacher': 'Thầy Vũ Đình Trọng',
         'homeroomTeacherName': 'Thầy Vũ Đình Trọng',
-        'schoolName': 'Trường THPT Astra',
+        'schoolName': 'Trường THPT Đại Việt',
         'educationLevel': 'HIGH_SCHOOL',
         'educationLevelName': 'THPT',
         'dob': '2010-08-15',
@@ -254,17 +265,19 @@ class AuthService {
     final token = await getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/change-password');
     try {
-      final response = await _client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        }),
-      ).timeout(ApiTimeoutPolicy.mutation.duration);
+      final response = await _client
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'oldPassword': oldPassword,
+              'newPassword': newPassword,
+            }),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -325,20 +338,28 @@ class AuthService {
     }
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/send-otp');
     try {
-      final response = await _client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone}),
-      ).timeout(ApiTimeoutPolicy.mutation.duration);
+      final response = await _client
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'phone': phone}),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
 
       if (response.statusCode == 200) {
         return {'success': true, 'message': 'Mã OTP đã được gửi.'};
       } else {
         final data = jsonDecode(response.body);
-        return {'success': false, 'message': data['message'] ?? 'Không thể gửi mã OTP.'};
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Không thể gửi mã OTP.',
+        };
       }
     } catch (_) {
-      return {'success': false, 'message': 'Không thể kết nối đến máy chủ gửi OTP.'};
+      return {
+        'success': false,
+        'message': 'Không thể kết nối đến máy chủ gửi OTP.',
+      };
     }
   }
 
@@ -352,11 +373,13 @@ class AuthService {
 
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/verify-otp');
     try {
-      final response = await _client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone, 'otp': otp}),
-      ).timeout(ApiTimeoutPolicy.mutation.duration);
+      final response = await _client
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'phone': phone, 'otp': otp}),
+          )
+          .timeout(ApiTimeoutPolicy.mutation.duration);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -373,7 +396,10 @@ class AuthService {
         return {'success': true, 'user': user};
       } else {
         final data = jsonDecode(response.body);
-        return {'success': false, 'message': data['message'] ?? 'Mã OTP không hợp lệ'};
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Mã OTP không hợp lệ',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Lỗi kết nối máy chủ: $e'};

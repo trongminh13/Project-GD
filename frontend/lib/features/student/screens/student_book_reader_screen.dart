@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ashadeep/core/theme/app_colors.dart';
 import 'package:ashadeep/core/services/auth_service.dart';
 import 'package:ashadeep/utils/constants.dart' show ApiConstants;
+import 'package:ashadeep/core/page_flip/page_flip_view.dart';
+import 'package:ashadeep/core/page_flip/material_pdf_page_image_source.dart';
 
 class StudentBookReaderScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -14,15 +16,19 @@ class StudentBookReaderScreen extends StatefulWidget {
   });
 
   @override
-  State<StudentBookReaderScreen> createState() => _StudentBookReaderScreenState();
+  State<StudentBookReaderScreen> createState() =>
+      _StudentBookReaderScreenState();
 }
 
 class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
   late PageController _pageController;
+  late PageFlipController _flipController;
+  late MaterialPdfPageImageSource _pageSource;
   late int _currentPage;
   late int _totalPages;
   bool _isDarkMode = false;
   bool _isBookmarked = false;
+  bool _isZoomMode = false;
   String? _jwtToken;
 
   bool get _isToan1 {
@@ -85,6 +91,18 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
     }
   }
 
+  String get _currentChapterTitle {
+    if (_isToan1) {
+      if (_currentPage < 24) return 'CHỦ ĐỀ 1: LÀM QUEN VỚI MỘT SỐ HÌNH';
+      if (_currentPage < 50) return 'CHỦ ĐỀ 2: CHỮ SỐ VÀ PHÉP SO SÁNH';
+      if (_currentPage < 82) {
+        return 'CHỦ ĐỀ 3: PHÉP CỘNG VÀ PHÉP TRỪ TRONG PHẠM VI 10';
+      }
+      return 'CHỦ ĐỀ 4: HÌNH KHỐI VÀ THỜI GIAN THỰC TẾ';
+    }
+    return 'CHƯƠNG 2: BẢNG NHÂN & BẢNG CHIA CƠ BẢN';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,7 +110,18 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
     _totalPages = total > 0 ? total : 118;
     _currentPage = widget.initialPage.clamp(1, _totalPages);
     _pageController = PageController(initialPage: _currentPage - 1);
+    _flipController = PageFlipController();
+    _initPageSource();
     _loadToken();
+  }
+
+  void _initPageSource() {
+    _pageSource = MaterialPdfPageImageSource(
+      fileId: widget.data['fileId'] ?? (widget.data['id'] == 101 ? 1 : null),
+      jwtToken: _jwtToken,
+      bookData: widget.data,
+      isDarkMode: _isDarkMode,
+    );
   }
 
   void _loadToken() async {
@@ -101,6 +130,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
       if (mounted) {
         setState(() {
           _jwtToken = token;
+          _initPageSource();
         });
       }
     } catch (_) {}
@@ -114,19 +144,27 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
 
   void _nextPage() {
     if (_currentPage < _totalPages) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeInOut,
-      );
+      if (_isZoomMode) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _flipController.next();
+      }
     }
   }
 
   void _prevPage() {
     if (_currentPage > 1) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeInOut,
-      );
+      if (_isZoomMode) {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _flipController.previous();
+      }
     }
   }
 
@@ -167,10 +205,13 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             Expanded(
               child: ListView.separated(
                 itemCount: _chapters.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.border),
+                separatorBuilder: (context, index) =>
+                    const Divider(height: 1, color: AppColors.border),
                 itemBuilder: (_, idx) {
                   final ch = _chapters[idx];
-                  final isCurrent = _currentPage >= ch['startPage'] && _currentPage <= ch['endPage'];
+                  final isCurrent =
+                      _currentPage >= ch['startPage'] &&
+                      _currentPage <= ch['endPage'];
                   return ListTile(
                     dense: true,
                     leading: Icon(
@@ -181,17 +222,31 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                       ch['title'],
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-                        color: isCurrent ? AppColors.primary : AppColors.textMain,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isCurrent
+                            ? AppColors.primary
+                            : AppColors.textMain,
                       ),
                     ),
                     trailing: Text(
                       'Tr. ${ch['startPage']}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSub),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSub,
+                      ),
                     ),
                     onTap: () {
                       Navigator.pop(ctx);
-                      _pageController.jumpToPage(ch['startPage'] - 1);
+                      final targetPage = ch['startPage'] as int;
+                      setState(() {
+                        _currentPage = targetPage;
+                      });
+                      _flipController.jumpTo(targetPage - 1);
+                      if (_isZoomMode && _pageController.hasClients) {
+                        _pageController.jumpToPage(targetPage - 1);
+                      }
                     },
                   );
                 },
@@ -204,56 +259,73 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
   }
 
   Widget _buildDigitizedCanvas(int pageNum) {
-    final paperText = _isDarkMode ? const Color(0xFFE0E0E0) : const Color(0xFF2C2C2C);
-    final paperBorder = _isDarkMode ? const Color(0xFF333333) : const Color(0xFFE8E5DD);
+    final paperText = _isDarkMode
+        ? const Color(0xFFE0E0E0)
+        : const Color(0xFF2C2C2C);
+    final paperBorder = _isDarkMode
+        ? const Color(0xFF333333)
+        : const Color(0xFFE8E5DD);
 
     if (_isToan1) {
       String chapterTitle = 'CHỦ ĐỀ 1: LÀM QUEN VỚI MỘT SỐ HÌNH';
-      String lessonTitle = 'BÀI 1: HÌNH VUÔNG - HÌNH TRÒN - HÌNH TAM GIÁC - HÌNH CHỮ NHẬT';
-      String tipText = '• Quan sát các đồ vật trong lớp học và nhận biết các hình học cơ bản.\n'
+      String lessonTitle =
+          'BÀI 1: HÌNH VUÔNG - HÌNH TRÒN - HÌNH TAM GIÁC - HÌNH CHỮ NHẬT';
+      String tipText =
+          '• Quan sát các đồ vật trong lớp học và nhận biết các hình học cơ bản.\n'
           '• Hình tròn không có góc, lăn được dễ dàng.\n'
           '• Hình vuông có 4 cạnh bằng nhau, hình tam giác có 3 góc và 3 cạnh.';
       String exTitle = '1. Đố vui nhận diện hình học:';
-      String exContent = 'a) Mặt trời, chiếc đĩa ăn cơm có hình: [ ? ]\n'
+      String exContent =
+          'a) Mặt trời, chiếc đĩa ăn cơm có hình: [ ? ]\n'
           'b) Khung tranh gia đình, viên gạch hoa có hình: [ ? ]\n'
           'c) Chiếc cờ đuôi nheo, biển báo giao thông có hình: [ ? ]';
       String exTitle2 = '2. Trò chơi ghép hình sáng tạo:';
-      String exContent2 = 'Em hãy dùng các miếng ghép hình tam giác và hình vuông để ghép thành một ngôi nhà mái đỏ và một chiếc thuyền buồm rực rỡ.';
+      String exContent2 =
+          'Em hãy dùng các miếng ghép hình tam giác và hình vuông để ghép thành một ngôi nhà mái đỏ và một chiếc thuyền buồm rực rỡ.';
 
       if (pageNum >= 24 && pageNum < 50) {
         chapterTitle = 'CHỦ ĐỀ 2: CHỮ SỐ VÀ PHÉP SO SÁNH';
         lessonTitle = 'BÀI 8: CÁC SỐ TỪ 1 ĐẾN 10 VÀ SO SÁNH SỐ';
-        tipText = '• Đếm xuôi: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.\n'
+        tipText =
+            '• Đếm xuôi: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.\n'
             '• Đếm ngược: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1.\n'
             '• Dấu > (lớn hơn), dấu < (bé hơn), dấu = (bằng nhau).';
         exTitle = '1. Điền dấu so sánh thích hợp (> , < , =):';
-        exContent = 'a) 5 ... 3       b) 8 ... 9       c) 6 ... 6\n'
+        exContent =
+            'a) 5 ... 3       b) 8 ... 9       c) 6 ... 6\n'
             'd) 10 ... 7      e) 4 ... 2       g) 1 ... 0';
         exTitle2 = '2. Tập đếm số lượng:';
-        exContent2 = 'Trên cành có 4 chú chim, 2 chú chim khác bay đến. Hỏi có tất cả bao nhiêu chú chim đang đậu trên cành?';
+        exContent2 =
+            'Trên cành có 4 chú chim, 2 chú chim khác bay đến. Hỏi có tất cả bao nhiêu chú chim đang đậu trên cành?';
       } else if (pageNum >= 50 && pageNum < 82) {
         chapterTitle = 'CHỦ ĐỀ 3: PHÉP CỘNG VÀ PHÉP TRỪ TRONG PHẠM VI 10';
         lessonTitle = 'BÀI 15: PHÉP CỘNG VÀ PHÉP TRỪ CƠ BẢN';
-        tipText = '• Thêm vào tức là làm phép tính cộng (+).\n'
+        tipText =
+            '• Thêm vào tức là làm phép tính cộng (+).\n'
             '• Bớt đi hoặc cho đi tức là làm phép tính trừ (-).\n'
             '• 5 + 5 = 10 ; 10 - 4 = 6 ; 7 + 3 = 10.';
         exTitle = '1. Tính nhẩm nhanh:';
-        exContent = 'a) 4 + 3 = ?       b) 6 + 2 = ?       c) 5 + 5 = ?\n'
+        exContent =
+            'a) 4 + 3 = ?       b) 6 + 2 = ?       c) 5 + 5 = ?\n'
             'd) 9 - 4 = ?       e) 10 - 3 = ?      g) 7 - 0 = ?';
         exTitle2 = '2. Bài toán lời văn:';
-        exContent2 = 'Mẹ mua cho An 6 quả cam, An biếu bà 2 quả. Hỏi An còn lại bao nhiêu quả cam?\n'
+        exContent2 =
+            'Mẹ mua cho An 6 quả cam, An biếu bà 2 quả. Hỏi An còn lại bao nhiêu quả cam?\n'
             'Bài giải: Số quả cam An còn lại là: 6 - 2 = 4 (quả). Đáp số: 4 quả cam.';
       } else if (pageNum >= 82) {
         chapterTitle = 'CHỦ ĐỀ 4: HÌNH KHỐI VÀ THỜI GIAN THỰC TẾ';
         lessonTitle = 'BÀI 25: KHỐI HỘP VÀ XEM ĐỒNG HỒ ĐÚNG GIỜ';
-        tipText = '• Khối hộp chữ nhật có các mặt bao quanh là hình chữ nhật.\n'
+        tipText =
+            '• Khối hộp chữ nhật có các mặt bao quanh là hình chữ nhật.\n'
             '• Khối lập phương có 6 mặt đều là các hình vuông.\n'
             '• Đồng hồ chỉ đúng giờ khi kim dài (kim phút) chỉ thẳng vào số 12.';
         exTitle = '1. Xem đồng hồ và đọc giờ:';
-        exContent = 'a) Kim ngắn chỉ số 7, kim dài chỉ số 12: [ 7 giờ đúng ]\n'
+        exContent =
+            'a) Kim ngắn chỉ số 7, kim dài chỉ số 12: [ 7 giờ đúng ]\n'
             'b) Kim ngắn chỉ số 8, kim dài chỉ số 12: [ 8 giờ đúng ]';
         exTitle2 = '2. Nhận biết khối vật dụng:';
-        exContent2 = 'Hộp sữa tươi là khối hộp chữ nhật. Viên xúc xắc trò chơi cá ngựa là khối lập phương.';
+        exContent2 =
+            'Hộp sữa tươi là khối hộp chữ nhật. Viên xúc xắc trò chơi cá ngựa là khối lập phương.';
       }
 
       return Column(
@@ -310,7 +382,11 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.auto_stories, size: 16, color: AppColors.primary),
+                    Icon(
+                      Icons.auto_stories,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(width: 6),
                     Text(
                       'Kiến thức trọng tâm',
@@ -325,11 +401,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                 const SizedBox(height: 6),
                 Text(
                   tipText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.5,
-                    color: paperText,
-                  ),
+                  style: TextStyle(fontSize: 12, height: 1.5, color: paperText),
                 ),
               ],
             ),
@@ -388,7 +460,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Sách giáo khoa Toán 1 - Astra EdTech',
+                  'Sách giáo khoa Toán 1 - Đại Việt EdTech',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 10,
@@ -457,16 +529,18 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             color: _isDarkMode
                 ? AppColors.primary.withValues(alpha: 0.15)
                 : AppColors.primary.withValues(alpha: 0.06),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Row(
                 children: [
-                  Icon(Icons.lightbulb_outline, size: 16, color: AppColors.primary),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Ghi nhớ kiến thức',
@@ -483,11 +557,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                 '• 7 × 1 = 7 ; 7 × 2 = 14 ; 7 × 3 = 21 ; 7 × 4 = 28\n'
                 '• Muốn gấp một số lên nhiều lần, ta lấy số đó nhân với số lần.\n'
                 '• Thứ tự thực hiện: Trong biểu thức có phép nhân và cộng/trừ, ta ưu tiên nhân trước.',
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.5,
-                  color: paperText,
-                ),
+                style: TextStyle(fontSize: 12, height: 1.5, color: paperText),
               ),
             ],
           ),
@@ -551,7 +621,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           children: [
             Expanded(
               child: Text(
-                'Astra EdTech Digital Library',
+                'Đại Việt EdTech Digital Library',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10,
@@ -575,13 +645,18 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
   }
 
   Widget _buildPageItem(int pageNum) {
-    final fileId = widget.data['fileId'] ?? (widget.data['id'] == 101 ? 1 : null);
+    final fileId =
+        widget.data['fileId'] ?? (widget.data['id'] == 101 ? 1 : null);
     final pageUrl = fileId != null
         ? '${ApiConstants.baseUrl}/materials/files/$fileId/pages/$pageNum?dpi=115'
         : null;
 
-    final paperBg = _isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFFCFBF7);
-    final paperBorder = _isDarkMode ? const Color(0xFF333333) : const Color(0xFFE8E5DD);
+    final paperBg = _isDarkMode
+        ? const Color(0xFF1E1E1E)
+        : const Color(0xFFFCFBF7);
+    final paperBorder = _isDarkMode
+        ? const Color(0xFF333333)
+        : const Color(0xFFE8E5DD);
 
     return InteractiveViewer(
       minScale: 1.0,
@@ -598,7 +673,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
               border: Border.all(color: paperBorder),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: _isDarkMode ? 0.35 : 0.08),
+                  color: Colors.black.withValues(
+                    alpha: _isDarkMode ? 0.35 : 0.08,
+                  ),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -607,7 +684,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
             child: pageUrl != null
                 ? Image.network(
                     pageUrl,
-                    headers: _jwtToken != null ? {'Authorization': 'Bearer $_jwtToken'} : null,
+                    headers: _jwtToken != null
+                        ? {'Authorization': 'Bearer $_jwtToken'}
+                        : null,
                     fit: BoxFit.contain,
                     loadingBuilder: (context, child, progress) {
                       if (progress == null) return child;
@@ -619,7 +698,8 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                             children: [
                               CircularProgressIndicator(
                                 value: progress.expectedTotalBytes != null
-                                    ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                                    ? progress.cumulativeBytesLoaded /
+                                          progress.expectedTotalBytes!
                                     : null,
                                 color: AppColors.primary,
                               ),
@@ -628,7 +708,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                                 'Đang truyền trực tiếp trang $pageNum...',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: _isDarkMode ? Colors.grey[400] : AppColors.textSub,
+                                  color: _isDarkMode
+                                      ? Colors.grey[400]
+                                      : AppColors.textSub,
                                 ),
                               ),
                             ],
@@ -653,13 +735,18 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
     final subject = widget.data['subjectName'] ?? 'Toán';
 
     final scaffold = Scaffold(
-      backgroundColor: _isDarkMode ? const Color(0xFF121212) : const Color(0xFFF0EFEB),
+      backgroundColor: _isDarkMode
+          ? const Color(0xFF121212)
+          : const Color(0xFFF0EFEB),
       appBar: AppBar(
         backgroundColor: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: _isDarkMode ? Colors.white : AppColors.textMain),
+          icon: Icon(
+            Icons.arrow_back,
+            color: _isDarkMode ? Colors.white : AppColors.textMain,
+          ),
           onPressed: () => Navigator.of(context).pop(_currentPage),
           tooltip: 'Thoát trình đọc',
         ),
@@ -689,7 +776,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           IconButton(
             icon: Icon(
               _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _isBookmarked ? AppColors.primary : (_isDarkMode ? Colors.white : AppColors.textMain),
+              color: _isBookmarked
+                  ? AppColors.primary
+                  : (_isDarkMode ? Colors.white : AppColors.textMain),
             ),
             tooltip: 'Đánh dấu trang',
             onPressed: () {
@@ -699,7 +788,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    _isBookmarked ? 'Đã đánh dấu trang $_currentPage' : 'Đã bỏ đánh dấu trang $_currentPage',
+                    _isBookmarked
+                        ? 'Đã đánh dấu trang $_currentPage'
+                        : 'Đã bỏ đánh dấu trang $_currentPage',
                   ),
                   duration: const Duration(seconds: 1),
                 ),
@@ -708,18 +799,55 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           ),
           IconButton(
             icon: Icon(
-              _isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              _isDarkMode
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
               color: _isDarkMode ? Colors.amber : AppColors.textMain,
             ),
             tooltip: _isDarkMode ? 'Chế độ ban ngày' : 'Chế độ ban đêm',
             onPressed: () {
               setState(() {
                 _isDarkMode = !_isDarkMode;
+                _initPageSource();
               });
             },
           ),
           IconButton(
-            icon: Icon(Icons.menu_book_outlined, color: _isDarkMode ? Colors.white : AppColors.textMain),
+            icon: Icon(
+              _isZoomMode ? Icons.auto_stories : Icons.zoom_in,
+              color: _isZoomMode
+                  ? AppColors.primary
+                  : (_isDarkMode ? Colors.white : AppColors.textMain),
+            ),
+            tooltip: _isZoomMode
+                ? 'Chuyển sang chế độ lật sách 3D'
+                : 'Chuyển sang chế độ phóng to chi tiết',
+            onPressed: () {
+              setState(() {
+                _isZoomMode = !_isZoomMode;
+              });
+              if (_isZoomMode) {
+                _pageController = PageController(initialPage: _currentPage - 1);
+              } else {
+                _flipController.jumpTo(_currentPage - 1);
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _isZoomMode
+                        ? 'Chế độ Phóng to: Dùng 2 ngón tay hoặc con lăn để zoom'
+                        : 'Chế độ Lật sách 3D: Vuốt góc hoặc chạm mép để lật trang',
+                  ),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.menu_book_outlined,
+              color: _isDarkMode ? Colors.white : AppColors.textMain,
+            ),
             tooltip: 'Mục lục',
             onPressed: _showTableOfContents,
           ),
@@ -733,18 +861,97 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
           ),
         ),
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        physics: const BouncingScrollPhysics(),
-        itemCount: _totalPages,
-        onPageChanged: (index) {
-          setState(() {
-            _currentPage = index + 1;
-          });
-        },
-        itemBuilder: (context, index) {
-          return _buildPageItem(index + 1);
-        },
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.menu_book,
+                  size: 14,
+                  color: _isDarkMode ? Colors.grey[400] : AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _currentChapterTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: _isDarkMode ? Colors.grey[400] : AppColors.textSub,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _isZoomMode ? 'Chế độ Phóng to' : 'Chế độ Lật 3D',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: _isDarkMode ? const Color(0xFF333333) : AppColors.border,
+          ),
+          Expanded(
+            child: _isZoomMode
+                ? PageView.builder(
+                    controller: _pageController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _totalPages,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index + 1;
+                      });
+                      _flipController.jumpTo(index);
+                    },
+                    itemBuilder: (context, index) {
+                      return _buildPageItem(index + 1);
+                    },
+                  )
+                : PageFlipView(
+                    pageCount: _totalPages,
+                    source: _pageSource,
+                    initialPage: _currentPage - 1,
+                    controller: _flipController,
+                    aspectRatio: 1 / 1.4142,
+                    paperColor: _isDarkMode
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFFFCFBF7),
+                    backColor: _isDarkMode
+                        ? const Color(0xFF2A2A2A)
+                        : const Color(0xFFF8F9FA),
+                    shadow: true,
+                    hintOnOpen: true,
+                    onPageChanged: (pageIndex) {
+                      setState(() {
+                        _currentPage = pageIndex + 1;
+                      });
+                      if (_pageController.hasClients) {
+                        _pageController.jumpToPage(pageIndex);
+                      }
+                    },
+                  ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -774,7 +981,9 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: AppColors.primary,
-                      inactiveTrackColor: _isDarkMode ? Colors.grey[800] : AppColors.border,
+                      inactiveTrackColor: _isDarkMode
+                          ? Colors.grey[800]
+                          : AppColors.border,
                       thumbColor: AppColors.primary,
                       trackHeight: 3.0,
                     ),
@@ -789,7 +998,10 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                           setState(() {
                             _currentPage = target;
                           });
-                          _pageController.jumpToPage(target - 1);
+                          _flipController.jumpTo(target - 1);
+                          if (_isZoomMode && _pageController.hasClients) {
+                            _pageController.jumpToPage(target - 1);
+                          }
                         }
                       },
                     ),
@@ -822,7 +1034,11 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle_outline, size: 12, color: AppColors.success),
+                        const Icon(
+                          Icons.check_circle_outline,
+                          size: 12,
+                          color: AppColors.success,
+                        ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
@@ -869,9 +1085,7 @@ class _StudentBookReaderScreenState extends State<StudentBookReaderScreen> {
                 ),
               ],
             ),
-            child: ClipRect(
-              child: scaffold,
-            ),
+            child: ClipRect(child: scaffold),
           ),
         ),
       ),

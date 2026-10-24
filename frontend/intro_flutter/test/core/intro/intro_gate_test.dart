@@ -27,7 +27,7 @@ Widget _app({
   Widget gate = IntroGate(
     policy: policy,
     ready: ready,
-    appName: 'Astra',
+    appName: 'Đại Việt',
     tagline: 'Ứng dụng nhà trường',
     semanticsLabel: 'Ứng dụng nhà trường. Chạm để bỏ qua',
     builder: (_) => const Text('HOME'),
@@ -42,7 +42,10 @@ Widget _app({
 }
 
 /// Bơm khung hình cho đến khi màn kế tiếp xuất hiện (tối đa [max]).
-Future<void> _pumpUntilHome(WidgetTester tester, {Duration max = const Duration(seconds: 8)}) async {
+Future<void> _pumpUntilHome(
+  WidgetTester tester, {
+  Duration max = const Duration(seconds: 8),
+}) async {
   const step = Duration(milliseconds: 250);
   var elapsed = Duration.zero;
   while (find.text('HOME').evaluate().isEmpty && elapsed < max) {
@@ -57,13 +60,13 @@ void main() {
     await tester.pumpWidget(_app(policy: policy, ready: Future<void>.value()));
     await tester.pump();
 
-    expect(find.text('Astra'), findsOneWidget);
+    expect(find.text('Đại Việt'), findsOneWidget);
     expect(find.text('HOME'), findsNothing);
     expect(policy.marked, 1);
 
     await _pumpUntilHome(tester);
     expect(find.text('HOME'), findsOneWidget);
-    expect(find.text('Astra'), findsNothing);
+    expect(find.text('Đại Việt'), findsNothing);
   });
 
   testWidgets('không hiện intro khi policy từ chối', (tester) async {
@@ -72,12 +75,16 @@ void main() {
     await tester.pump();
 
     expect(find.text('HOME'), findsOneWidget);
-    expect(find.text('Astra'), findsNothing);
+    expect(find.text('Đại Việt'), findsNothing);
     expect(policy.marked, 0);
   });
 
-  testWidgets('chạm bỏ qua vào ngay và không lặp lại khi hết giờ', (tester) async {
-    await tester.pumpWidget(_app(policy: _FakePolicy(true), ready: Future<void>.value()));
+  testWidgets('chạm bỏ qua vào ngay và không lặp lại khi hết giờ', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(policy: _FakePolicy(true), ready: Future<void>.value()),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -90,24 +97,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('giảm chuyển động: hiện hình tĩnh rồi vào màn kế tiếp', (tester) async {
-    await tester.pumpWidget(_app(
-      policy: _FakePolicy(true),
-      ready: Future<void>.value(),
-      reduceMotion: true,
-    ));
+  testWidgets('giảm chuyển động: hiện hình tĩnh rồi vào màn kế tiếp', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        policy: _FakePolicy(true),
+        ready: Future<void>.value(),
+        reduceMotion: true,
+      ),
+    );
     await tester.pump();
 
-    expect(find.text('Astra'), findsOneWidget);
+    expect(find.text('Đại Việt'), findsOneWidget);
     expect(find.text('HOME'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.text('HOME'), findsOneWidget);
   });
 
-  testWidgets('khởi động chậm: giữ tư thế rồi vẫn chuyển sau giới hạn chờ', (tester) async {
+  testWidgets('khởi động chậm: giữ tư thế rồi vẫn chuyển sau giới hạn chờ', (
+    tester,
+  ) async {
     final never = Completer<void>(); // khởi động không bao giờ xong
-    await tester.pumpWidget(_app(policy: _FakePolicy(true), ready: never.future));
+    await tester.pumpWidget(
+      _app(policy: _FakePolicy(true), ready: never.future),
+    );
     await tester.pump();
 
     // Vẫy xong sớm nhất ở 1,4 giây, giữ thêm tối đa 1 giây, nên chưa thể vào ở 1,9 giây.
@@ -133,7 +148,9 @@ void main() {
   });
 
   testWidgets('gỡ widget giữa chừng không gây lỗi', (tester) async {
-    await tester.pumpWidget(_app(policy: _FakePolicy(true), ready: Future<void>.value()));
+    await tester.pumpWidget(
+      _app(policy: _FakePolicy(true), ready: Future<void>.value()),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 

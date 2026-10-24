@@ -1,6 +1,6 @@
 # Hồ sơ Kiểm thử — Project-GD Phase 1
 
-**Dự án:** Hệ thống Quản trị & Sổ liên lạc Giáo dục Astra  
+**Dự án:** Hệ thống Quản trị & Sổ liên lạc Giáo dục Đại Việt  
 **Phiên bản:** Phase 1  
 **Môi trường:** Backend Spring Boot 3.5 / Java 21, Port 8081 · DB PostgreSQL `ashadeep_school_db`  
 **Ngày khởi tạo:** 2026-10-15  
