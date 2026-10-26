@@ -60,18 +60,26 @@ class BookMockContentProvider {
       ];
     }
 
-    // 3. Sách giáo khoa Toán 6
+    // 3. Sách giáo khoa Toán 6 (126 trang thực tế)
     if (_toan6Regex.hasMatch(title)) {
       return [
         {'title': 'Chương 1: Tập hợp các số tự nhiên & Phép tính', 'startPage': 4, 'endPage': 35},
         {'title': 'Chương 2: Tính chất chia hết & Số nguyên tố', 'startPage': 36, 'endPage': 65},
         {'title': 'Chương 3: Số nguyên âm & Tập hợp số nguyên', 'startPage': 66, 'endPage': 95},
-        {'title': 'Chương 4: Một số hình phẳng trong thực tiễn', 'startPage': 96, 'endPage': 120},
+        {'title': 'Chương 4: Một số hình phẳng trong thực tiễn & Ôn tập', 'startPage': 96, 'endPage': 126},
       ];
     }
 
-    // 4. Sách giáo khoa Toán 10
+    // 4. Sách giáo khoa Toán 10 (Tập 2: 52 trang thực tế; Tập 1: dải trang mặc định)
     if (_toan10Regex.hasMatch(title) || (subject.contains('toán') && title.contains('10'))) {
+      if (title.toLowerCase().contains('tập 2') || title.toLowerCase().contains('tap 2') || title.toLowerCase().contains('tap_2')) {
+        return [
+          {'title': 'Chương 6: Hàm số, Đồ thị và Ứng dụng', 'startPage': 4, 'endPage': 18},
+          {'title': 'Chương 7: Phương pháp tọa độ trong mặt phẳng', 'startPage': 19, 'endPage': 32},
+          {'title': 'Chương 8: Đại số tổ hợp & Nhị thức Newton', 'startPage': 33, 'endPage': 42},
+          {'title': 'Chương 9: Tính xác suất của biến cố', 'startPage': 43, 'endPage': 52},
+        ];
+      }
       return [
         {'title': 'Chương 1: Mệnh đề toán học và Tập hợp', 'startPage': 4, 'endPage': 28},
         {'title': 'Chương 2: Bất phương trình bậc nhất hai ẩn', 'startPage': 29, 'endPage': 55},
@@ -83,6 +91,14 @@ class BookMockContentProvider {
     // 5. Môn Ngữ văn / Tiếng Việt
     if (subject.contains('văn') || subject.contains('tiếng việt') || title.toLowerCase().contains('văn') || title.toLowerCase().contains('tiếng việt')) {
       if (title.contains('10')) {
+        if (title.toLowerCase().contains('tập 2') || title.toLowerCase().contains('tap 2') || title.toLowerCase().contains('tap_2')) {
+          return [
+            {'title': 'Bài 6: Nguyễn Trãi - Dành còn để trợ dân này', 'startPage': 4, 'endPage': 22},
+            {'title': 'Bài 7: Quyền năng của người kể chuyện (Truyện ngắn)', 'startPage': 23, 'endPage': 40},
+            {'title': 'Bài 8: Thế giới đa dạng của thông tin (Văn bản thông tin)', 'startPage': 41, 'endPage': 56},
+            {'title': 'Bài 9: Hành trang cuộc sống (Văn bản nghị luận)', 'startPage': 57, 'endPage': 71},
+          ];
+        }
         return [
           {'title': 'Bài 1: Sức sống của sử thi & Thần thoại', 'startPage': 4, 'endPage': 32},
           {'title': 'Bài 2: Vẻ đẹp của thơ ca trung đại và Đường luật', 'startPage': 33, 'endPage': 65},
@@ -92,18 +108,18 @@ class BookMockContentProvider {
       }
       if (title.contains('6')) {
         return [
-          {'title': 'Bài 1: Lắng nghe lịch sử nước mình (Truyền thuyết)', 'startPage': 4, 'endPage': 35},
-          {'title': 'Bài 2: Miền cổ tích & Thế giới diệu kỳ', 'startPage': 36, 'endPage': 70},
-          {'title': 'Bài 3: Vẻ đẹp quê hương (Thơ lục bát)', 'startPage': 71, 'endPage': 105},
-          {'title': 'Bài 4: Những trải nghiệm trong đời (Truyện đồng thoại)', 'startPage': 106, 'endPage': 136},
+          {'title': 'Bài 1: Lắng nghe lịch sử nước mình (Truyền thuyết: Thánh Gióng, Sơn Tinh Thủy Tinh)', 'startPage': 4, 'endPage': 35},
+          {'title': 'Bài 2: Miền cổ tích và thế giới diệu kỳ (Cổ tích: Thạch Sanh)', 'startPage': 36, 'endPage': 70},
+          {'title': 'Bài 3: Vẻ đẹp quê hương (Thơ lục bát: Ca dao, Chùm ca dao quê hương)', 'startPage': 71, 'endPage': 105},
+          {'title': 'Bài 4: Những trải nghiệm trong đời (Đồng thoại: Dế Mèn phiêu lưu ký - Tô Hoài; Hoàng tử bé - Saint-Exupéry)', 'startPage': 106, 'endPage': 138},
         ];
       }
-      // Tiếng Việt 1
+      // Tiếng Việt 1 (57 trang thực tế)
       return [
-        {'title': 'Chủ đề 1: Em làm quen với chữ cái và dấu thanh', 'startPage': 4, 'endPage': 35},
-        {'title': 'Chủ đề 2: Em học ghép vần & Luyện phát âm', 'startPage': 36, 'endPage': 75},
-        {'title': 'Chủ đề 3: Đọc câu ngắn & Đoạn văn về gia đình', 'startPage': 76, 'endPage': 110},
-        {'title': 'Chủ đề 4: Mái trường mến yêu & Thầy cô bè bạn', 'startPage': 111, 'endPage': 140},
+        {'title': 'Chủ đề 1: Em làm quen với chữ cái và dấu thanh', 'startPage': 4, 'endPage': 18},
+        {'title': 'Chủ đề 2: Em học ghép vần & Luyện phát âm', 'startPage': 19, 'endPage': 32},
+        {'title': 'Chủ đề 3: Đọc câu ngắn & Đoạn văn về gia đình', 'startPage': 33, 'endPage': 45},
+        {'title': 'Chủ đề 4: Mái trường mến yêu & Thầy cô bè bạn', 'startPage': 46, 'endPage': 57},
       ];
     }
 
@@ -306,7 +322,7 @@ class BookMockContentProvider {
             'c) R: "Tam giác đều có 3 góc bằng nhau và bằng 60°" [ Mệnh đề ĐÚNG ]',
         exTitle2: '2. Bài tập mệnh đề kéo theo (P ⇒ Q):',
         exContent2: 'Cho định lý: "Nếu số tự nhiên n có chữ số tận cùng là 0 thì n chia hết cho 5". Hãy phát biểu mệnh đề đảo và xét tính đúng sai.',
-        footerBookName: 'Sách giáo khoa Toán 10 - Tập 1',
+        footerBookName: 'Sách giáo khoa Toán 10 - Tập 2',
       );
     }
 
@@ -342,11 +358,30 @@ class BookMockContentProvider {
             'b) Chi tiết bà con buôn làng đi theo Đăm Săn sau chiến thắng mang ý nghĩa biểu tượng gì?',
         exTitle2: '2. Bài tập rèn luyện viết đoạn văn:',
         exContent2: 'Viết đoạn văn ngắn (khoảng 150 chữ) trình bày cảm nghĩ của em về vẻ đẹp lý tưởng của người anh hùng sử thi Tây Nguyên.',
-        footerBookName: 'Sách giáo khoa Ngữ văn 10 - Tập 1',
+        footerBookName: 'Sách giáo khoa Ngữ văn 10 - Tập 2',
       );
     }
 
-    // 5. Môn Ngữ văn 6 (Cấp 2 THCS)
+    // 5A. Môn Ngữ văn 6 - Bài 4: Trải nghiệm trong đời (Đồng thoại, trang 106 trở đi - Ưu tiên kiểm tra trước)
+    if ((subject.contains('văn') || title.toLowerCase().contains('văn')) &&
+        title.contains('6') && pageNum >= 106) {
+      return BookLessonData(
+        chapterTitle: 'BÀI 4: NHỮNG TRẢI NGHIỆM TRONG ĐỜI',
+        lessonTitle: 'VĂN BẢN: DẾ MÈN PHIÊU LƯU KÝ (Trích, Tô Hoài)',
+        tipTitle: 'Đặc trưng thể loại Truyện đồng thoại',
+        tipText: '• Truyện đồng thoại lấy loài vật làm nhân vật, thể hiện tâm lý và cảm xúc như con người.\n'
+            '• Nhân vật Dế Mèn dũng cảm, kiêu ngạo nhưng biết nhận ra lỗi lầm — hành trình trưởng thành.\n'
+            '• Ngôn ngữ giàu hình ảnh, từ láy miêu tả đặc sắc của Tô Hoài.',
+        exTitle: '1. Câu hỏi đọc hiểu:',
+        exContent: 'a) Dế Mèn đã đối xử với Dế Choắt như thế nào? Em có đồng ý với cách ứng xử đó không?\n'
+            'b) Sau cái chết của Dế Choắt, Dế Mèn đã nhận ra điều gì về bản thân?',
+        exTitle2: '2. Kết nối văn bản "Hoàng tử bé" (Saint-Exupéry):',
+        exContent2: 'So sánh nhân vật Dế Mèn và Hoàng tử bé về hành trình khám phá thế giới xung quanh.',
+        footerBookName: 'Sách giáo khoa Ngữ văn 6 - Tập 1 (Kết nối tri thức)',
+      );
+    }
+
+    // 5B. Môn Ngữ văn 6 (Bài 1 - 3, trang < 106)
     if ((subject.contains('văn') || title.toLowerCase().contains('văn')) && title.contains('6')) {
       return BookLessonData(
         chapterTitle: 'BÀI 1: LẮNG NGHE LỊCH SỬ NƯỚC MÌNH',

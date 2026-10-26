@@ -43,6 +43,9 @@ public class MaterialService {
     @Autowired
     private com.school.backend.security.SchoolAccessPolicy accessPolicy;
 
+    @Autowired
+    private PdfPreRenderJob pdfPreRenderJob;
+
     @Transactional
     public Material createMaterial(MaterialCreateRequest req, String teacherUsername) {
         Teacher teacher = teacherRepository.findByUserUsername(teacherUsername)
@@ -66,7 +69,11 @@ public class MaterialService {
             file.setFileName(req.getFileName());
             file.setFileUrl(req.getFileUrl());
             file.setVersion(1);
-            materialFileRepository.save(file);
+            file = materialFileRepository.save(file);
+
+            if ("PUBLISHED".equals(saved.getStatus())) {
+                pdfPreRenderJob.preRenderAllPages(file.getId());
+            }
         }
 
         if (req.getTargetClassIds() != null) {

@@ -10,4 +10,5 @@ import java.util.List;
 public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByCreatedByTeacherIdOrderByCreatedAtDesc(Long teacherId);
     List<Material> findBySubjectId(Long subjectId);
+    boolean existsByTitle(String title);
 }

@@ -39,4 +39,7 @@ public class MaterialFile {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "rendered_at")
+    private LocalDateTime renderedAt;
 }

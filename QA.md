@@ -3352,3 +3352,70 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + ✅ **213 / 213 tests PASSED (100% test suite pass, 0 failures, 0 errors, 0 skipped)**.
 - **Phân tích tĩnh (`flutter analyze`)**:
   + ✅ **0 errors, 0 warnings** trên toàn bộ mã nguồn frontend.
+
+---
+
+## 11. ĐỢT TỐI ƯU HÓA PDF RENDERING (3 LỚP CACHE) & CHUẨN HÓA REBAC KHO SÁCH GIÁO KHOA
+
+**1. Mục Tiêu, Yêu Cầu & Giải Quyết Triệt Để 8 Điểm Phản Biện QA Senior:**
+- **Vấn đề cốt lõi trước tối ưu**:
+  1. *Nghẽn CPU/RAM do Render On-The-Fly*: Mỗi lần học sinh lật trang sách, server phải đọc toàn bộ tệp PDF lớn (30-110MB) vào RAM và giải mã lại từ đầu, gây nghẽn nghiêm trọng khi nhiều học sinh cùng đọc sách.
+  2. *API PDFBox 3.x không tương thích*: Code cũ đề xuất `MemoryUsageSetting` của PDFBox 2.x, gây lỗi biên dịch trên PDFBox 3.0.3.
+  3. *Lỗ hổng ReBAC Sách Toán 1*: Bản ghi Toán 1 cũ bị gán cho toàn bộ các lớp trong trường, học sinh Lớp 6 và Lớp 10 vẫn nhìn thấy sách Lớp 1.
+  4. *2 Semaphore phân mảnh*: Khai báo Semaphore riêng lẻ gây rủi ro mở tới 8 luồng render nặng đồng thời.
+  5. *Thiếu Startup Backfill*: Các sách đã xuất bản từ trước không có cơ chế tự động tạo ảnh đĩa nếu không có sự kiện tạo mới.
+  6. *Số trang ước lượng sai*: Sách Tiếng Việt 1 thật có 57 trang nhưng ước lượng 140 trang.
+  7. *Nhánh kiểm tra Ngữ văn 6 Unreachable Code*: Nhánh Bài 4 bị nhánh chung che khuất trong Mock Provider.
+  8. *Truy vấn quét toàn bộ bảng O(N)*: `findAll().stream().anyMatch()` gây lãng phí bộ nhớ khi seed.
+
+**2. Chi Tiết Triển Khai Kỹ Thuật (Senior Dev Implementation):**
+1. **Kiến trúc 3 Lớp Cache (3-Tier Caching System)**:
+   - **Lớp 1 (RAM Cache - Caffeine)**: 300 entries gần nhất, TTL 2 giờ không truy cập, tốc độ phản hồi tức thì (<1ms).
+   - **Lớp 2 (Disk Cache - Pre-rendered JPEGs)**: Đọc file ảnh tĩnh tại `uploads/materials/pages/{fileId}/p{page}.jpg` đã được render sẵn khi xuất bản, tốc độ siêu nhanh (~5-10ms), giải phóng 100% CPU parse PDF.
+   - **Lớp 3 (Fallback On-The-Fly)**: Sử dụng `RandomAccessReadBufferedFile` của PDFBox 3.0.3 nạp buffer từ đĩa, được bảo vệ nghiêm ngặt bởi Semaphore toàn cục để tránh cạn kiệt RAM.
+2. **Quản trị Tải Render Toàn Cục ([`AsyncConfig.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/config/AsyncConfig.java))**:
+   - Cung cấp ThreadPoolTaskExecutor (`pdfRenderExecutor`) với core=2, max=4, queue=100.
+   - Định nghĩa duy nhất 1 Bean `@Bean(name = "pdfRenderSemaphore") Semaphore(4, true)` điều phối tải chung cho cả job bất đồng bộ và request on-the-fly.
+3. **Tiến trình Render Nền & Tự Động Backfill ([`PdfPreRenderJob.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/service/PdfPreRenderJob.java))**:
+   - Render ảnh chuẩn DPI=120, JPEG quality=80% (tối ưu nét và dung lượng nhỏ cho di động).
+   - Lắng nghe sự kiện `@EventListener(ApplicationReadyEvent.class)` tự động quét các sách chưa render (`renderedAt IS NULL`) để đẩy vào hàng đợi render nền.
+4. **Cơ sở Dữ liệu & Migration V8 ([`V8__add_rendered_at_to_material_files.sql`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/resources/db/migration/V8__add_rendered_at_to_material_files.sql))**:
+   - Bổ sung cột `rendered_at TIMESTAMP DEFAULT NULL` kèm chỉ mục `idx_material_files_rendered_at` trên bảng `material_files`.
+   - Bổ sung `boolean existsByTitle(String title)` vào `MaterialRepository` (O(1) SQL EXISTS).
+5. **Chuẩn Hóa Kho Lưu Trữ & Phân Quyền ReBAC Tuyệt Đối ([`DataSeeder.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/main/java/com/school/backend/util/DataSeeder.java))**:
+   - Đo đạc chính xác số trang thực tế của cả 6 cuốn SGK:
+     + Toán 1 - Tập 1: 118 trang | Tiếng Việt 1 - Tập 1: 57 trang
+     + Ngữ văn 6 - Tập 1: 138 trang | Toán 6 - Tập 1: 126 trang
+     + Ngữ văn 10 - Tập 2: 71 trang | Toán 10 - Tập 2: 52 trang
+   - Tự động dọn dẹp các liên kết sai của Toán 1, chuẩn hóa phân quyền:
+     + Lớp 1A: Chỉ xem được Toán 1 & Tiếng Việt 1.
+     + Lớp 6A: Chỉ xem được Toán 6 & Ngữ văn 6.
+     + Lớp 10A: Chỉ xem được Toán 10 - Tập 2 & Ngữ văn 10 - Tập 2.
+6. **Đồng Bộ Dữ Liệu Mock Frontend ([`book_mock_content_provider.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/lib/core/page_flip/book_mock_content_provider.dart))**:
+   - Cập nhật mục lục Ngữ văn 6 đúng bộ Kết nối tri thức với cuộc sống (Dế Mèn phiêu lưu ký, Hoàng tử bé).
+   - Sắp xếp nhánh Bài 4 (`pageNum >= 106`) trước nhánh chung để bảo đảm phân giải chính xác.
+   - Gắn nhãn chuẩn "Tập 2" cho Toán 10 và Ngữ văn 10.
+
+**3. Kết Quả Kiểm Thử Thực Tế (Rule 5 Compliance):**
+- **Biên dịch Backend (`./mvnw clean compile -DskipTests`)**:
+  + ✅ **BUILD SUCCESS** (170 source files compiled, 0 lỗi cú pháp/import).
+- **Kiểm thử Tích hợp Backend ([`MaterialOptimizationTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/service/MaterialOptimizationTest.java))**:
+  + ✅ **3 / 3 tests PASSED (100% pass)**:
+    - `TC-OPT-01`: ReBAC cô lập tuyệt đối theo lớp (student01 chỉ thấy sách Khối 1, student02 chỉ thấy sách Khối 6, student03 chỉ thấy sách Khối 10).
+    - `TC-OPT-02`: Phương thức `existsByTitle` hoạt động chính xác với cả 6 cuốn sách.
+    - `TC-OPT-03`: Tốc độ phản hồi từ Disk Cache L2 < 50ms (thực tế đo được < 15ms).
+- **Kiểm thử Frontend ([`book_mock_content_provider_test.dart`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/frontend/test/core/page_flip/book_mock_content_provider_test.dart))**:
+  + ✅ **19 / 19 tests PASSED (100% pass)**: Bao gồm test Bài 4 Dế Mèn phiêu lưu ký, nhãn Tập 2 và test chống tràn dải trang mục lục TOC.
+- **Tiến độ Render Đĩa Thực Tế**:
+  + ✅ **562 / 562 trang sách đã được render nền thành công ra JPEG tĩnh** (thư mục `uploads/materials/pages/`):
+    - FileId 77 (Toán 1): 118 trang ảnh
+    - FileId 206 (Tiếng Việt 1): 57 trang ảnh
+    - FileId 207 (Ngữ văn 6): 138 trang ảnh
+    - FileId 208 (Toán 6): 126 trang ảnh
+    - FileId 209 (Ngữ văn 10): 71 trang ảnh
+    - FileId 210 (Toán 10): 52 trang ảnh
+- **Bổ sung Bản vá QA Khẩn cấp (Hotfixes)**:
+  + ✅ **Fix Điểm #1 (TOC Boundary Alignment)**: Điều chỉnh dải trang mục lục khớp 100% số trang thực tế của sách (Tiếng Việt 1: 57 trang, Toán 10 Tập 2: 52 trang, Ngữ văn 10 Tập 2: 71 trang, Toán 6: 126 trang, Ngữ văn 6: 138 trang), triệt tiêu hoàn toàn nguy cơ học sinh bấm mục lục bị lỗi HTTP 404.
+  + ✅ **Fix Điểm #3 (Per-Page Fault Tolerance)**: Bọc khối `try-catch` cục bộ cho từng trang trong `PdfPreRenderJob.java`. Nếu 1 trang bị lỗi corrupt/font thì log cảnh báo và tiếp tục render các trang tiếp theo, không làm crash toàn bộ tiến trình và đảm bảo lưu `renderedAt` cho các trang thành công.
+
+

@@ -163,3 +163,13 @@ backend/school-backend/boot.log
 # Demo & Mockups
 Demo*.html
 "Demo ứng dụng giáo dục.html"
+
+# ===========================
+# Textbook Data & Binary Files (PDF)
+# ===========================
+*.pdf
+PrimarySchool/
+MiddleSchool/
+HighSchool/
+backend/school-backend/uploads/
+

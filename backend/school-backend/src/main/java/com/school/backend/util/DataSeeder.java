@@ -7,6 +7,9 @@ import com.school.backend.entity.Student;
 import com.school.backend.entity.Enrollment;
 import com.school.backend.entity.GuardianStudent;
 import com.school.backend.entity.Marks;
+import com.school.backend.entity.Material;
+import com.school.backend.entity.MaterialClass;
+import com.school.backend.entity.MaterialFile;
 import com.school.backend.enums.ExamType;
 import com.school.backend.repository.TeacherRepository;
 import com.school.backend.repository.SchoolClassRepository;
@@ -394,42 +397,43 @@ public class DataSeeder implements CommandLineRunner {
         seedSubjectMarks(student3, english, currentYear, 1, new double[]{8.5, 9.0}, 8.5, 9.0);
 
 
-        // 4. Seed textbook SGK Toán 1 - Tập 1 (118 pages) if not already exists
-        if (materialRepository.findAll().stream().noneMatch(m -> "Sách giáo khoa Toán 1 - Tập 1".equals(m.getTitle()))) {
-            com.school.backend.entity.Subject mathSubject = subjectRepository.findByName("Toán").orElseGet(() -> {
-                com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
-                s.setName("Toán");
-                return subjectRepository.save(s);
-            });
-
-            Teacher author = teacherRepository.findAll().stream().findFirst().orElse(null);
-
-            if (author != null) {
-                com.school.backend.entity.Material book = new com.school.backend.entity.Material();
-                book.setTitle("Sách giáo khoa Toán 1 - Tập 1");
-                book.setDescription("Sách giáo khoa Toán 1 Bộ Kết nối tri thức với cuộc sống. Bản số hóa tương tác có lật trang trực tiếp.");
-                book.setSubject(mathSubject);
-                book.setCreatedByTeacher(author);
-                book.setStatus("PUBLISHED");
-                book = materialRepository.save(book);
-
-                com.school.backend.entity.MaterialFile mf = new com.school.backend.entity.MaterialFile();
-                mf.setMaterial(book);
-                mf.setFileName("SGK_Toan_1_Tap_1.pdf");
-                mf.setFileUrl("uploads/materials/SGK_Toan_1_Tap_1.pdf");
-                mf.setPageCount(118);
-                mf.setVersion(1);
-                materialFileRepository.save(mf);
-
-                for (SchoolClass sc : schoolClassRepository.findAll()) {
-                    com.school.backend.entity.MaterialClass mc = new com.school.backend.entity.MaterialClass();
-                    mc.setMaterial(book);
-                    mc.setSchoolClass(sc);
-                    materialClassRepository.save(mc);
-                }
-                System.out.println("Seeded textbook: Sách giáo khoa Toán 1 - Tập 1 (118 pages)");
+        // 4. ReBAC Cleanup: Kiểm tra và chuẩn hóa quyền cho Toán 1 nếu đang gán sai cho nhiều lớp
+        Material toan1Existing = materialRepository.findAll().stream()
+                .filter(m -> "Sách giáo khoa Toán 1 - Tập 1".equals(m.getTitle()))
+                .findFirst().orElse(null);
+        if (toan1Existing != null) {
+            List<MaterialClass> currentMCs = materialClassRepository.findByMaterialId(toan1Existing.getId());
+            boolean isAssignedToOtherClasses = currentMCs.stream()
+                    .anyMatch(mc -> !mc.getSchoolClass().getId().equals(class1A.getId()));
+            if (isAssignedToOtherClasses || currentMCs.isEmpty()) {
+                materialClassRepository.deleteAll(currentMCs);
+                MaterialClass mc = new MaterialClass();
+                mc.setMaterial(toan1Existing);
+                mc.setSchoolClass(class1A);
+                materialClassRepository.save(mc);
+                System.out.println("[ReBAC Fix] Đã chuẩn hóa phân quyền Toán 1 -> Chỉ gán Lớp 1A");
             }
         }
+
+        // Seed đủ 6 cuốn SGK với ReBAC đúng khối lớp và số trang đo đạc thực tế
+        seedTextbook("Sách giáo khoa Toán 1 - Tập 1",
+                "Sách giáo khoa Toán 1 Bộ Kết nối tri thức với cuộc sống. Bản số hóa tương tác có lật trang trực tiếp.",
+                "Toán", "SGK_Toan_1_Tap_1.pdf", 118, List.of(class1A));
+        seedTextbook("Sách giáo khoa Tiếng Việt 1 - Tập 1",
+                "Sách giáo khoa Tiếng Việt lớp 1 bộ Kết nối tri thức.",
+                "Tiếng Việt", "sgk_tieng_viet_1_tap_1.pdf", 57, List.of(class1A));
+        seedTextbook("Sách giáo khoa Ngữ văn 6 - Tập 1",
+                "Sách giáo khoa Ngữ văn lớp 6 bộ Kết nối tri thức.",
+                "Ngữ văn", "sgk_ngu_van_6_tap_1.pdf", 138, List.of(class6A));
+        seedTextbook("Sách giáo khoa Toán 6 - Tập 1",
+                "Sách giáo khoa Toán lớp 6 bộ Kết nối tri thức.",
+                "Toán", "sgk_toan_6_tap_1.pdf", 126, List.of(class6A));
+        seedTextbook("Sách giáo khoa Ngữ văn 10 - Tập 2",
+                "Sách giáo khoa Ngữ văn lớp 10 tập 2 bộ Kết nối tri thức.",
+                "Ngữ văn", "sgk_ngu_van_10_tap_2.pdf", 71, List.of(class10A));
+        seedTextbook("Sách giáo khoa Toán 10 - Tập 2",
+                "Sách giáo khoa Toán lớp 10 tập 2 bộ Kết nối tri thức.",
+                "Toán", "sgk_toan_10_tap_2.pdf", 52, List.of(class10A));
 
         // 9. Seed Bài tập tự động (Homework & HomeworkAssignment) phục vụ tính năng nộp bài
         if (homeworkRepository.count() == 0) {
@@ -673,5 +677,43 @@ public class DataSeeder implements CommandLineRunner {
             m.setMaxScore(BigDecimal.valueOf(10.0));
             marksRepository.save(m);
         }
+    }
+
+    private void seedTextbook(String title, String desc, String subjectName,
+                              String fileName, int pageCount, List<SchoolClass> targetClasses) {
+        if (materialRepository.existsByTitle(title)) return;
+
+        com.school.backend.entity.Subject subj = subjectRepository.findByName(subjectName).orElseGet(() -> {
+            com.school.backend.entity.Subject s = new com.school.backend.entity.Subject();
+            s.setName(subjectName);
+            return subjectRepository.save(s);
+        });
+        Teacher author = teacherRepository.findAll().stream().findFirst().orElse(null);
+        if (author == null) return;
+
+        com.school.backend.entity.Material book = new com.school.backend.entity.Material();
+        book.setTitle(title);
+        book.setDescription(desc);
+        book.setSubject(subj);
+        book.setCreatedByTeacher(author);
+        book.setStatus("PUBLISHED");
+        book = materialRepository.save(book);
+
+        com.school.backend.entity.MaterialFile mf = new com.school.backend.entity.MaterialFile();
+        mf.setMaterial(book);
+        mf.setFileName(fileName);
+        mf.setFileUrl("uploads/materials/" + fileName);
+        mf.setPageCount(pageCount);
+        mf.setVersion(1);
+        materialFileRepository.save(mf);
+
+        for (SchoolClass sc : targetClasses) {
+            com.school.backend.entity.MaterialClass mc = new com.school.backend.entity.MaterialClass();
+            mc.setMaterial(book);
+            mc.setSchoolClass(sc);
+            materialClassRepository.save(mc);
+        }
+        System.out.println("Seeded textbook: " + title + " (" + pageCount + " pages) -> "
+                + targetClasses.stream().map(sc -> sc.getGrade() + sc.getSection()).toList());
     }
 }

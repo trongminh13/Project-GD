@@ -80,6 +80,15 @@ void main() {
       expect(lesson.chapterTitle, contains('TẾ BÀO'));
       expect(lesson.tipText, contains('Màng tế bào, Chất tế bào'));
     });
+
+    test('Ngữ văn 6 trang 110 trả về Bài 4 Dế Mèn phiêu lưu ký & kết nối Hoàng tử bé', () {
+      final book = {'title': 'Sách giáo khoa Ngữ văn 6 - Tập 1', 'subjectName': 'Ngữ văn'};
+      final lesson = BookMockContentProvider.resolve(book, 110);
+      expect(lesson.chapterTitle, contains('NHỮNG TRẢI NGHIỆM TRONG ĐỜI'));
+      expect(lesson.lessonTitle, contains('DẾ MÈN PHIÊU LƯU KÝ'));
+      expect(lesson.exContent2, contains('Hoàng tử bé'));
+      expect(lesson.footerBookName, contains('Kết nối tri thức'));
+    });
   });
 
   group('BookMockContentProvider Tests - Cấp 3 (THPT)', () {
@@ -137,6 +146,35 @@ void main() {
       expect(lesson.chapterTitle, contains('FAMILY LIFE AND HOUSEHOLD CHORES'));
       expect(lesson.tipText, contains('Present Simple: Habits'));
       expect(lesson.tipText, isNot(contains('7 × 1 = 7')));
+    });
+
+    test('Toán 10 và Ngữ văn 10 hiển thị đúng nhãn Tập 2', () {
+      final toan10 = {'title': 'Sách giáo khoa Toán 10 - Tập 2', 'subjectName': 'Toán'};
+      final nv10 = {'title': 'Sách giáo khoa Ngữ văn 10 - Tập 2', 'subjectName': 'Ngữ văn'};
+      expect(BookMockContentProvider.resolve(toan10, 1).footerBookName, 'Sách giáo khoa Toán 10 - Tập 2');
+      expect(BookMockContentProvider.resolve(nv10, 1).footerBookName, 'Sách giáo khoa Ngữ văn 10 - Tập 2');
+    });
+
+    test('Dải trang mục lục (TOC) không bị tràn quá số trang thực tế của sách', () {
+      final tv1 = {'title': 'Sách giáo khoa Tiếng Việt 1 - Tập 1', 'subjectName': 'Tiếng Việt'};
+      final chTv1 = BookMockContentProvider.getChapters(tv1);
+      expect(chTv1.last['endPage'], 57);
+
+      final toan10 = {'title': 'Sách giáo khoa Toán 10 - Tập 2', 'subjectName': 'Toán'};
+      final chToan10 = BookMockContentProvider.getChapters(toan10);
+      expect(chToan10.last['endPage'], 52);
+
+      final nv10 = {'title': 'Sách giáo khoa Ngữ văn 10 - Tập 2', 'subjectName': 'Ngữ văn'};
+      final chNv10 = BookMockContentProvider.getChapters(nv10);
+      expect(chNv10.last['endPage'], 71);
+
+      final toan6 = {'title': 'Sách giáo khoa Toán 6 - Tập 1', 'subjectName': 'Toán'};
+      final chToan6 = BookMockContentProvider.getChapters(toan6);
+      expect(chToan6.last['endPage'], 126);
+
+      final nv6 = {'title': 'Sách giáo khoa Ngữ văn 6 - Tập 1', 'subjectName': 'Ngữ văn'};
+      final chNv6 = BookMockContentProvider.getChapters(nv6);
+      expect(chNv6.last['endPage'], 138);
     });
   });
 
