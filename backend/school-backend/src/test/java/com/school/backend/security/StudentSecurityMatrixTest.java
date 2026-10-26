@@ -60,11 +60,13 @@ public class StudentSecurityMatrixTest {
     void setUp() {
         cleanUp();
 
-        // Tạo lớp học mẫu
-        schoolClass = new SchoolClass();
-        schoolClass.setGrade("10");
-        schoolClass.setSection("A");
-        schoolClass = classRepository.save(schoolClass);
+        // Tạo hoặc lấy lớp học mẫu độc lập cho test
+        schoolClass = classRepository.findByGradeAndSection("99", "SEC").orElseGet(() -> {
+            SchoolClass sc = new SchoolClass();
+            sc.setGrade("99");
+            sc.setSection("SEC");
+            return classRepository.save(sc);
+        });
 
         // Tạo tài khoản User role STUDENT
         studentUser = new User();
@@ -94,10 +96,8 @@ public class StudentSecurityMatrixTest {
         userRepository.findByUsername("STU_TEST_001").ifPresent(u -> userRepository.delete(u));
         userRepository.findByUsername("TEACHER_TEST_001").ifPresent(u -> userRepository.delete(u));
         userRepository.findByUsername("PARENT_TEST_001").ifPresent(u -> userRepository.delete(u));
-        if (schoolClass != null && schoolClass.getId() != null) {
-            classRepository.deleteById(schoolClass.getId());
-            schoolClass = null;
-        }
+        classRepository.findByGradeAndSection("99", "SEC").ifPresent(classRepository::delete);
+        schoolClass = null;
     }
 
     @Test

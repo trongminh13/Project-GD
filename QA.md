@@ -3418,4 +3418,38 @@ Qua rà soát chuyên sâu toàn bộ API, luồng dữ liệu bảng điểm v�
   + ✅ **Fix Điểm #1 (TOC Boundary Alignment)**: Điều chỉnh dải trang mục lục khớp 100% số trang thực tế của sách (Tiếng Việt 1: 57 trang, Toán 10 Tập 2: 52 trang, Ngữ văn 10 Tập 2: 71 trang, Toán 6: 126 trang, Ngữ văn 6: 138 trang), triệt tiêu hoàn toàn nguy cơ học sinh bấm mục lục bị lỗi HTTP 404.
   + ✅ **Fix Điểm #3 (Per-Page Fault Tolerance)**: Bọc khối `try-catch` cục bộ cho từng trang trong `PdfPreRenderJob.java`. Nếu 1 trang bị lỗi corrupt/font thì log cảnh báo và tiếp tục render các trang tiếp theo, không làm crash toàn bộ tiến trình và đảm bảo lưu `renderedAt` cho các trang thành công.
 
+---
+
+## 12. BÁO CÁO KIỂM ĐỊNH PIPELINE GITHUB ACTIONS & SỬA TRIỆT ĐỂ 9 LỖI TEST CI (OCTOBER 2026)
+
+### 1. Đánh giá Tương thích Pipeline GitHub Actions
+1. **Workflow `deploy.yml` (Flutter Web -> GitHub Pages)**:
+   - **Lệnh thực thi**: `flutter build web --base-href "/Project-GD/" --release -O4 --dart-define=DEMO_MODE=true`
+   - **Kết quả kiểm chứng**: ✅ **BUILD SUCCESS** (`✓ Built build/web` sau 90.7s).
+   - **Điều kiện cần**: Cần đảm bảo repository bật GitHub Pages với nguồn cấp là **GitHub Actions** (`Settings > Pages`).
+
+2. **Workflow `backend-ci.yml` (Backend Test Suite)**:
+   - **Lệnh thực thi**: `./mvnw clean test` trên PostgreSQL Service container.
+   - **Lỗi phát hiện trước khi sửa**: 9 bài test bị lỗi (`Errors: 9, Failures: 0`) tại `StudentHomeworkControllerTest` (2 lỗi) và `StudentSecurityMatrixTest` (7 lỗi).
+   - **Nguyên nhân kỹ thuật**: Bảng `classes` có ràng buộc `UNIQUE(grade, section)`. `DataSeeder` đã nạp lớp `(1, "A")` và `(10, "A")`. Phương thức `setUp()` của test lại tiếp tục gọi `classRepository.save()` với đúng các cặp grade/section này, kích hoạt ngoại lệ `DataIntegrityViolationException`.
+
+### 2. Chi tiết Bản vá Lỗi Test
+* **[`StudentHomeworkControllerTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/controller/StudentHomeworkControllerTest.java)**:
+  - Chuyển sang lớp kiểm thử cô lập `grade="99", section="HW"`.
+  - Tái sử dụng an toàn: `schoolClass = classRepository.findByGradeAndSection("99", "HW").orElseGet(...)`.
+  - Dọn dẹp sạch sẽ sau kiểm thử trong `cleanUp()`.
+* **[`StudentSecurityMatrixTest.java`](file:///home/dotrongminh/Documents/CTY-GIAODUC-DAIVIET/Astra/Project-GD/backend/school-backend/src/test/java/com/school/backend/security/StudentSecurityMatrixTest.java)**:
+  - Chuyển sang lớp kiểm thử cô lập `grade="99", section="SEC"`.
+  - Tái sử dụng an toàn: `schoolClass = classRepository.findByGradeAndSection("99", "SEC").orElseGet(...)`.
+  - Dọn dẹp sạch sẽ sau kiểm thử trong `cleanUp()`.
+
+### 3. Kết Quả Kiểm Chứng Thực Tế (Rule #5)
+* **Kiểm thử Trọng điểm**:
+  - `StudentHomeworkControllerTest`: ✅ **2 / 2 tests PASSED**.
+  - `StudentSecurityMatrixTest`: ✅ **7 / 7 tests PASSED**.
+* **Kiểm thử Toàn bộ Backend Suite (`./mvnw test`)**:
+  - ✅ **91 / 91 tests PASSED (100% BUILD SUCCESS, 0 Failures, 0 Errors)**.
+  - Tổng thời gian chạy: 01:01 phút.
+
+
 

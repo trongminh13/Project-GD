@@ -62,10 +62,12 @@ public class StudentHomeworkControllerTest {
     void setUp() {
         cleanUp();
 
-        schoolClass = new SchoolClass();
-        schoolClass.setGrade("1");
-        schoolClass.setSection("A");
-        schoolClass = classRepository.save(schoolClass);
+        schoolClass = classRepository.findByGradeAndSection("99", "HW").orElseGet(() -> {
+            SchoolClass sc = new SchoolClass();
+            sc.setGrade("99");
+            sc.setSection("HW");
+            return classRepository.save(sc);
+        });
 
         studentUser = new User();
         studentUser.setUsername("STU_HW_TEST");
@@ -91,10 +93,8 @@ public class StudentHomeworkControllerTest {
     private void cleanUp() {
         studentRepository.findByAdmissionNumber("STU_HW_TEST").ifPresent(studentRepository::delete);
         userRepository.findByUsername("STU_HW_TEST").ifPresent(userRepository::delete);
-        if (schoolClass != null && schoolClass.getId() != null) {
-            classRepository.deleteById(schoolClass.getId());
-            schoolClass = null;
-        }
+        classRepository.findByGradeAndSection("99", "HW").ifPresent(classRepository::delete);
+        schoolClass = null;
     }
 
     @Test
